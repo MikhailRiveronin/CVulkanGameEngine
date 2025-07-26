@@ -32,7 +32,7 @@ static b8 physicalDeviceMeetsRequirements(
     VulkanSwapchainSupportInfo* swapchainSupportInfo);
 
 
-b8 vulkanDeviceInit(VulkanContext* context)
+b8 vulkanDeviceCreate(VulkanContext* context)
 {
     if (!selectPhysicalDevice(context)) {
         return FALSE;
@@ -148,8 +148,7 @@ void vulkanDeviceQuerySwapchainSupport(
     VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, NULL));
     if (surfaceFormatCount) {
         if (!swapchainSupportInfo->formats.capacity) {
-            DARRAY_INIT(swapchainSupportInfo->formats, MEMORY_TAG_RENDERER);
-            DARRAY_RESERVE(swapchainSupportInfo->formats, surfaceFormatCount);
+            DARRAY_RESERVE(swapchainSupportInfo->formats, surfaceFormatCount, MEMORY_TAG_RENDERER);
         }
         VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDevice,
@@ -164,7 +163,7 @@ void vulkanDeviceQuerySwapchainSupport(
     if (presentModeCount) {
         if (!swapchainSupportInfo->modes.capacity) {
             DARRAY_INIT(swapchainSupportInfo->modes, MEMORY_TAG_RENDERER);
-            DARRAY_RESERVE(swapchainSupportInfo->modes, presentModeCount);
+            DARRAY_EXPAND(swapchainSupportInfo->modes, presentModeCount);
         }
         VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
             physicalDevice,
@@ -173,6 +172,29 @@ void vulkanDeviceQuerySwapchainSupport(
             swapchainSupportInfo->modes.data));
         swapchainSupportInfo->modes.size = presentModeCount;
     }
+}
+
+b8 vulkanDeviceDetectDepthFormat(VulkanDevice* device)
+{
+    VkFormat candidates[3] = {
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT };
+
+    u32 flags = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    for (u64 i = 0; i < _countof(candidates); ++i) {
+        VkFormatProperties properties;
+        vkGetPhysicalDeviceFormatProperties(device->physicalDevice, candidates[i], &properties);
+        if ((properties.linearTilingFeatures & flags) == flags) {
+            device->depthFormat = candidates[i];
+            return TRUE;
+        }
+        else if ((properties.optimalTilingFeatures & flags) == flags) {
+            device->depthFormat = candidates[i];
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 b8 selectPhysicalDevice(VulkanContext* context)

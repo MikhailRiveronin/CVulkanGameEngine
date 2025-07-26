@@ -1,6 +1,7 @@
 #include "VulkanBackend.h"
 #include "VulkanPlatform.h"
 #include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 #include "Containers/DArray.h"
 #include "Core/Logger.h"
 #include "Core/String.h"
@@ -16,9 +17,12 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
     void* userData);
 #endif
 
+static i32 findMemoryType(u32 memoryTypeBits, VkMemoryPropertyFlags properties);
+
 b8 vulkanBackendInit(struct RendererBackend* backend, char const* appName, struct PlatformState* platformState)
 {
     context.allocator = NULL;
+    context.findMemoryType = findMemoryType;
 
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -140,8 +144,13 @@ b8 vulkanBackendInit(struct RendererBackend* backend, char const* appName, struc
         return FALSE;
     }
 
-    if (!vulkanDeviceInit(&context)) {
+    if (!vulkanDeviceCreate(&context)) {
         LOG_ERROR("Failed to create device");
+        return FALSE;
+    }
+
+    if (!vulkanSwapchainCreate(&context, context.framebuffer.width, context.framebuffer.height, &context.swapchain)) {
+        LOG_ERROR("Failed to create swapchain");
         return FALSE;
     }
 
@@ -151,6 +160,8 @@ b8 vulkanBackendInit(struct RendererBackend* backend, char const* appName, struc
 
 void vulkanBackendDestroy(struct RendererBackend* backend)
 {
+    vulkanSwapchainDestroy(&context, &context.swapchain);
+
     vulkanDeviceDestroy(&context);
 
     vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
@@ -201,3 +212,15 @@ VkBool32 debugUtilsMessengerCallback(
     return VK_FALSE;
 }
 #endif
+
+i32 findMemoryType(u32 memoryTypeBits, VkMemoryPropertyFlags properties)
+{
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(context.device.physicalDevice, &memoryProperties);
+    for (u32 i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+        if ((memoryTypeBits & (1 << i)) && ((memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)) {
+            return i;
+        }
+    }
+    return -1;
+}

@@ -17,5 +17,4 @@ b8 gameOnRender(struct Game* game, f64 deltaTime)
 
 void gameOnResize(struct Game* game, i32 width, i32 height)
 {
-    return TRUE;
 }

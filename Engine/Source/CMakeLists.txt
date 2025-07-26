@@ -13,7 +13,8 @@ set(sources
     Renderer/Vulkan/VulkanBackend.c
     Renderer/Vulkan/VulkanPlatform.c
     Renderer/Vulkan/VulkanDevice.c
-    )
+    Renderer/Vulkan/VulkanSwapchain.c
+    Renderer/Vulkan/VulkanImage.c)
 
 if(WIN32)
     list(APPEND sources

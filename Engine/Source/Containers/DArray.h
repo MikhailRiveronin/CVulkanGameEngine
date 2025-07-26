@@ -5,7 +5,7 @@
 #include "Core/Memory.h"
 
 #define DARRAY_MIN_CAPACITY 1
-#define DARRAY_RESERVE_FACTOR 2
+#define DARRAY_EXPAND_FACTOR 2
 
 #define DARRAY(type)      \
     struct {              \
@@ -33,9 +33,9 @@
     }                                                                                            \
     while (0)
 
-#define DARRAY_RESERVE(array, count)                                                                \
+#define DARRAY_EXPAND(array, count)                                                                 \
     do {                                                                                            \
-        u64 newCapacity = (count) > DARRAY_MIN_CAPACITY ? (count) : DARRAY_MIN_CAPACITY;            \
+        u64 newCapacity = MAX(count, DARRAY_MIN_CAPACITY);                                          \
         if (newCapacity != DARRAY_MIN_CAPACITY) {                                                   \
             void* newData = memoryAllocate(newCapacity * sizeof(*(array).data), (array).memory);    \
             if (newData) {                                                                          \
@@ -54,7 +54,11 @@
 #define DARRAY_DEFINE(type, array, count, memoryTag) \
     DARRAY(type) array;                              \
     DARRAY_INIT(array, memoryTag);                   \
-    DARRAY_RESERVE(array, count)
+    DARRAY_EXPAND(array, count)
+
+#define DARRAY_RESERVE(array, count, memoryTag) \
+    DARRAY_INIT(array, memoryTag);              \
+    DARRAY_EXPAND(array, count)
 
 #define DARRAY_DESTROY(array)                                                                   \
     do {                                                                                        \
@@ -67,14 +71,14 @@
     }                                                                                           \
     while (0)
 
-#define DARRAY_PUSH(array, ...)                                      \
-    do {                                                             \
-        if ((array).size == (array).capacity) {                      \
-            u64 capacity = (array).capacity * DARRAY_RESERVE_FACTOR; \
-            DARRAY_RESERVE(array, capacity);                         \
-        }                                                            \
-        (array).data[(array).size++] = __VA_ARGS__;                  \
-    }                                                                \
+#define DARRAY_PUSH(array, ...)                                     \
+    do {                                                            \
+        if ((array).size == (array).capacity) {                     \
+            u64 capacity = (array).capacity * DARRAY_EXPAND_FACTOR; \
+            DARRAY_EXPAND(array, capacity);                         \
+        }                                                           \
+        (array).data[(array).size++] = __VA_ARGS__;                 \
+    }                                                               \
     while (0)
 
 #define DARRAY_POP(array, value)                      \
@@ -93,7 +97,7 @@
     do {                                                                                                              \
         if (pos >= 0 && pos < (array).size) {                                                                         \
             if ((array).size == (array).capacity) {                                                                   \
-                DARRAY_RESERVE((array), (array).capacity * DARRAY_RESERVE_FACTOR);                                    \
+                DARRAY_EXPAND((array), (array).capacity * DARRAY_EXPAND_FACTOR);                                      \
             }                                                                                                         \
             if (pos != (array).size - 1) {                                                                            \
                 memoryCopy((array).data + pos + 1, (array).data + pos, ((array).size - pos) * sizeof(*(array).data)); \
