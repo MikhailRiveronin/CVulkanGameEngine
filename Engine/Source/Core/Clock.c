@@ -3,19 +3,18 @@
 
 void clockUpdate(Clock* clock)
 {
-    if (clock->startTime != 0) {
-        clock->elapsedTime = platformGetAbsoluteTime() - clock->startTime;
-
+    if (clock->start != 0) {
+        clock->elapsed = platformGetAbsoluteTime() - clock->start;
     }
 }
 
 void clockStart(Clock* clock)
 {
-    clock->startTime = platformGetAbsoluteTime();
-    clock->elapsedTime = 0;
+    clock->start = platformGetAbsoluteTime();
+    clock->elapsed = 0;
 }
 
 void clockStop(Clock* clock)
 {
-    clock->startTime = 0;
+    clock->start = 0;
 }

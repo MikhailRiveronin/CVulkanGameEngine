@@ -3,8 +3,7 @@
 
 b8 createGameState(Game* game)
 {
-    game->specific = allocate(sizeof(GameState), MEMORY_TAG_GAME);
-    memoryPrintUsageStr();
+    game->specific = memoryAllocate(sizeof(GameState), MEMORY_TAG_GAME);
 
     game->onInit = gameOnInit;
     game->onUpdate = gameOnUpdate;

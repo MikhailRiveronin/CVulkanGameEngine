@@ -2,6 +2,7 @@
 #include "Core/Logger.h"
 #include "Core/Input.h"
 #include "Core/Events.h"
+#include "Renderer/Vulkan/VulkanTypes.inl"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -172,6 +173,25 @@ f64 platformGetAbsoluteTime()
 void platformSleep(u64 ms)
 {
     Sleep(ms);
+}
+
+b8 platformCreateVulkanSurface(PlatformState* platformState, VulkanContext* context)
+{
+    Win32State* state = platformState->specific;
+    VkWin32SurfaceCreateInfoKHR createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.hinstance = state->hInstance;
+    createInfo.hwnd = state->hWnd;
+    VkResult result = vkCreateWin32SurfaceKHR(context->instance, &createInfo, context->allocator, &context->surface);
+    if (result) {
+        LOG_ERROR("Failed to create surface");
+        return FALSE;
+    }
+
+    LOG_DEBUG("Surface created");
+    return TRUE;
 }
 
 LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam)

@@ -1,63 +1,51 @@
-#include "Renderer/RendererFrontend.h"
-
+#include "RendererFrontend.h"
+#include "RendererBackend.h"
 #include "Core/Logger.h"
 #include "Core/Memory.h"
 
-#include "Renderer/RendererBackend.h"
-
 static RendererBackend* backend;
 
-bool rendererStartup(const char* appName, struct PlatformState* platformState)
+b8 rendererInit(char const* appName, struct PlatformState* platformState)
 {
     backend = memoryAllocate(sizeof(*backend), MEMORY_TAG_RENDERER);
-
-    rendererBackendCreate(RENDERER_BACKEND_TYPE_VULKAN, platformState, backend);
+    rendererBackendInit(RENDERER_BACKEND_TYPE_VULKAN, platformState, backend);
     backend->frameCount = 0;
-
-    if (!backend->initialize(backend, appName, platformState))
-    {
+    if (!backend->init(backend, appName, platformState)) {
         LOG_FATAL("Failed to initialize renderer backend. Shutting down");
         return FALSE;
     }
-
     return TRUE;
 }
 
-void rendererShutdown()
+void rendererDestroy()
 {
-    backend->terminate(backend);
-
+    backend->destroy(backend);
     memoryFree(backend, sizeof(*backend), MEMORY_TAG_RENDERER);
 }
 
-static bool rendererBeginFrame(float deltaTime);
-static bool rendererEndFrame(float deltaTime);
+static b8 rendererBeginFrame(float deltaTime);
+static b8 rendererEndFrame(float deltaTime);
 
-bool rendererDrawFrame(RenderPacket* packet)
+b8 rendererDrawFrame(RenderPacket* packet)
 {
-    if (rendererBeginFrame(packet->deltaTime))
-    {
-        bool result = rendererEndFrame(packet->deltaTime);
-        if (!result)
-        {
-            LOG_ERROR("Failed to end frame (rendererEndFrame). Shutting down");
-
+    if (rendererBeginFrame(packet->deltaTime)) {
+        b8 result = rendererEndFrame(packet->deltaTime);
+        if (!result) {
+            LOG_FATAL("Failed to end frame (rendererEndFrame). Shutting down");
             return FALSE;
         }
     }
-
     return TRUE;
 }
 
-bool rendererBeginFrame(float deltaTime)
+b8 rendererBeginFrame(float deltaTime)
 {
     return backend->beginFrame(backend, deltaTime);
 }
 
-bool rendererEndFrame(float deltaTime)
+b8 rendererEndFrame(float deltaTime)
 {
-    bool result = backend->endFrame(backend, deltaTime);
+    b8 result = backend->endFrame(backend, deltaTime);
     backend->frameCount++;
-
     return result;
 }

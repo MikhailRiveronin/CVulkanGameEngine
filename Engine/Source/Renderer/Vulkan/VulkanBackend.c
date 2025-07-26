@@ -1,15 +1,25 @@
-#include "Renderer/Vulkan/VulkanBackend.h"
-
+#include "VulkanBackend.h"
+#include "VulkanPlatform.h"
+#include "VulkanDevice.h"
+#include "Containers/DArray.h"
 #include "Core/Logger.h"
+#include "Core/String.h"
 
-#include "Containers/DynamicArray.h"
-
-#include "Renderer/Vulkan/VulkanTypes.h"
 
 static VulkanContext context;
 
-bool vulkanBackendInitialize(RendererBackend* pBackend, const char* pAppName, struct PlatformState* pPlatformState)
+#ifdef _DEBUG
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    VkDebugUtilsMessengerCallbackDataEXT const* callbackData,
+    void* userData);
+#endif
+
+b8 vulkanBackendInit(struct RendererBackend* backend, char const* appName, struct PlatformState* platformState)
 {
+    context.allocator = NULL;
+
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext = NULL;
@@ -17,121 +27,177 @@ bool vulkanBackendInitialize(RendererBackend* pBackend, const char* pAppName, st
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_2;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
-    const char** ppLayerNames = NULL;
+    DARRAY_DEFINE(char const*, requiredLayers, 0, MEMORY_TAG_STRING);
 #ifdef _DEBUG
-    ppLayerNames = DYNAMIC_ARRAY_CREATE(const char*);
-    DYNAMIC_ARRAY_PUSH_BACK(ppLayerNames, "VK_LAYER_KHRONOS_validation");
+    DARRAY_PUSH(requiredLayers, "VK_LAYER_KHRONOS_validation");
+
+    LOG_DEBUG("Required layers:");
+    for (u32 i = 0; i < requiredLayers.size; ++i) {
+        LOG_DEBUG("    %s", DARRAY_AT(requiredLayers, i));
+    }
 #endif
-
     {
-        uint32 propertyCount;
-        CHECK_IF_VK_SUCCESS(vkEnumerateInstanceLayerProperties(&propertyCount, NULL), __FILE__, __LINE__, "Failed to enumerate instance layer properties");
-        VkLayerProperties* pProperties = DYNAMIC_ARRAY_CREATE(VkExtensionProperties);
-        DYNAMIC_ARRAY_RESERVE(pProperties, propertyCount);
-        CHECK_IF_VK_SUCCESS(vkEnumerateInstanceLayerProperties(&propertyCount, pProperties), __FILE__, __LINE__, "Failed to enumerate instance layer properties");
+        u32 propertyCount;
+        VK_CHECK(vkEnumerateInstanceLayerProperties(&propertyCount, NULL));
+        DARRAY_DEFINE(VkLayerProperties, availableLayers, propertyCount, MEMORY_TAG_RENDERER);
+        VK_CHECK(vkEnumerateInstanceLayerProperties(&propertyCount, availableLayers.data));
+        availableLayers.size = propertyCount;
 
-        for (uint32 i = 0; i < DYNAMIC_ARRAY_FIELD_SIZE(ppLayerNames); ++i)
-        {
-            bool isFound = FALSE;
-            for (uint32 j = 0; j < propertyCount; ++j)
-            {
-                if (strcmp(ppLayerNames[i], pProperties[j].layerName) == 0)
-                {
-                    isFound = TRUE;
+        for (u32 i = 0; i < requiredLayers.size; ++i) {
+            b8 found = FALSE;
+            for (u32 j = 0; j < availableLayers.size; ++j) {
+                if (stringEqual(DARRAY_AT(requiredLayers, i), DARRAY_AT(availableLayers, j).layerName)) {
+                    found = TRUE;
                     break;
                 }
             }
 
-            if (isFound)
-                continue;
-
-            LOG_ERROR("Layer '%s' is not supported", ppLayerNames[i]);
-
-            return FALSE;
+            if (!found) {
+                LOG_FATAL("Required validation layer '%s' not found", DARRAY_AT(requiredLayers, i));
+                return FALSE;
+            }
         }
+        DARRAY_DESTROY(availableLayers);
     }
 
-    const char** ppExtensionNames = DYNAMIC_ARRAY_CREATE(const char*);
-    DYNAMIC_ARRAY_PUSH_BACK(ppExtensionNames, VK_KHR_SURFACE_EXTENSION_NAME);
-#ifdef _WIN32
-    DYNAMIC_ARRAY_PUSH_BACK(ppExtensionNames, "VK_KHR_win32_surface");
-#endif
+    DARRAY_CSTRING requiredExtensions;
+    DARRAY_INIT(requiredExtensions, MEMORY_TAG_STRING);
+    DARRAY_PUSH(requiredExtensions, VK_KHR_SURFACE_EXTENSION_NAME);
+    vulkanPlatformGetRequiredExtensions(&requiredExtensions);
 #ifdef _DEBUG
-    DYNAMIC_ARRAY_PUSH_BACK(ppExtensionNames, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    DARRAY_PUSH(requiredExtensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+    LOG_DEBUG("Required extensions:");
+    for (u32 i = 0; i < requiredExtensions.size; ++i) {
+        LOG_DEBUG("    %s", DARRAY_AT(requiredExtensions, i));
+    }
 #endif
-
     {
-        uint32 propertyCount;
-        CHECK_IF_VK_SUCCESS(vkEnumerateInstanceExtensionProperties(NULL, &propertyCount, NULL), __FILE__, __LINE__, "Failed to enumerate instance extension properties");
-        VkExtensionProperties* pProperties = DYNAMIC_ARRAY_CREATE(VkExtensionProperties);
-        DYNAMIC_ARRAY_RESERVE(pProperties, propertyCount);
-        CHECK_IF_VK_SUCCESS(vkEnumerateInstanceExtensionProperties(NULL, &propertyCount, pProperties), __FILE__, __LINE__, "Failed to enumerate instance extension properties");
+        u32 propertyCount;
+        VK_CHECK(vkEnumerateInstanceExtensionProperties(NULL, &propertyCount, NULL));
+        DARRAY_DEFINE(VkExtensionProperties, availableExtensions, propertyCount, MEMORY_TAG_RENDERER);
+        VK_CHECK(vkEnumerateInstanceExtensionProperties(NULL, &propertyCount, availableExtensions.data));
+        availableExtensions.size = propertyCount;
 
-        for (uint32 i = 0; i < DYNAMIC_ARRAY_FIELD_SIZE(ppExtensionNames); ++i)
-        {
-            bool isFound = FALSE;
-            for (uint32 j = 0; j < propertyCount; ++j)
-            {
-                if (strcmp(ppExtensionNames[i], pProperties[j].extensionName) == 0)
-                {
-                    isFound = TRUE;
+        for (u32 i = 0; i < requiredExtensions.size; ++i) {
+            b8 found = FALSE;
+            for (u32 j = 0; j < availableExtensions.size; ++j) {
+                if (stringEqual(DARRAY_AT(requiredExtensions, i), DARRAY_AT(availableExtensions, j).extensionName)) {
+                    found = TRUE;
                     break;
                 }
             }
 
-            if (isFound)
-                continue;
-
-            LOG_ERROR("Extension '%s' is not supported", ppExtensionNames[i]);
-
-            return FALSE;
+            if (!found) {
+                LOG_FATAL("Required extension '%s' not found", DARRAY_AT(requiredExtensions, i));
+                return FALSE;
+            }
         }
+        DARRAY_DESTROY(availableExtensions);
     }
-
-#if LOG_DEBUG_ENABLED == 1
-    LOG_INFO("Required Vulkan extensions: ");
-    for (uint32 i = 0; i < DYNAMIC_ARRAY_FIELD_SIZE(ppExtensionNames); ++i)
-    {
-        LOG_INFO("                            %s", ppExtensionNames[i]);
-    }
-#endif
 
     VkInstanceCreateInfo instanceCreateInfo = {};
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCreateInfo.pNext = NULL;
     instanceCreateInfo.pApplicationInfo = &appInfo;
-    instanceCreateInfo.enabledLayerCount = DYNAMIC_ARRAY_FIELD_SIZE(ppLayerNames);
-    instanceCreateInfo.ppEnabledLayerNames = ppLayerNames;
-    instanceCreateInfo.enabledExtensionCount = DYNAMIC_ARRAY_FIELD_SIZE(ppExtensionNames);
-    instanceCreateInfo.ppEnabledExtensionNames = ppExtensionNames;
+    instanceCreateInfo.enabledLayerCount = requiredLayers.size;
+    instanceCreateInfo.ppEnabledLayerNames = requiredLayers.data;
+    instanceCreateInfo.enabledExtensionCount = requiredExtensions.size;
+    instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data;
+    VK_CHECK(vkCreateInstance(&instanceCreateInfo, context.allocator, &context.instance));
+    LOG_INFO("Vulkan instance created");
+    DARRAY_DESTROY(requiredLayers);
+    DARRAY_DESTROY(requiredExtensions);
 
-    context.allocator = NULL;
-    VkResult result = vkCreateInstance(&instanceCreateInfo, context.allocator, &context.instance);
-    if (result != VK_SUCCESS)
-    {
-        LOG_ERROR("Failed to create Vulkan instance");
+#ifdef _DEBUG
+    VkDebugUtilsMessageSeverityFlagsEXT severity =
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+    // severity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+    VkDebugUtilsMessageTypeFlagsEXT messageType =
+        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    // messageType |= VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+
+    VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo = {};
+    debugMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    debugMessengerCreateInfo.pNext = NULL;
+    debugMessengerCreateInfo.flags = 0;
+    debugMessengerCreateInfo.messageSeverity = severity;
+    debugMessengerCreateInfo.messageType = messageType;
+    debugMessengerCreateInfo.pfnUserCallback = debugUtilsMessengerCallback;
+    debugMessengerCreateInfo.pUserData = NULL;
+
+    PFN_vkCreateDebugUtilsMessengerEXT func =
+        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
+    ASSERT_MSG(func, "Failed to load vkCreateDebugUtilsMessengerEXT");
+    VK_CHECK(func(context.instance, &debugMessengerCreateInfo, context.allocator, &context.debugUtilsMessenger));
+    LOG_INFO("Debug messenger created");
+#endif
+
+    if (!platformCreateVulkanSurface(platformState, &context)) {
+        LOG_ERROR("Failed to create surface");
         return FALSE;
     }
 
+    if (!vulkanDeviceInit(&context)) {
+        LOG_ERROR("Failed to create device");
+        return FALSE;
+    }
+
+    LOG_INFO("Vulkan renderer initialized");
     return TRUE;
 }
 
-void vulkanBackendTerminate(struct RendererBackend* backend)
+void vulkanBackendDestroy(struct RendererBackend* backend)
 {
+    vulkanDeviceDestroy(&context);
+
+    vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
+#ifdef _DEBUG
+    PFN_vkDestroyDebugUtilsMessengerEXT func =
+        (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
+    ASSERT_MSG(func, "Failed to load vkDestroyDebugUtilsMessengerEXT");
+    func(context.instance, context.debugUtilsMessenger, context.allocator);
+#endif
+    vkDestroyInstance(context.instance, context.allocator);
 }
 
-bool vulkanBackendBeginFrame(struct RendererBackend* backend, float deltaTime)
+b8 vulkanBackendBeginFrame(struct RendererBackend* backend, f64 deltaTime)
 {
     return TRUE;
 }
 
-bool vulkanBackendEndFrame(struct RendererBackend* backend, float deltaTime)
+b8 vulkanBackendEndFrame(struct RendererBackend* backend, f64 deltaTime)
 {
     return TRUE;
 }
 
-void vulkanBackendResize(struct RendererBackend* backend, uint16 width, uint16 height)
+void vulkanBackendResize(struct RendererBackend* backend, u16 width, u16 height)
 {
 }
+
+#ifdef _DEBUG
+VkBool32 debugUtilsMessengerCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    VkDebugUtilsMessengerCallbackDataEXT const* callbackData,
+    void* userData)
+{
+    switch (messageSeverity) {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            LOG_ERROR("%s", callbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            LOG_WARNING("%s", callbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            LOG_INFO("%s", callbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            LOG_TRACE("%s", callbackData->pMessage);
+            break;
+    }
+    return VK_FALSE;
+}
+#endif

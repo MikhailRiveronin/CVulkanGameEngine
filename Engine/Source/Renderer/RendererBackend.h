@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Renderer/RendererTypes.h"
+#include "RendererTypes.inl"
 
 struct PlatformState;
 
-bool rendererBackendCreate(RendererBackendType type, struct PlatformState* platformState, RendererBackend* outBackend);
+b8 rendererBackendInit(RendererBackendType type, struct PlatformState* platformState, RendererBackend* backend);
 void rendererBackendDestroy(RendererBackend* backend);

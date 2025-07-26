@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Defines.h"
+#include "Containers/DArray.h"
 
 typedef struct PlatformState {
     void* specific;
