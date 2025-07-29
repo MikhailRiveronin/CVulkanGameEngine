@@ -1,28 +1,27 @@
-#include "Renderer/RendererBackend.h"
-
-#include "Renderer/Vulkan/VulkanBackend.h"
-
+#include "RendererBackend.h"
+#include "Vulkan/VulkanBackend.h"
 #include "Core/Memory.h"
 
-bool rendererBackendCreate(RendererBackendType type, struct PlatformState* platformState, RendererBackend* outBackend)
+b8 renderer_backend_init(RendererBackendType type, struct PlatformState* platformState, renderer_backend* backend)
 {
-    outBackend->platformState = platformState;
-
-    if (type == RENDERER_BACKEND_TYPE_VULKAN)
-    {
-        outBackend->initialize = vulkanBackendInitialize;
-        outBackend->terminate = vulkanBackendTerminate;
-        outBackend->beginFrame = vulkanBackendBeginFrame;
-        outBackend->endFrame = vulkanBackendEndFrame;
-        outBackend->resize = vulkanBackendResize;
-
-        return TRUE;
+    backend->platformState = platformState;
+    switch (type) {
+        case RENDERER_BACKEND_TYPE_VULKAN:
+            backend->on_init = vulkanBackendInit;
+            backend->on_destroy = vulkanBackendDestroy;
+            backend->begin_frame = vulkan_backend_begin_frame;
+            backend->endFrame = vulkan_backend_end_frame;
+            backend->on_resize = vulkan_backend_on_resize;
+            return TRUE;
     }
-
     return FALSE;
 }
 
-void rendererBackendDestroy(RendererBackend* backend)
+void rendererBackendDestroy(renderer_backend* backend)
 {
-    memoryZero(backend, sizeof(*backend));
+    backend->on_init = NULL;
+    backend->on_destroy = NULL;
+    backend->begin_frame = NULL;
+    backend->endFrame = NULL;
+    backend->on_resize = NULL;
 }

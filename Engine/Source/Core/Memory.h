@@ -5,7 +5,7 @@
 typedef enum MemoryTag {
     MEMORY_TAG_UNKNOWN,
     MEMORY_TAG_ARRAY,
-    MEMORY_TAG_DYNAMIC_ARRAY,
+    MEMORY_TAG_DARRAY,
     MEMORY_TAG_DICT,
     MEMORY_TAG_RING_QUEUE,
     MEMORY_TAG_BST,
@@ -27,8 +27,8 @@ typedef enum MemoryTag {
 API void memoryInit(void);
 API void memoryDestroy();
 
-API void* allocate(u64 size, MemoryTag tag);
-API void deallocate(void* ptr, u64 size, MemoryTag tag);
+API void* memoryAllocate(u64 size, MemoryTag tag);
+API void memoryFree(void* ptr, u64 size, MemoryTag tag);
 
 API void* memorySet(void* dest, i32 value, u64 size);
 API void* memoryZero(void* dest, u64 size);

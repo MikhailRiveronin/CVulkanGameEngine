@@ -14,3 +14,5 @@ typedef struct ApplicationConfig {
 
 API b8 applicationInit(struct Game* game);
 API b8 applicationRun(void);
+
+void applicationGetFramebufferSize(u32* width, u32* height);

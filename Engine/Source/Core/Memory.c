@@ -40,7 +40,7 @@ void memoryDestroy()
 {
 }
 
-void* allocate(u64 size, MemoryTag tag)
+void* memoryAllocate(u64 size, MemoryTag tag)
 {
     if (tag == MEMORY_TAG_UNKNOWN) {
         LOG_WARNING("allocate() called using MEMORY_TAG_UNKNOWN. Use another allocation class");
@@ -55,7 +55,7 @@ void* allocate(u64 size, MemoryTag tag)
     return ptr;
 }
 
-void deallocate(void* ptr, u64 size, MemoryTag tag)
+void memoryFree(void* ptr, u64 size, MemoryTag tag)
 {
     if (tag == MEMORY_TAG_UNKNOWN) {
         LOG_WARNING("deallocate() called using MEMORY_TAG_UNKNOWN. Use another allocation class");
@@ -85,9 +85,9 @@ void* memoryCopy(void* dest, void const* src, u64 size)
 
 void memoryPrintUsageStr()
 {
-    const u32 KiB = 1024;
-    const u32 MiB = KiB * KiB;
-    const u32 GiB = KiB * KiB * KiB;
+    u32 const KiB = 1024;
+    u32 const MiB = KiB * KiB;
+    u32 const GiB = KiB * KiB * KiB;
 
     char buffer[8192];
     memset(buffer, 0, sizeof(buffer));

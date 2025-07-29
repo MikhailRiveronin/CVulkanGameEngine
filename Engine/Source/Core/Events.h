@@ -70,7 +70,7 @@ typedef enum SystemEventCode {
      * u16 width = data.data.u16[0];
      * u16 height = data.data.u16[1];
      */
-    EVENT_CODE_RESIZED = 0x08,
+    EVENT_CODE_RESIZE = 0x08,
 
     EVENT_CODE_ENUM_MAX = 0xFF
 } SystemEventCode;
@@ -88,7 +88,7 @@ void eventDestroy();
  * @param onEvent The callback function pointer to be invoked when the event code is fired.
  * @returns TRUE if the event is successfully registered; otherwise false.
  */
-API b8 eventRegister(u16 code, void* listener, OnEventCallback onEvent);
+API b8 event_register(u16 code, void* listener, OnEventCallback onEvent);
 
 /**
  * Unregister from listening for when events are sent with the provided code. If no matching
@@ -98,7 +98,7 @@ API b8 eventRegister(u16 code, void* listener, OnEventCallback onEvent);
  * @param onEvent The callback function pointer to be unregistered.
  * @returns TRUE if the event is successfully unregistered; otherwise false.
  */
-API b8 eventUnregister(u16 code, void const* listener, OnEventCallback onEvent);
+API b8 event_unregister(u16 code, void const* listener, OnEventCallback onEvent);
 
 /**
  * Fires an event to listeners of the given code. If an event handler returns 

@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Defines.h"
-
-#include "Renderer/Vulkan/VulkanTypes.h"
-
+#include "VulkanTypes.inl"
 #include "Platform/Platform.h"
 
-bool vulkanCreateDevice(VulkanState* state);
-void vulkanDestroyDevice(VulkanState* state);
+b8 vulkanDeviceCreate(vulkan_context* context);
+void vulkanDeviceDestroy(vulkan_context* context);
 
-void vulkanDeviceQuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VulkanSwapchainSupportInfo* pOutSwapchainSupportInfo);
+void vulkan_device_query_swapchain_support(
+    VkPhysicalDevice physicalDevice,
+    VkSurfaceKHR surface,
+    VulkanSwapchainSupportInfo* swapchainSupportInfo);
+
+b8 vulkan_device_detect_depth_format(vulkan_device* device);

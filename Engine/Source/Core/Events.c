@@ -1,7 +1,6 @@
 #include "Events.h"
 #include "Core/Logger.h"
-#include "Core/Memory.h"
-#include "Containers/DynamicArray.h"
+#include "Containers/DArray.h"
 
 typedef struct RegisteredListener {
     void* listener;
@@ -9,7 +8,7 @@ typedef struct RegisteredListener {
 } RegisteredListener;
 
 typedef struct EventCodeEntry {
-    RegisteredListener* listeners;
+    DARRAY(RegisteredListener) listeners;
 } EventCodeEntry;
 
 #define MAX_EVENT_CODES 1024
@@ -27,8 +26,6 @@ b8 eventInit()
         LOG_ERROR("eventSystemInit() called more then once");
         return FALSE;
     }
-
-    memoryZero(&state, sizeof(state));
     initialized = TRUE;
     return TRUE;
 }
@@ -36,26 +33,25 @@ b8 eventInit()
 void eventDestroy()
 {
     for (u32 i = 0; i < MAX_EVENT_CODES; ++i) {
-        if (state.eventCodes[i].listeners) {
-            DYNAMIC_ARRAY_DESTROY(state.eventCodes[i].listeners);
-            state.eventCodes[i].listeners = NULL;
+        if (state.eventCodes[i].listeners.size != 0) {
+            DARRAY_DESTROY(state.eventCodes[i].listeners);
         }
     }
 }
 
-b8 eventRegister(u16 code, void* listener, OnEventCallback onEvent)
+b8 event_register(u16 code, void* listener, OnEventCallback onEvent)
 {
     if (!initialized) {
         LOG_ERROR("registerEvent() called before then event system is initialized");
         return FALSE;
     }
 
-    if (!state.eventCodes[code].listeners) {
-        state.eventCodes[code].listeners = DYNAMIC_ARRAY_CREATE(RegisteredListener);
+    if (state.eventCodes[code].listeners.capacity == 0) {
+        DARRAY_INIT(state.eventCodes[code].listeners, MEMORY_TAG_APPLICATION);
     }
 
-    for (u32 i = 0; i < DYNAMIC_ARRAY_LENGTH(state.eventCodes[code].listeners); ++i) {
-        RegisteredListener registered = state.eventCodes[code].listeners[i];
+    for (u32 i = 0; i < state.eventCodes[code].listeners.size; ++i) {
+        RegisteredListener registered = DARRAY_AT(state.eventCodes[code].listeners, i);
         if (registered.listener == listener && registered.callback == onEvent) {
             LOG_ERROR("Event has already been registered");
             return FALSE;
@@ -65,27 +61,27 @@ b8 eventRegister(u16 code, void* listener, OnEventCallback onEvent)
     RegisteredListener registered;
     registered.listener = listener;
     registered.callback = onEvent;
-    DYNAMIC_ARRAY_PUSH(state.eventCodes[code].listeners, registered);
+    DARRAY_PUSH(state.eventCodes[code].listeners, registered);
     return TRUE;
 }
 
-b8 eventUnregister(u16 code, void const* listener, OnEventCallback onEvent)
+b8 event_unregister(u16 code, void const* listener, OnEventCallback onEvent)
 {
     if (!initialized) {
         LOG_ERROR("unregisterEvent() called before then event system is initialized");
         return FALSE;
     }
 
-    if (!state.eventCodes[code].listeners) {
+    if (state.eventCodes[code].listeners.capacity == 0) {
         LOG_ERROR("No listeners registered for event code %u", code);
         return FALSE;
     }
 
-    for (u32 i = 0; i < DYNAMIC_ARRAY_LENGTH(state.eventCodes[code].listeners); ++i) {
-        RegisteredListener unregistered = state.eventCodes[code].listeners[i];
+    for (u32 i = 0; i < state.eventCodes[code].listeners.size; ++i) {
+        RegisteredListener unregistered = DARRAY_AT(state.eventCodes[code].listeners, i);
         if (unregistered.listener == listener && unregistered.callback == onEvent) {
             RegisteredListener unregistered;
-            DYNAMIC_ARRAY_ERASE(state.eventCodes[code].listeners, i, &unregistered);
+            DARRAY_ERASE(state.eventCodes[code].listeners, i, unregistered);
             return TRUE;
         }
     }
@@ -99,13 +95,13 @@ b8 eventNotify(u16 code, void const* sender, EventContext context)
         return FALSE;
     }
 
-    if (!state.eventCodes[code].listeners) {
+    if (state.eventCodes[code].listeners.capacity == 0) {
         // LOG_ERROR("No listeners registered for event code %u", code);
         return FALSE;
     }
 
-    for (u32 i = 0; i < DYNAMIC_ARRAY_LENGTH(state.eventCodes[code].listeners); ++i) {
-        RegisteredListener registered = state.eventCodes[code].listeners[i];
+    for (u32 i = 0; i < state.eventCodes[code].listeners.size; ++i) {
+        RegisteredListener registered = DARRAY_AT(state.eventCodes[code].listeners, i);
         if (registered.callback(code, sender, registered.listener, context)) {
             return TRUE;
         }

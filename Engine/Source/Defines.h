@@ -25,3 +25,6 @@ typedef u32 b32;
 #else
 #define API __declspec(dllimport)
 #endif
+
+#define MAX(a, b) ((a) > (b)) ? (a) : (b)
+#define CLAMP(value, min, max) ((value) < (min)) ? (min) : ((value) > (max)) ? (max) : (value)

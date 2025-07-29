@@ -1,11 +1,12 @@
 #pragma once
 
+#include "VulkanTypes.inl"
 #include "Renderer/RendererBackend.h"
 
-bool vulkanBackendInitialize(struct RendererBackend* backend, const char* appName, struct PlatformState* platformState);
-void vulkanBackendTerminate(struct RendererBackend* backend);
+b8 vulkanBackendInit(struct renderer_backend* backend, char const* appName, struct PlatformState* platformState);
+void vulkanBackendDestroy(struct renderer_backend* backend);
 
-bool vulkanBackendBeginFrame(struct RendererBackend* backend, float deltaTime);
-bool vulkanBackendEndFrame(struct RendererBackend* backend, float deltaTime);
+b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 deltaTime);
+b8 vulkan_backend_end_frame(struct renderer_backend* backend, f64 deltaTime);
 
-void vulkanBackendResize(struct RendererBackend* backend, uint16 width, uint16 height);
+void vulkan_backend_on_resize(renderer_backend* backend, i16 width, i16 height);

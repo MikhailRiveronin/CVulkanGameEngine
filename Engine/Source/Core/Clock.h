@@ -3,8 +3,8 @@
 #include "Defines.h"
 
 typedef struct Clock {
-    f64 startTime;
-    f64 elapsedTime;
+    f64 start;
+    f64 elapsed;
 } Clock;
 
 // Should be called just before checking elapsed time.

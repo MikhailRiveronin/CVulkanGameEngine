@@ -21,7 +21,8 @@
             LOG_FATAL("Assertion failed: %s: %d: %s", __FILE__, __LINE__, #expr); \
             DEBUG_BREAK();                                                        \
         }                                                                         \
-    } while (0)
+    }                                                                             \
+    while (0)
 
 #define ASSERT_MSG(expr, message)                                                              \
     do {                                                                                       \
@@ -29,5 +30,6 @@
             LOG_FATAL("Assertion failed: %s: %d: %s: %s", __FILE__, __LINE__, #expr, message); \
             DEBUG_BREAK();                                                                     \
         }                                                                                      \
-    } while (0)
+    }                                                                                          \
+    while (0)
 #endif

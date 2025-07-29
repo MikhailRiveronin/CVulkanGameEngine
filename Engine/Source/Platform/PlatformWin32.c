@@ -2,6 +2,7 @@
 #include "Core/Logger.h"
 #include "Core/Input.h"
 #include "Core/Events.h"
+#include "Renderer/Vulkan/VulkanTypes.inl"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -174,6 +175,25 @@ void platformSleep(u64 ms)
     Sleep(ms);
 }
 
+b8 platformCreateVulkanSurface(PlatformState* platformState, vulkan_context* context)
+{
+    Win32State* state = platformState->specific;
+    VkWin32SurfaceCreateInfoKHR createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.hinstance = state->hInstance;
+    createInfo.hwnd = state->hWnd;
+    VkResult result = vkCreateWin32SurfaceKHR(context->instance, &createInfo, context->allocator, &context->surface);
+    if (result != VK_SUCCESS) {
+        LOG_ERROR("Failed to create surface");
+        return FALSE;
+    }
+
+    LOG_DEBUG("Surface created");
+    return TRUE;
+}
+
 LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
@@ -185,6 +205,11 @@ LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam
             GetClientRect(hWnd, &rect);
             i32 width = rect.right - rect.left;
             i32 height = rect.bottom - rect.top;
+
+            EventContext context;
+            context.as.i16[0] = width;
+            context.as.i16[1] = height;
+            eventNotify(EVENT_CODE_RESIZE, NULL, context);
             return 0;
         }
         case WM_ERASEBKGND:

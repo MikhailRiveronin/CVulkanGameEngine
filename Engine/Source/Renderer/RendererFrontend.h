@@ -1,13 +1,14 @@
 #pragma once
 
-#include "Renderer/RendererTypes.h"
+#include "RendererTypes.inl"
 
 struct PlatformState;
 struct StaticMeshData;
 
-bool rendererStartup(const char* appName, struct PlatformState* platformState);
-void rendererShutdown();
+b8 rendererInit(char const* appName, struct PlatformState* platformState);
+void rendererDestroy();
 
-void rendererOnResize(uint16 width, uint16 height);
+b8 renderer_draw_frame(RenderPacket* packet);
 
-bool rendererDrawFrame(RenderPacket* packet);
+void renderer_frontend_resize(i16 width, i16 height);
+
