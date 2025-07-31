@@ -31,7 +31,7 @@ API void* memoryAllocate(u64 size, MemoryTag tag);
 API void memoryFree(void* ptr, u64 size, MemoryTag tag);
 
 API void* memorySet(void* dest, i32 value, u64 size);
-API void* memoryZero(void* dest, u64 size);
+API void* memory_zero(void* dest, u64 size);
 API void* memoryCopy(void* dest, void const* src, u64 size);
 
 API void memoryPrintUsageStr();

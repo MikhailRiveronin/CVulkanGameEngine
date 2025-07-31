@@ -28,3 +28,12 @@ typedef u32 b32;
 
 #define MAX(a, b) ((a) > (b)) ? (a) : (b)
 #define CLAMP(value, min, max) ((value) < (min)) ? (min) : ((value) > (max)) ? (max) : (value)
+
+// Inlining
+#ifdef _MSC_VER
+#define KINLINE __forceinline
+#define KNOINLINE __declspec(noinline)
+#else
+#define KINLINE static inline
+#define KNOINLINE
+#endif

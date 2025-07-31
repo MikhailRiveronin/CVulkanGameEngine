@@ -102,7 +102,7 @@ b8 applicationRun(void)
             clockUpdate(&state.clock);
             f64 currentTime = state.clock.elapsed;
             f64 deltaTime = currentTime - state.lastTime;
-            f64 frameStartTime = platformGetAbsoluteTime();
+            f64 frameStartTime = platform_get_absolute_time();
 
 
             if (!state.game->onUpdate(state.game, deltaTime)) {
@@ -122,7 +122,7 @@ b8 applicationRun(void)
             packet.deltaTime = deltaTime;
             renderer_draw_frame(&packet);
 
-            f64 frameEndTime = platformGetAbsoluteTime();
+            f64 frameEndTime = platform_get_absolute_time();
             f64 frameElapsedTime = frameEndTime - frameStartTime;
             runningTime += frameElapsedTime;
             f64 remainingSeconds = targetFrameRate - frameElapsedTime;

@@ -19,7 +19,7 @@
     do {                                                                                         \
         (array).data = memoryAllocate(DARRAY_MIN_CAPACITY * sizeof(*(array).data), (memoryTag)); \
         if ((array).data) {                                                                      \
-            memoryZero((array).data, DARRAY_MIN_CAPACITY * sizeof(*(array).data));               \
+            memory_zero((array).data, DARRAY_MIN_CAPACITY * sizeof(*(array).data));               \
             (array).capacity = DARRAY_MIN_CAPACITY;                                              \
             (array).size = 0;                                                                    \
             (array).memory = (memoryTag);                                                        \
@@ -39,7 +39,7 @@
         if (newCapacity != DARRAY_MIN_CAPACITY) {                                                   \
             void* newData = memoryAllocate(newCapacity * sizeof(*(array).data), (array).memory);    \
             if (newData) {                                                                          \
-                memoryZero(newData, newCapacity * sizeof(*(array).data));                           \
+                memory_zero(newData, newCapacity * sizeof(*(array).data));                           \
                 memoryCopy(newData, (array).data, (array).size * sizeof(*(array).data));            \
                 memoryFree((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
                 (array).data = newData;                                                             \

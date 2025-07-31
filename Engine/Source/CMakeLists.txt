@@ -1,25 +1,25 @@
-# file(GLOB_RECURSE sources *.c)
+file(GLOB_RECURSE sources *.c)
 
-set(sources
-    Core/Logger.c
-    Core/Application.c
-    Core/Memory.c
-    Core/Events.c
-    Core/Input.c
-    Core/Clock.c
-    Core/String.c
-    Renderer/RendererFrontend.c
-    Renderer/RendererBackend.c
-    Renderer/Vulkan/VulkanBackend.c
-    Renderer/Vulkan/VulkanPlatform.c
-    Renderer/Vulkan/VulkanDevice.c
-    Renderer/Vulkan/VulkanSwapchain.c
-    Renderer/Vulkan/VulkanImage.c
-    Renderer/Vulkan/VulkanRenderpass.c
-    Renderer/Vulkan/VulkanCommandBuffer.c
-    Renderer/Vulkan/VulkanFramebuffer.c
-    Renderer/Vulkan/VulkanFence.c
-    Renderer/Vulkan/VulkanUtils.c)
+# set(sources
+#     Core/Logger.c
+#     Core/Application.c
+#     Core/Memory.c
+#     Core/Events.c
+#     Core/Input.c
+#     Core/Clock.c
+#     Core/String.c
+#     Renderer/RendererFrontend.c
+#     Renderer/RendererBackend.c
+#     Renderer/Vulkan/VulkanBackend.c
+#     Renderer/Vulkan/VulkanPlatform.c
+#     Renderer/Vulkan/VulkanDevice.c
+#     Renderer/Vulkan/VulkanSwapchain.c
+#     Renderer/Vulkan/VulkanImage.c
+#     Renderer/Vulkan/VulkanRenderpass.c
+#     Renderer/Vulkan/VulkanCommandBuffer.c
+#     Renderer/Vulkan/VulkanFramebuffer.c
+#     Renderer/Vulkan/VulkanFence.c
+#     Renderer/Vulkan/VulkanUtils.c)
 
 if(WIN32)
     list(APPEND sources

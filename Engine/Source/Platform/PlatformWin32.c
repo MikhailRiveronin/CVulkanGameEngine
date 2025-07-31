@@ -163,7 +163,7 @@ void platformWriteError(const char *message)
     WriteConsoleA(handle, message, strlen(message), &numCharsWritten, NULL);
 }
 
-f64 platformGetAbsoluteTime()
+f64 platform_get_absolute_time()
 {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);

@@ -4,13 +4,13 @@
 void clockUpdate(Clock* clock)
 {
     if (clock->start != 0) {
-        clock->elapsed = platformGetAbsoluteTime() - clock->start;
+        clock->elapsed = platform_get_absolute_time() - clock->start;
     }
 }
 
 void clockStart(Clock* clock)
 {
-    clock->start = platformGetAbsoluteTime();
+    clock->start = platform_get_absolute_time();
     clock->elapsed = 0;
 }
 

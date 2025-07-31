@@ -73,7 +73,7 @@ void* memorySet(void* dest, i32 value, u64 size)
     return platformSetMemory(dest, value, size);
 }
 
-void* memoryZero(void* dest, u64 size)
+void* memory_zero(void* dest, u64 size)
 {
     return memorySet(dest, 0, size);
 }

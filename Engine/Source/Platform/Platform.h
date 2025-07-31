@@ -22,5 +22,5 @@ void* platformCopyMemory(void* dest, void const* src, u64 size);
 void platformWriteConsoleOutput(char const* message, u8 color);
 void platformWriteConsoleError(char const* message, u8 color);
 
-f64 platformGetAbsoluteTime();
+f64 platform_get_absolute_time();
 void platformSleep(u64 ms);
