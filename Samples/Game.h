@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
 typedef struct GameState {
     f64 deltaTime;

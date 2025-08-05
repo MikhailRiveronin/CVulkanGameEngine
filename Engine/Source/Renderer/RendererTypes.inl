@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
 typedef enum RendererBackendType {
     RENDERER_BACKEND_TYPE_VULKAN,

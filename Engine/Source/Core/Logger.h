@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
 #define LOG_WARNING_ENABLED
 #define LOG_INFO_ENABLED
@@ -18,8 +18,16 @@ typedef enum LogLevel {
     LOG_LEVEL_TRACE
 } LogLevel;
 
-b8 loggerInit();
-void loggerDestroy();
+/**
+ * @brief Initializes logging system. Call twice; once with state = 0 to get required memory size,
+ * then a second time passing allocated memory to state.
+ * 
+ * @param required_memory_size A pointer to hold the required memory size of internal state.
+ * @param memory 0 if just requesting memory requirement, otherwise allocated block of memory.
+ * @return b8 True on success; otherwise false.
+ */
+b8 logger_init(u64* required_memory_size, void* memory);
+void logger_destroy(void* memory);
 
 API void logOutput(LogLevel level, char const* message, ...);
 

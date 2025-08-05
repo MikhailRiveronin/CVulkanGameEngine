@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
 typedef union vec2_u {
     // An array of x, y

@@ -1,6 +1,6 @@
 #include "VulkanImage.h"
 #include "VulkanDevice.h"
-#include "Core/Logger.h"
+#include "core/logger.h"
 
 void vulkanImageCreate(
     vulkan_context* context,

@@ -4,3 +4,4 @@ project(CVulkanGameEngine LANGUAGES C)
 
 add_subdirectory(Engine/Source)
 add_subdirectory(Samples)
+add_subdirectory(tests)

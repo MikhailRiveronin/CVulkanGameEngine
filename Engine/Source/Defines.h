@@ -13,7 +13,7 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
-typedef u8 b8;
+typedef _Bool b8;
 typedef u32 b32;
 
 #define TRUE 1

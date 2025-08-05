@@ -1,17 +1,17 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
-typedef struct Clock {
+typedef struct clock {
     f64 start;
     f64 elapsed;
-} Clock;
+} clock;
 
 // Should be called just before checking elapsed time.
-void clockUpdate(Clock* clock);
+API void clock_update(clock* clock);
 
 // Also resets elapsed time.
-void clockStart(Clock* clock);
+API void clock_start(clock* clock);
 
 // Does not reset elapsed time.
-void clockStop(Clock* clock);
+API void clock_stop(clock* clock);

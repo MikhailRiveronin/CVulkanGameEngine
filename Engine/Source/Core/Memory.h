@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
 typedef enum MemoryTag {
     MEMORY_TAG_UNKNOWN,
     MEMORY_TAG_ARRAY,
     MEMORY_TAG_DARRAY,
+    MEMORY_TAG_LINEAR_ALLOCATOR,
     MEMORY_TAG_DICT,
     MEMORY_TAG_RING_QUEUE,
     MEMORY_TAG_BST,
@@ -24,14 +25,15 @@ typedef enum MemoryTag {
     MEMORY_TAG_ENUM_COUNT
 } MemoryTag;
 
-API void memoryInit(void);
-API void memoryDestroy();
+API void memory_init(u64* required_memory_size, void* memory);
+API void memory_destroy();
 
-API void* memoryAllocate(u64 size, MemoryTag tag);
-API void memoryFree(void* ptr, u64 size, MemoryTag tag);
+API void* memory_allocate(u64 size, MemoryTag tag);
+API void memory_free(void* ptr, u64 size, MemoryTag tag);
 
 API void* memorySet(void* dest, i32 value, u64 size);
 API void* memory_zero(void* dest, u64 size);
 API void* memoryCopy(void* dest, void const* src, u64 size);
 
 API void memoryPrintUsageStr();
+API u64 memory_allocation_count();

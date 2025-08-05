@@ -1,6 +1,6 @@
 #include "RendererBackend.h"
 #include "Vulkan/VulkanBackend.h"
-#include "Core/Memory.h"
+#include "Core/memory.h"
 
 b8 renderer_backend_init(RendererBackendType type, struct PlatformState* platformState, renderer_backend* backend)
 {

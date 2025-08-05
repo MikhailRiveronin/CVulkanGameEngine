@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 #include "Core/Asserts.h"
-#include "Core/Memory.h"
+#include "Core/memory.h"
 
 #define DARRAY_MIN_CAPACITY 1
 #define DARRAY_EXPAND_FACTOR 2
@@ -17,7 +17,7 @@
 
 #define DARRAY_INIT(array, memoryTag)                                                            \
     do {                                                                                         \
-        (array).data = memoryAllocate(DARRAY_MIN_CAPACITY * sizeof(*(array).data), (memoryTag)); \
+        (array).data = memory_allocate(DARRAY_MIN_CAPACITY * sizeof(*(array).data), (memoryTag)); \
         if ((array).data) {                                                                      \
             memory_zero((array).data, DARRAY_MIN_CAPACITY * sizeof(*(array).data));               \
             (array).capacity = DARRAY_MIN_CAPACITY;                                              \
@@ -37,11 +37,11 @@
     do {                                                                                            \
         u64 newCapacity = MAX(count, DARRAY_MIN_CAPACITY);                                          \
         if (newCapacity != DARRAY_MIN_CAPACITY) {                                                   \
-            void* newData = memoryAllocate(newCapacity * sizeof(*(array).data), (array).memory);    \
+            void* newData = memory_allocate(newCapacity * sizeof(*(array).data), (array).memory);    \
             if (newData) {                                                                          \
                 memory_zero(newData, newCapacity * sizeof(*(array).data));                           \
                 memoryCopy(newData, (array).data, (array).size * sizeof(*(array).data));            \
-                memoryFree((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
+                memory_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
                 (array).data = newData;                                                             \
                 (array).capacity = newCapacity;                                                     \
             }                                                                                       \
@@ -64,7 +64,7 @@
 #define DARRAY_DESTROY(array)                                                                   \
     do {                                                                                        \
         if ((array).data) {                                                                     \
-            memoryFree((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
+            memory_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
             (array).data = NULL;                                                                \
         }                                                                                       \
         (array).capacity = 0;                                                                   \

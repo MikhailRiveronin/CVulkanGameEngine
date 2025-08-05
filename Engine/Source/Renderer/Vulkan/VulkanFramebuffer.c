@@ -1,5 +1,5 @@
 #include "VulkanFramebuffer.h"
-#include "Core/Memory.h"
+#include "Core/memory.h"
 
 void vulkanFramebufferCreate(
     vulkan_context* context,
@@ -12,7 +12,7 @@ void vulkanFramebufferCreate(
 {
     framebuffer->renderpass = renderpass;
     framebuffer->attachmentCount = attachmentCount;
-    framebuffer->attachments = memoryAllocate(attachmentCount * sizeof(*attachments), MEMORY_TAG_RENDERER);
+    framebuffer->attachments = memory_allocate(attachmentCount * sizeof(*attachments), MEMORY_TAG_RENDERER);
     memoryCopy(framebuffer->attachments, attachments, attachmentCount * sizeof(*attachments));
 
     VkFramebufferCreateInfo createInfo = {};
@@ -32,7 +32,7 @@ void vulkanFramebufferDestroy(vulkan_context* context, VulkanFramebuffer* frameb
 {
     vkDestroyFramebuffer(context->device.handle, framebuffer->handle, context->allocator);
     if (framebuffer->attachments) {
-        memoryFree(
+        memory_free(
             framebuffer->attachments,
             framebuffer->attachmentCount * sizeof(*framebuffer->attachments),
             MEMORY_TAG_RENDERER);

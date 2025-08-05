@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 #include "Core/Asserts.h"
-#include "Containers/DArray.h"
+#include "Containers/darray.h"
 
 #include <vulkan/vulkan.h>
 
@@ -95,7 +95,7 @@ typedef struct VulkanFramebuffer {
 typedef struct VulkanSwapchain {
     VkSwapchainKHR handle;
     VkSurfaceFormatKHR surfaceFormat;
-    u8 framesInFlight;
+    u8 frames_in_flight;
     DARRAY(VkImage) images;
     DARRAY(VkImageView) imageViews;
     DARRAY(VulkanFramebuffer) framebuffers;

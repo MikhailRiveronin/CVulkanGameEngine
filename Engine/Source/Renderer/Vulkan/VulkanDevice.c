@@ -1,7 +1,7 @@
 #include "VulkanDevice.h"
-#include "Containers/DArray.h"
-#include "Core/Logger.h"
-#include "Core/Memory.h"
+#include "Containers/darray.h"
+#include "core/logger.h"
+#include "Core/memory.h"
 #include "Core/String.h"
 
 typedef struct PhysicalDeviceRequirements {
@@ -102,6 +102,9 @@ b8 vulkanDeviceCreate(vulkan_context* context)
         context->allocator,
         &context->device.handle));
     LOG_INFO("Logical device created");
+
+    DARRAY_DESTROY(indices);
+    DARRAY_DESTROY(queueCreateInfos);
 
     vkGetDeviceQueue(context->device.handle, context->device.queues.graphics.index, 0, &context->device.queues.graphics.handle);
     vkGetDeviceQueue(context->device.handle, context->device.queues.present.index, 0, &context->device.queues.present.handle);

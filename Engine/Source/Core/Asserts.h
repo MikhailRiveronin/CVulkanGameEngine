@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Defines.h"
-#include "Logger.h"
+#include "defines.h"
+#include "logger.h"
 
 #ifdef _DEBUG
 #define ASSERT_ENABLED

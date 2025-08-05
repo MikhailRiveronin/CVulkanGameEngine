@@ -1,6 +1,6 @@
 #include "VulkanSwapchain.h"
-#include "Core/Logger.h"
-#include "Core/Memory.h"
+#include "core/logger.h"
+#include "Core/memory.h"
 #include "VulkanDevice.h"
 
 static b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain);
@@ -76,7 +76,6 @@ void vulkan_swapchain_present(
 b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain)
 {
     VkExtent2D swapchainExtent = { width, height };
-    swapchain->framesInFlight = 2;
 
     // Swapchain format
     b8 found = FALSE;
@@ -120,18 +119,19 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
     context->framebuffer_width = swapchainExtent.width;
     context->framebuffer_height = swapchainExtent.height;
 
-    u32 imageCount = context->device.swapchain_support.capabilities.minImageCount + 1;
+    u32 image_count = context->device.swapchain_support.capabilities.minImageCount + 1;
     if ((context->device.swapchain_support.capabilities.maxImageCount > 0)
-        && (imageCount > context->device.swapchain_support.capabilities.maxImageCount)) {
-        imageCount = context->device.swapchain_support.capabilities.maxImageCount;
+        && (image_count > context->device.swapchain_support.capabilities.maxImageCount)) {
+        image_count = context->device.swapchain_support.capabilities.maxImageCount;
     }
+    swapchain->frames_in_flight = image_count - 1;
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
     createInfo.surface = context->surface;
-    createInfo.minImageCount = imageCount;
+    createInfo.minImageCount = image_count;
     createInfo.imageFormat = swapchain->surfaceFormat.format;
     createInfo.imageColorSpace = swapchain->surfaceFormat.colorSpace;
     createInfo.imageExtent = swapchainExtent;

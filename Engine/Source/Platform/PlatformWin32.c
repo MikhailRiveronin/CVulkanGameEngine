@@ -1,5 +1,5 @@
 #include "Platform/Platform.h"
-#include "Core/Logger.h"
+#include "core/logger.h"
 #include "Core/Input.h"
 #include "Core/Events.h"
 #include "Renderer/Vulkan/VulkanTypes.inl"
@@ -34,7 +34,7 @@ b8 platformInit(PlatformState* platformState, char const* appName, i32 x, i32 y,
     state->hInstance = GetModuleHandleA(NULL);
 
     WNDCLASSEXA wc;
-    platformZeroMemory(&wc, sizeof(wc));
+    platform_zero_memory(&wc, sizeof(wc));
     wc.cbSize = sizeof(WNDCLASSEXA);
     wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = windowProc;
@@ -54,7 +54,7 @@ b8 platformInit(PlatformState* platformState, char const* appName, i32 x, i32 y,
     }
 
     RECT rect;
-    platformZeroMemory(&rect, sizeof(rect));
+    platform_zero_memory(&rect, sizeof(rect));
     rect.left = x;
     rect.top = y;
     rect.right = width;
@@ -126,7 +126,7 @@ void* platformSetMemory(void* dest, i32 value, u64 size)
     return memset(dest, value, size);
 }
 
-void* platformZeroMemory(void* dest, u64 size)
+void* platform_zero_memory(void* dest, u64 size)
 {
     return platformSetMemory(dest, 0, size);
 }
@@ -139,7 +139,7 @@ void* platformCopyMemory(void* dest, void const* src, u64 size)
 void platformWriteConsoleOutput(char const* message, u8 color)
 {
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    u32 numCharsWritten;
+    DWORD numCharsWritten;
     SetConsoleTextAttribute(handle, charAttributes[color]);
     WriteConsoleA(handle, message, strlen(message), &numCharsWritten, NULL);
 
@@ -149,9 +149,9 @@ void platformWriteConsoleOutput(char const* message, u8 color)
 void platformWriteConsoleError(char const* message, u8 color)
 {
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
-    u32 numCharsWritten;
+    DWORD numCharsWritten;
     SetConsoleTextAttribute(handle, charAttributes[color]);
-    WriteConsoleA(handle, message, strlen(message), &numCharsWritten, NULL);
+    WriteConsoleA(handle, message, strlen(message), (LPDWORD)&numCharsWritten, NULL);
 
     OutputDebugStringA(message);
 }
@@ -159,7 +159,7 @@ void platformWriteConsoleError(char const* message, u8 color)
 void platformWriteError(const char *message)
 {
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
-    u32 numCharsWritten;
+    DWORD numCharsWritten;
     WriteConsoleA(handle, message, strlen(message), &numCharsWritten, NULL);
 }
 
@@ -220,6 +220,34 @@ LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam
         case WM_SYSKEYUP: {
             b8 pressed = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
             u16 key = (u16)wParam;
+
+            if (wParam == VK_MENU) {
+                if (GetKeyState(VK_RMENU) & 0x8000) {
+                    key = KEY_RALT;
+                }
+                if (GetKeyState(VK_LMENU) & 0x8000) {
+                    key = KEY_LALT;
+                }
+            }
+
+            if (wParam == VK_SHIFT) {
+                if (GetKeyState(VK_RSHIFT) & 0x8000) {
+                    key = KEY_RSHIFT;
+                }
+                if (GetKeyState(VK_LSHIFT) & 0x8000) {
+                    key = KEY_LSHIFT;
+                }
+            }
+
+            if (wParam == VK_CONTROL) {
+                if (GetKeyState(VK_RCONTROL) & 0x8000) {
+                    key = KEY_RCONTROL;
+                }
+                if (GetKeyState(VK_LCONTROL) & 0x8000) {
+                    key = KEY_LCONTROL;
+                }
+            }
+
             inputProcessKey(key, pressed);
             return 0;
         }

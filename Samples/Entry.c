@@ -1,9 +1,10 @@
-#include "Game.h"
+#include "game.h"
+#include <Core/memory.h>
 #include <Entry.h>
 
 b8 createGameState(Game* game)
 {
-    game->specific = memoryAllocate(sizeof(GameState), MEMORY_TAG_GAME);
+    game->specific = memory_allocate(sizeof(GameState), MEMORY_TAG_GAME);
 
     game->onInit = gameOnInit;
     game->onUpdate = gameOnUpdate;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defines.h"
+#include "defines.h"
 
 struct Game;
 
@@ -12,7 +12,7 @@ typedef struct ApplicationConfig {
     char* name;
 } ApplicationConfig;
 
-API b8 applicationInit(struct Game* game);
+API b8 application_init(struct Game* game);
 API b8 applicationRun(void);
 
 void applicationGetFramebufferSize(u32* width, u32* height);

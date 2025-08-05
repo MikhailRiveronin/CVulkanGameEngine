@@ -1,5 +1,5 @@
 #include "VulkanPlatform.h"
-#include "Containers/DArray.h"
+#include "Containers/darray.h"
 
 void vulkanPlatformGetRequiredExtensions(DARRAY_CSTRING* extensions)
 {

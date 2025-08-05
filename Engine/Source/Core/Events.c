@@ -1,6 +1,6 @@
 #include "Events.h"
-#include "Core/Logger.h"
-#include "Containers/DArray.h"
+#include "core/logger.h"
+#include "Containers/darray.h"
 
 typedef struct RegisteredListener {
     void* listener;

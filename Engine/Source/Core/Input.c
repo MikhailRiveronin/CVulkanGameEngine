@@ -1,7 +1,7 @@
 #include "Input.h"
 #include "Events.h"
-#include "Logger.h"
-#include "Memory.h"
+#include "logger.h"
+#include "memory.h"
 
 typedef struct KeyboardState {
     b8 keys[KEY_ENUM_COUNT];
@@ -48,7 +48,7 @@ void inputUpdate(f64 deltaTime)
     memoryCopy(&state.prevMouse, &state.mouse, sizeof(state.mouse));
 }
 
-b8 inputIsKeyDown(Key key)
+b8 input_is_key_down(Key key)
 {
     if (!initialized) {
         return FALSE;
@@ -56,7 +56,7 @@ b8 inputIsKeyDown(Key key)
     return state.keyboard.keys[key] == TRUE;
 }
 
-b8 inputIsKeyUp(Key key)
+b8 input_is_key_up(Key key)
 {
     if (!initialized) {
         return TRUE;
@@ -64,7 +64,7 @@ b8 inputIsKeyUp(Key key)
     return state.keyboard.keys[key] == FALSE;
 }
 
-b8 inputWasKeyDown(Key key)
+b8 input_was_key_down(Key key)
 {
     if (!initialized) {
         return FALSE;
@@ -72,7 +72,7 @@ b8 inputWasKeyDown(Key key)
     return state.prevKeyboard.keys[key] == TRUE;
 }
 
-b8 inputWasKeyUp(Key key)
+b8 input_was_key_up(Key key)
 {
     if (!initialized) {
         return TRUE;
@@ -82,6 +82,27 @@ b8 inputWasKeyUp(Key key)
 
 void inputProcessKey(Key key, b8 pressed)
 {
+    switch (key) {
+        case KEY_RALT:
+            LOG_INFO("Right alt pressed");
+            break;
+        case KEY_LALT:
+            LOG_INFO("Left alt pressed");
+            break;
+        case KEY_RSHIFT:
+            LOG_INFO("Right shift pressed");
+            break;
+        case KEY_LSHIFT:
+            LOG_INFO("Left shift pressed");
+            break;
+        case KEY_RCONTROL:
+            LOG_INFO("Right control pressed");
+            break;
+        case KEY_LCONTROL:
+            LOG_INFO("Left control pressed");
+            break;
+    }
+
     if (state.keyboard.keys[key] != pressed) {
         state.keyboard.keys[key] = pressed;
 

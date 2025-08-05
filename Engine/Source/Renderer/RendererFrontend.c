@@ -1,7 +1,7 @@
 #include "RendererFrontend.h"
 #include "RendererBackend.h"
-#include "Core/Logger.h"
-#include "Core/Memory.h"
+#include "core/logger.h"
+#include "Core/memory.h"
 
 static renderer_backend* backend;
 
@@ -10,7 +10,7 @@ static b8 rendererEndFrame(float deltaTime);
 
 b8 rendererInit(char const* appName, struct PlatformState* platformState)
 {
-    backend = memoryAllocate(sizeof(*backend), MEMORY_TAG_RENDERER);
+    backend = memory_allocate(sizeof(*backend), MEMORY_TAG_RENDERER);
     renderer_backend_init(RENDERER_BACKEND_TYPE_VULKAN, platformState, backend);
     backend->frameCount = 0;
     if (!backend->on_init(backend, appName, platformState)) {
@@ -23,7 +23,7 @@ b8 rendererInit(char const* appName, struct PlatformState* platformState)
 void rendererDestroy()
 {
     backend->on_destroy(backend);
-    memoryFree(backend, sizeof(*backend), MEMORY_TAG_RENDERER);
+    memory_free(backend, sizeof(*backend), MEMORY_TAG_RENDERER);
 }
 
 b8 renderer_draw_frame(RenderPacket* packet)

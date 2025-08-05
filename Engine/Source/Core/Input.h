@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "Defines.h"
+#include "defines.h"
 
 #define DEFINE_KEY(name, code) KEY_##name = code
 
@@ -121,8 +121,8 @@ typedef enum Key {
     DEFINE_KEY(RSHIFT, 0xA1),
     DEFINE_KEY(LCONTROL, 0xA2),
     DEFINE_KEY(RCONTROL, 0xA3),
-    DEFINE_KEY(LMENU, 0xA4),
-    DEFINE_KEY(RMENU, 0xA5),
+    DEFINE_KEY(LALT, 0xA4),
+    DEFINE_KEY(RALT, 0xA5),
 
     DEFINE_KEY(SEMICOLON, 0xBA),
     DEFINE_KEY(PLUS, 0xBB),
@@ -147,10 +147,10 @@ void inputDestroy();
 
 void inputUpdate(f64 deltaTime);
 
-API b8 inputIsKeyDown(Key key);
-API b8 inputIsKeyUp(Key key);
-API b8 inputWasKeyDown(Key key);
-API b8 inputWasKeyUp(Key key);
+API b8 input_is_key_down(Key key);
+API b8 input_is_key_up(Key key);
+API b8 input_was_key_down(Key key);
+API b8 input_was_key_up(Key key);
 
 void inputProcessKey(Key key, b8 pressed);
 

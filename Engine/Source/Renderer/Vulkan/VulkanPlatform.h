@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VulkanTypes.inl"
-#include "Containers/DArray.h"
+#include "Containers/darray.h"
 
 struct PlatformState;
 struct vulkan_context;
