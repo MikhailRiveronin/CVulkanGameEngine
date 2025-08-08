@@ -15,6 +15,18 @@
     }                                                                     \
     while (0)
 
+typedef struct vulkan_buffer {
+    VkBuffer handle;
+    VkDeviceMemory memory;
+    VkDeviceSize size;
+    VkBufferUsageFlags usage;
+    VkMemoryPropertyFlags memory_properties;
+    i32 memory_index;
+    void* mapped;
+    u32 alignment;
+    b8 locked;
+} vulkan_buffer;
+
 typedef struct VulkanSwapchainSupportInfo {
     VkSurfaceCapabilitiesKHR capabilities;
     DARRAY(VkSurfaceFormatKHR) formats;
@@ -122,11 +134,35 @@ typedef struct VulkanFence {
     b8 signaled;
 } VulkanFence;
 
+typedef struct vulkan_shader_stage {
+    VkShaderModuleCreateInfo create_info;
+    VkShaderModule handle;
+    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+} vulkan_shader_stage;
+
+typedef struct vulkan_pipeline {
+    VkPipeline handle;
+    VkPipelineLayout pipeline_layout;
+} vulkan_pipeline;
+
+#define OBJECT_SHADER_STAGE_COUNT 2
+
+typedef struct vulkan_object_shader {
+    vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
+    vulkan_pipeline pipeline;
+} vulkan_object_shader;
+
 typedef struct vulkan_context {
     i16 framebuffer_width;
     i16 framebuffer_height;
     u64 framebuffer_generation;
     u64 framebuffer_last_generation;
+
+    vulkan_buffer object_vertex_buffer;
+    vulkan_buffer object_index_buffer;
+
+    u64 geometry_vertex_offset;
+    u64 geometry_index_offset;
 
     VulkanSwapchain swapchain;
     b8 recreating_swapchain;
@@ -142,9 +178,6 @@ typedef struct vulkan_context {
     DARRAY(vulkan_command_buffer) command_buffers;
     vulkan_renderpass main_renderpass;
 
-
-
-
     VkInstance instance;
     VkAllocationCallbacks* allocator;
 #ifdef _DEBUG
@@ -153,13 +186,7 @@ typedef struct vulkan_context {
     VkSurfaceKHR surface;
     vulkan_device device;
 
-
-
-
-
-
-
-
+    vulkan_object_shader object_shader;
 
     i32 (* findMemoryType)(u32 memoryTypeBits, VkMemoryPropertyFlags properties);
 } vulkan_context;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 
 void vulkanCommandBufferAllocate(
     vulkan_context* context,
@@ -25,12 +25,12 @@ void vulkanCommandBufferUpdateSubmitted(vulkan_command_buffer* commandBuffer);
 
 void vulkan_command_buffer_reset(vulkan_command_buffer* commandBuffer);
 
-void vulkanCommandBufferAllocateAndBeginSingleUse(
+void vulkan_command_buffer_allocate_and_begin_single_use(
     vulkan_context* context,
     VkCommandPool pool,
     vulkan_command_buffer* commandBuffer);
 
-void vulkanCommandBufferEndSingleUse(
+void vulkan_command_buffer_end_single_use(
     vulkan_context* context,
     VkCommandPool pool,
     vulkan_command_buffer* commandBuffer,

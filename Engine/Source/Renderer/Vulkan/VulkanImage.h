@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 
 void vulkanImageCreate(
     vulkan_context* context,

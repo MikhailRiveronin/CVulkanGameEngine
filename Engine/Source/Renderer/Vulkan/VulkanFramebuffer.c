@@ -13,7 +13,7 @@ void vulkanFramebufferCreate(
     framebuffer->renderpass = renderpass;
     framebuffer->attachmentCount = attachmentCount;
     framebuffer->attachments = memory_allocate(attachmentCount * sizeof(*attachments), MEMORY_TAG_RENDERER);
-    memoryCopy(framebuffer->attachments, attachments, attachmentCount * sizeof(*attachments));
+    memory_copy(framebuffer->attachments, attachments, attachmentCount * sizeof(*attachments));
 
     VkFramebufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

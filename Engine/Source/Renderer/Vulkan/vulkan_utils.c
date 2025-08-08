@@ -1,4 +1,4 @@
-#include "VulkanUtils.h"
+#include "vulkan_utils.h"
 
 char const* vulkan_result_string(VkResult result, b8 get_extended)
 {

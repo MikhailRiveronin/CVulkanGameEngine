@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 
 /**
  * Returns the string representation of result.

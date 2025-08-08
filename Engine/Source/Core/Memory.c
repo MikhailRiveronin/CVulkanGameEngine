@@ -95,7 +95,7 @@ void* memory_zero(void* dest, u64 size)
     return memorySet(dest, 0, size);
 }
 
-void* memoryCopy(void* dest, void const* src, u64 size)
+void* memory_copy(void* dest, void const* src, u64 size)
 {
     return platformCopyMemory(dest, src, size);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 
 b8 vulkanSwapchainCreate(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain);
 b8 vulkan_swapchain_recreate(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain);

@@ -44,8 +44,8 @@ void inputUpdate(f64 deltaTime)
         return;
     }
 
-    memoryCopy(&state.prevKeyboard, &state.keyboard, sizeof(state.keyboard));
-    memoryCopy(&state.prevMouse, &state.mouse, sizeof(state.mouse));
+    memory_copy(&state.prevKeyboard, &state.keyboard, sizeof(state.keyboard));
+    memory_copy(&state.prevMouse, &state.mouse, sizeof(state.mouse));
 }
 
 b8 input_is_key_down(Key key)

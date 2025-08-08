@@ -797,7 +797,7 @@ KINLINE mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 nea
 KINLINE mat4 mat4_perspective(f32 fov_radians, f32 aspect_ratio, f32 near_clip, f32 far_clip) {
     f32 half_tan_fov = ktan(fov_radians * 0.5f);
     mat4 out_matrix;
-    kzero_memory(out_matrix.data, sizeof(f32) * 16);
+    memory_zero(out_matrix.data, sizeof(f32) * 16);
     out_matrix.data[0] = 1.0f / (aspect_ratio * half_tan_fov);
     out_matrix.data[5] = 1.0f / half_tan_fov;
     out_matrix.data[10] = -((far_clip + near_clip) / (far_clip - near_clip));

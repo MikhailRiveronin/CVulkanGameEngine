@@ -1,9 +1,9 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 #include "Renderer/RendererBackend.h"
 
-b8 vulkanBackendInit(struct renderer_backend* backend, char const* appName, struct PlatformState* platformState);
+b8 vulkan_backend_init(struct renderer_backend* backend, char const* appName, struct PlatformState* platformState);
 void vulkanBackendDestroy(struct renderer_backend* backend);
 
 b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 deltaTime);

@@ -1,4 +1,4 @@
-#include "VulkanCommandBuffer.h"
+#include "vulkan_command_buffer.h"
 
 void vulkanCommandBufferAllocate(
     vulkan_context* context,
@@ -72,7 +72,7 @@ void vulkan_command_buffer_reset(vulkan_command_buffer* commandBuffer)
     commandBuffer->state = COMMAND_BUFFER_STATE_READY;
 }
 
-void vulkanCommandBufferAllocateAndBeginSingleUse(
+void vulkan_command_buffer_allocate_and_begin_single_use(
     vulkan_context* context,
     VkCommandPool pool,
     vulkan_command_buffer* commandBuffer)
@@ -81,7 +81,7 @@ void vulkanCommandBufferAllocateAndBeginSingleUse(
     vulkan_command_buffer_begin(commandBuffer, TRUE, FALSE, FALSE);
 }
 
-void vulkanCommandBufferEndSingleUse(
+void vulkan_command_buffer_end_single_use(
     vulkan_context* context,
     VkCommandPool pool,
     vulkan_command_buffer* commandBuffer,

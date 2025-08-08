@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 
 void vulkanFenceCreate(vulkan_context* context, b8 createSignaled, VulkanFence* fence);
 void vulkanFenceDestroy(vulkan_context* context, VulkanFence* fence);

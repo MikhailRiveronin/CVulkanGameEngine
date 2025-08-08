@@ -1,5 +1,5 @@
 #include "VulkanImage.h"
-#include "VulkanDevice.h"
+#include "vulkan_device.h"
 #include "core/logger.h"
 
 void vulkanImageCreate(

@@ -1,7 +1,7 @@
 #include "VulkanSwapchain.h"
 #include "core/logger.h"
 #include "Core/memory.h"
-#include "VulkanDevice.h"
+#include "vulkan_device.h"
 
 static b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain);
 static void destroy(vulkan_context* context, VulkanSwapchain* swapchain);

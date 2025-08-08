@@ -40,7 +40,7 @@
             void* newData = memory_allocate(newCapacity * sizeof(*(array).data), (array).memory);    \
             if (newData) {                                                                          \
                 memory_zero(newData, newCapacity * sizeof(*(array).data));                           \
-                memoryCopy(newData, (array).data, (array).size * sizeof(*(array).data));            \
+                memory_copy(newData, (array).data, (array).size * sizeof(*(array).data));            \
                 memory_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
                 (array).data = newData;                                                             \
                 (array).capacity = newCapacity;                                                     \
@@ -101,7 +101,7 @@
                 DARRAY_EXPAND((array), (array).capacity * DARRAY_EXPAND_FACTOR);                                      \
             }                                                                                                         \
             if (pos != (array).size - 1) {                                                                            \
-                memoryCopy((array).data + pos + 1, (array).data + pos, ((array).size - pos) * sizeof(*(array).data)); \
+                memory_copy((array).data + pos + 1, (array).data + pos, ((array).size - pos) * sizeof(*(array).data)); \
             }                                                                                                         \
             (array).data[(array).size++] = __VA_ARGS__;                                                               \
         }                                                                                                             \
@@ -116,7 +116,7 @@
         if ((array).size > 0 && pos >= 0 && pos < (array).size) {                                                         \
             (value) = (array).data[pos];                                                                                  \
             if (pos != (array).size - 1) {                                                                                \
-                memoryCopy((array).data + pos, (array).data + pos + 1, ((array).size - pos - 1) * sizeof(*(array).data)); \
+                memory_copy((array).data + pos, (array).data + pos + 1, ((array).size - pos - 1) * sizeof(*(array).data)); \
             }                                                                                                             \
             (array).size--;                                                                                               \
         }                                                                                                                 \

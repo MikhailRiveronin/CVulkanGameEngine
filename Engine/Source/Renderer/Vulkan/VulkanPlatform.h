@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanTypes.inl"
+#include "vulkan_types.inl"
 #include "Containers/darray.h"
 
 struct PlatformState;

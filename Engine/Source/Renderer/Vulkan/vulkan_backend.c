@@ -1,13 +1,16 @@
-#include "VulkanBackend.h"
+#include "vulkan_backend.h"
 
 #include "VulkanPlatform.h"
-#include "VulkanDevice.h"
+#include "vulkan_device.h"
 #include "VulkanSwapchain.h"
 #include "VulkanRenderpass.h"
-#include "VulkanCommandBuffer.h"
+#include "vulkan_command_buffer.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanFence.h"
-#include "VulkanUtils.h"
+#include "vulkan_utils.h"
+#include "shaders/vulkan_object_shader.h"
+#include "math/math_types.h"
+#include "vulkan_buffer.h"
 
 #include "Containers/darray.h"
 
@@ -33,7 +36,9 @@ static void createCommandBuffers(renderer_backend* backend);
 static void regenerateFramebuffers(renderer_backend* backend, VulkanSwapchain* swapchain, vulkan_renderpass* renderpass);
 static b8 recreate_swapchain(renderer_backend* backend);
 
-b8 vulkanBackendInit(renderer_backend* backend, char const* appName, struct PlatformState* platformState)
+static b8 create_buffer(vulkan_context* context);
+
+b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct PlatformState* platformState)
 {
     context.allocator = NULL;
     context.findMemoryType = findMemoryType;
@@ -209,6 +214,14 @@ b8 vulkanBackendInit(renderer_backend* backend, char const* appName, struct Plat
         vulkanFenceCreate(&context, TRUE, &DARRAY_AT(context.fences_in_flight, i));
     }
 
+    // Create builtin shaders
+    if (!vulkan_object_shader_create(&context, &context.object_shader)) {
+        LOG_ERROR("Error loading built-in basic_lighting shader.");
+        return FALSE;
+    }
+
+    create_buffer(&context);
+
     LOG_INFO("Vulkan renderer initialized");
     return TRUE;
 }
@@ -216,6 +229,13 @@ b8 vulkanBackendInit(renderer_backend* backend, char const* appName, struct Plat
 void vulkanBackendDestroy(struct renderer_backend* backend)
 {
     vkDeviceWaitIdle(context.device.handle);
+
+    // Vertex/index buffers
+    vulkan_buffer_destroy(&context, &context.object_vertex_buffer);
+    vulkan_buffer_destroy(&context, &context.object_index_buffer);
+
+    // Shader objects
+    vulkan_object_shader_destroy(&context, &context.object_shader);
 
     // Sync objects
     for (u32 i = 0; i < context.image_available_semaphors.capacity; ++i) {
@@ -511,6 +531,41 @@ b8 recreate_swapchain(renderer_backend* backend)
 
     // Clear the recreating flag.
     context.recreating_swapchain = FALSE;
+
+    return TRUE;
+}
+
+b8 create_buffer(vulkan_context* context)
+{
+    VkMemoryPropertyFlagBits memory_property_flag_bits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    u64 vertex_buffer_size = 1024 * 1024 * sizeof(vertex_3d);
+    if (!vulkan_buffer_create(
+        context,
+        vertex_buffer_size,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        memory_property_flag_bits,
+        TRUE,
+        &context->object_vertex_buffer)) {
+        LOG_ERROR("Failed to create vertex buffer");
+        return FALSE;
+    }
+
+    context->geometry_vertex_offset = 0;
+
+    u64 index_buffer_size = 1024 * 1024 * sizeof(u32);
+    if (!vulkan_buffer_create(
+        context,
+        index_buffer_size,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        memory_property_flag_bits,
+        TRUE,
+        &context->object_index_buffer)) {
+        LOG_ERROR("Failed to create index buffer");
+        return FALSE;
+    }
+
+    context->geometry_index_offset = 0;
 
     return TRUE;
 }

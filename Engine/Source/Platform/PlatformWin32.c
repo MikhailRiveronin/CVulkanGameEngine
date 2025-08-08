@@ -2,7 +2,7 @@
 #include "core/logger.h"
 #include "Core/Input.h"
 #include "Core/Events.h"
-#include "Renderer/Vulkan/VulkanTypes.inl"
+#include "Renderer/Vulkan/vulkan_types.inl"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -156,7 +156,7 @@ void platformWriteConsoleError(char const* message, u8 color)
     OutputDebugStringA(message);
 }
 
-void platformWriteError(const char *message)
+void platformWriteError(char const *message)
 {
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
     DWORD numCharsWritten;

@@ -1,5 +1,5 @@
 #include "RendererBackend.h"
-#include "Vulkan/VulkanBackend.h"
+#include "Vulkan/vulkan_backend.h"
 #include "Core/memory.h"
 
 b8 renderer_backend_init(RendererBackendType type, struct PlatformState* platformState, renderer_backend* backend)
@@ -7,7 +7,7 @@ b8 renderer_backend_init(RendererBackendType type, struct PlatformState* platfor
     backend->platformState = platformState;
     switch (type) {
         case RENDERER_BACKEND_TYPE_VULKAN:
-            backend->on_init = vulkanBackendInit;
+            backend->on_init = vulkan_backend_init;
             backend->on_destroy = vulkanBackendDestroy;
             backend->begin_frame = vulkan_backend_begin_frame;
             backend->endFrame = vulkan_backend_end_frame;
