@@ -2,7 +2,7 @@ file(GLOB_RECURSE sources *.c)
 
 # if(WIN32)
 #     list(APPEND sources
-#         Platform/PlatformWin32.c)
+#         platform/PlatformWin32.c)
 # endif()
 
 find_package(Vulkan)

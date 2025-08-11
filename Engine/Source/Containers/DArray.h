@@ -1,8 +1,8 @@
 #pragma once
 
 #include "defines.h"
-#include "Core/Asserts.h"
-#include "Core/memory.h"
+#include "core/asserts.h"
+#include "core/memory.h"
 
 #define DARRAY_MIN_CAPACITY 1
 #define DARRAY_EXPAND_FACTOR 2
@@ -12,7 +12,7 @@
         u64 capacity;     \
         u64 size;         \
         type* data;       \
-        MemoryTag memory; \
+        memory_tag memory; \
     }
 
 #define DARRAY_INIT(array, memoryTag)                                                            \

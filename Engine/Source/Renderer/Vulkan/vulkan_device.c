@@ -1,8 +1,8 @@
 #include "vulkan_device.h"
-#include "Containers/darray.h"
+#include "containers/darray.h"
 #include "core/logger.h"
-#include "Core/memory.h"
-#include "Core/String.h"
+#include "core/memory.h"
+#include "core/string.h"
 
 typedef struct PhysicalDeviceRequirements {
     DARRAY_CSTRING deviceExtensionNames;

@@ -12,11 +12,11 @@
 #include "math/math_types.h"
 #include "vulkan_buffer.h"
 
-#include "Containers/darray.h"
+#include "containers/darray.h"
 
-#include "Core/Application.h"
+#include "core/application.h"
 #include "core/logger.h"
-#include "Core/String.h"
+#include "core/string.h"
 
 
 static vulkan_context context;
@@ -38,7 +38,7 @@ static b8 recreate_swapchain(renderer_backend* backend);
 
 static b8 create_buffer(vulkan_context* context);
 
-b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct PlatformState* platformState)
+b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct platform_state* platformState)
 {
     context.allocator = NULL;
     context.findMemoryType = findMemoryType;
@@ -360,6 +360,18 @@ b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 deltaTime)
         context.swapchain.framebuffers.data[context.image_index].handle);
 
     return TRUE;
+}
+
+void vulkan_backend_update_global_state(mat4 view, mat4 proj, vec3 view_pos, vec4 ambient_color, i32 mode)
+{
+    vulkan_command_buffer* command_buffer = &context.command_buffers.data[context.current_frame];
+
+    vulkan_object_shader_use(&context, &context.object_shader);
+
+    context.object_shader.global_data.view = view;
+    context.object_shader.global_data.proj = proj;
+
+    vulkan_object_shader_update_global_state(&context, &context.object_shader);
 }
 
 b8 vulkan_backend_end_frame(struct renderer_backend* backend, f64 deltaTime)

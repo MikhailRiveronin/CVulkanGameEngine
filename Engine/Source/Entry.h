@@ -2,16 +2,16 @@
 
 #include "defines.h"
 #include "game_types.h"
-#include "Core/Application.h"
+#include "core/application.h"
 #include "core/logger.h"
 
 #include <stdlib.h>
 
-extern b8 createGameState(Game* game);
+extern b8 createGameState(game_instance* game);
 
 int main(void)
 {
-    Game game = {};
+    game_instance game = {};
     if (!createGameState(&game)) {
         LOG_FATAL("Failed to create game state");
         return EXIT_FAILURE;
@@ -27,7 +27,7 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-    if (!applicationRun()) {
+    if (!application_run()) {
         LOG_FATAL("Application destroyed incorrectly");
         return EXIT_FAILURE;
     }

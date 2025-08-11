@@ -1,146 +1,193 @@
-#include "Application.h"
+#include "application.h"
+
+#include "clock.h"
+#include "events.h"
+#include "input.h"
 #include "game_types.h"
 #include "logger.h"
-#include "Events.h"
-#include "Input.h"
-#include "clock.h"
-#include "Platform/Platform.h"
-#include "Renderer/RendererFrontend.h"
 #include "memory/linear_allocator.h"
+#include "platform/platform.h"
+#include "Renderer/RendererFrontend.h"
 
 typedef struct application_state {
-    Game* game;
+    game_instance* game;
     b8 running;
     b8 suspended;
     i32 width;
     i32 height;
     clock clock;
     f64 lastTime;
-    PlatformState platform;
+    platform_state platform;
     linear_allocator system_allocator;
 
-    u64 memory_system_required_memory_size;
-    void* memory_system_memory;
+    struct {
+        u64 memory_size;
+        void* memory;
+    } memory_system;
 
-    u64 logger_required_memory_size;
-    void* logger_memory;
+    struct {
+        u64 memory_size;
+        void* memory;
+    } logger_system;
+
+    struct {
+        u64 memory_size;
+        void* memory;
+    } event_system;
+
+    struct {
+        u64 memory_size;
+        void* memory;
+    } input_system;
+
+    struct {
+        u64 memory_size;
+        void* memory;
+    } platform_system;
 } application_state;
 
-static application_state* state;
+static application_state* app_state;
 
 b8 applicationOnEvent(u16 code, void const* sender, void const* listener, EventContext context);
 b8 applicationOnKey(u16 code, void const* sender, void const* listener, EventContext context);
 b8 application_on_resize(u16 code, void const* sender, void const* listener, EventContext context);
 
-b8 application_init(Game* game)
+b8 application_init(game_instance* game)
 {
     if (game->app_state) {
         LOG_ERROR("application_init() called more than once");
         return FALSE;
     }
 
-    game->app_state = memory_allocate(sizeof(application_state), MEMORY_TAG_APPLICATION);
-    state = game->app_state;
-    state->game = game;
-    state->running = FALSE;
-    state->suspended = FALSE;
+    game->app_state = memory_allocate(sizeof(*app_state), MEMORY_TAG_APPLICATION);
+    app_state = game->app_state;
+    app_state->game = game;
+    app_state->running = FALSE;
+    app_state->suspended = FALSE;
 
     u64 system_allocator_total_size = 64 * 1024 * 1024;
-    linear_allocator_create(system_allocator_total_size, 0, &state->system_allocator);
+    linear_allocator_create(system_allocator_total_size, 0, &app_state->system_allocator);
 
     // Initialize subsystems
     // Memory
-    memory_init(&state->memory_system_required_memory_size, 0);
-    state->memory_system_memory = linear_allocator_allocate(
-        &state->system_allocator,
-        state->memory_system_required_memory_size);
-    memory_init(&state->memory_system_required_memory_size, state->memory_system_memory);
-
-    // Logging
-    logger_init(&state->logger_required_memory_size, 0);
-    state->logger_memory = linear_allocator_allocate(&state->system_allocator, state->logger_required_memory_size);
-    if (!logger_init(&state->logger_required_memory_size, state->logger_memory)) {
-        LOG_ERROR("Failed to initialize logging system. Shutting down...");
+    memory_system_startup(&app_state->memory_system.memory_size, 0);
+    app_state->memory_system.memory = linear_allocator_allocate(
+        &app_state->system_allocator,
+        app_state->memory_system.memory_size);
+    if (!memory_system_startup(&app_state->memory_system.memory_size, app_state->memory_system.memory)) {
+        LOG_ERROR("Failed to initialize memory system. Shutting down...");
         return FALSE;
     }
 
-    inputInit();
-
-    state->width = game->appConfig.width;
-    state->height = game->appConfig.height;
-
-    if (!eventInit()) {
-        LOG_ERROR("Failed to init event system");
+    // Logger
+    logger_system_startup(&app_state->logger_system.memory_size, 0);
+    app_state->logger_system.memory = linear_allocator_allocate(
+        &app_state->system_allocator,
+        app_state->logger_system.memory_size);
+    if (!logger_system_startup(&app_state->logger_system.memory_size, app_state->logger_system.memory)) {
+        LOG_ERROR("Failed to initialize logger system. Shutting down...");
         return FALSE;
     }
+
+    // Input
+    input_system_startup(&app_state->input_system.memory_size, 0);
+    app_state->input_system.memory = linear_allocator_allocate(
+        &app_state->system_allocator,
+        app_state->input_system.memory_size);
+    if (!input_system_startup(&app_state->input_system.memory_size, app_state->input_system.memory)) {
+        LOG_ERROR("Failed to initialize input system. Shutting down...");
+        return FALSE;
+    }
+
+    // Events
+    event_system_startup(&app_state->event_system.memory_size, 0);
+    app_state->event_system.memory = linear_allocator_allocate(
+        &app_state->system_allocator,
+        app_state->event_system.memory_size);
+    if (!event_system_startup(&app_state->event_system.memory_size, app_state->event_system.memory)) {
+        LOG_ERROR("Failed to initialize event system. Shutting down...");
+        return FALSE;
+    }
+
+    // Platform
+    platform_system_startup(&app_state->platform_system.memory_size, 0, 0, 0, 0, 0, 0, 0);
+    app_state->platform_system.memory = linear_allocator_allocate(
+        &app_state->system_allocator,
+        app_state->platform_system.memory_size);
+    if (!platform_system_startup(
+        &app_state->platform_system.memory_size,
+        app_state->platform_system.memory,
+        &app_state->platform,
+        app_state->game->app_config.name,
+        app_state->game->app_config.x, app_state->game->app_config.y,
+        app_state->game->app_config.width, app_state->game->app_config.height)) {
+        LOG_ERROR("Failed to initialize platform system. Shutting down...");
+        return FALSE;
+    }
+
+    if (!rendererInit(game->app_config.name, &app_state->platform)) {
+        LOG_FATAL("Failed to initialize renderer. Shutting down");
+        return FALSE;
+    }
+
+    if (!app_state->game->onInit(app_state->game)) {
+        LOG_FATAL("Failed to initialize game");
+        return FALSE;
+    }
+
+    app_state->width = game->app_config.width;
+    app_state->height = game->app_config.height;
 
     event_register(EVENT_CODE_APPLICATION_QUIT, NULL, applicationOnEvent);
     event_register(EVENT_CODE_KEY_PRESSED, NULL, applicationOnKey);
     event_register(EVENT_CODE_RESIZE, NULL, application_on_resize);
 
-    if (!platformInit(
-        &state->platform, state->game->appConfig.name,
-        state->game->appConfig.x, state->game->appConfig.y,
-        state->game->appConfig.width, state->game->appConfig.height)) {
-        return FALSE;
-    }
-
-    if (!rendererInit(game->appConfig.name, &state->platform)) {
-        LOG_FATAL("Failed to initialize renderer. Shutting down");
-        return FALSE;
-    }
-
-    if (!state->game->onInit(state->game)) {
-        LOG_FATAL("Failed to initialize game");
-        return FALSE;
-    }
-
-    state->running = TRUE;
-    state->suspended = FALSE;
+    app_state->suspended = FALSE;
 
     // TODO: What for?
-    state->game->onResize(state->game, state->width, state->height);
+    app_state->game->onResize(app_state->game, app_state->width, app_state->height);
 
     return TRUE;
 }
 
-b8 applicationRun(void)
+b8 application_run(void)
 {
+    app_state->running = TRUE;
     memoryPrintUsageStr();
 
-    clock_start(&state->clock);
-    clock_update(&state->clock);
-    state->lastTime = state->clock.elapsed;
+    clock_start(&app_state->clock);
+    clock_update(&app_state->clock);
+    app_state->lastTime = app_state->clock.elapsed;
     f64 runningTime = 0.0;
     u8 frameCount = 0;
     const f64 targetFrameRate = 1.0 / 60.0;
 
-    while (state->running) {
-        if (!platformProcMessages(&state->platform)) {
-            state->running = FALSE;
+    while (app_state->running) {
+        if (!platformProcMessages(&app_state->platform)) {
+            app_state->running = FALSE;
             break;
         }
 
-        if (!state->running) {
+        if (!app_state->running) {
             break;
         }
 
-        if (!state->suspended) {
-            clock_update(&state->clock);
-            f64 currentTime = state->clock.elapsed;
-            f64 deltaTime = currentTime - state->lastTime;
+        if (!app_state->suspended) {
+            clock_update(&app_state->clock);
+            f64 currentTime = app_state->clock.elapsed;
+            f64 deltaTime = currentTime - app_state->lastTime;
             f64 frameStartTime = platform_get_absolute_time();
 
 
-            if (!state->game->onUpdate(state->game, deltaTime)) {
+            if (!app_state->game->onUpdate(app_state->game, deltaTime)) {
                 LOG_FATAL("Game update failed");
-                state->running = FALSE;
+                app_state->running = FALSE;
                 break;
             }
 
-            if (!state->game->onRender(state->game, deltaTime)) {
+            if (!app_state->game->onRender(app_state->game, deltaTime)) {
                 LOG_FATAL("Game render failed");
-                state->running = FALSE;
+                app_state->running = FALSE;
                 break;
             }
 
@@ -162,8 +209,8 @@ b8 applicationRun(void)
                 frameCount++;
             }
 
-            inputUpdate(deltaTime);
-            state->lastTime = currentTime;
+            input_update(deltaTime);
+            app_state->lastTime = currentTime;
         }
     }
 
@@ -171,12 +218,12 @@ b8 applicationRun(void)
     event_unregister(EVENT_CODE_KEY_PRESSED, NULL, applicationOnEvent);
     event_unregister(EVENT_CODE_RESIZE, NULL, application_on_resize);
 
-    eventDestroy();
-    inputDestroy();
+    event_system_shutdown(app_state->event_system.memory);
+    input_system_shutdown(app_state->input_system.memory);
 
     rendererDestroy();
 
-    platformDestroy(&state->platform);
+    platform_system_shutdown(&app_state->platform);
 
     memory_destroy();
 
@@ -185,8 +232,8 @@ b8 applicationRun(void)
 
 void applicationGetFramebufferSize(u32* width, u32* height)
 {
-    *width = state->width;
-    *height = state->height;
+    *width = app_state->width;
+    *height = app_state->height;
 }
 
 b8 applicationOnEvent(u16 code, void const* sender, void const* listener, EventContext context)
@@ -194,7 +241,7 @@ b8 applicationOnEvent(u16 code, void const* sender, void const* listener, EventC
     switch (code) {
         case EVENT_CODE_APPLICATION_QUIT:
             LOG_INFO("EVENT_CODE_APPLICATION_QUIT recieved. Shutting down");
-            state->running = FALSE;
+            app_state->running = FALSE;
             return TRUE;
     }
     return FALSE;
@@ -232,22 +279,22 @@ b8 application_on_resize(u16 code, void const* sender, void const* listener, Eve
         i16 width = context.as.i16[0];
         i16 height = context.as.i16[1];
 
-        if (width != state->width || height != state->height) {
-            state->width = width;
-            state->height = height;
+        if (width != app_state->width || height != app_state->height) {
+            app_state->width = width;
+            app_state->height = height;
 
             LOG_DEBUG("application_on_resized: width %d, height %d", width, height);
 
             if (width == 0 || height == 0) {
                 LOG_INFO("Window minimized. Suspending application");
-                state->suspended = TRUE;
+                app_state->suspended = TRUE;
                 return TRUE;
             } else {
-                if (state->suspended) {
+                if (app_state->suspended) {
                     LOG_INFO("Window restored. Resuming application");
-                    state->suspended = FALSE;
+                    app_state->suspended = FALSE;
                 }
-                state->game->onResize(state->game, width, height);
+                app_state->game->onResize(app_state->game, width, height);
                 renderer_frontend_resize(width, height);
             }
         }

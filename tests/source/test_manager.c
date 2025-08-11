@@ -1,9 +1,9 @@
 #include "test_manager.h"
 
-#include <Containers/darray.h>
-#include <Core/logger.h>
-#include <Core/String.h>
-#include <Core/clock.h>
+#include <containers/darray.h>
+#include <core/logger.h>
+#include <core/string.h>
+#include <core/clock.h>
 
 typedef struct test_entry {
     PFN_test func;

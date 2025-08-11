@@ -1,87 +1,86 @@
-#include "Events.h"
+#include "events.h"
 #include "core/logger.h"
-#include "Containers/darray.h"
+#include "containers/darray.h"
 
-typedef struct RegisteredListener {
+typedef struct registered_listener {
     void* listener;
-    OnEventCallback callback;
-} RegisteredListener;
+    pfn_on_event callback;
+} registered_listener;
 
-typedef struct EventCodeEntry {
-    DARRAY(RegisteredListener) listeners;
-} EventCodeEntry;
+typedef struct event_code_entry {
+    DARRAY(registered_listener) listeners;
+} event_code_entry;
 
 #define MAX_EVENT_CODES 1024
 
-typedef struct EventSystemState {
-    EventCodeEntry eventCodes[MAX_EVENT_CODES];
-} EventSystemState;
+typedef struct event_system_state {
+    event_code_entry event_codes[MAX_EVENT_CODES];
+} event_system_state;
+static event_system_state* system_state;
 
-static b8 initialized = FALSE;
-static EventSystemState state;
-
-b8 eventInit()
+b8 event_system_startup(u64* memory_size, void* memory)
 {
-    if (initialized) {
-        LOG_ERROR("eventSystemInit() called more then once");
-        return FALSE;
+    *memory_size = sizeof(*system_state);
+    if (!memory) {
+        return TRUE;
     }
-    initialized = TRUE;
+
+    system_state = memory;
     return TRUE;
 }
 
-void eventDestroy()
+void event_system_shutdown(void* memory)
 {
     for (u32 i = 0; i < MAX_EVENT_CODES; ++i) {
-        if (state.eventCodes[i].listeners.size != 0) {
-            DARRAY_DESTROY(state.eventCodes[i].listeners);
+        if (system_state->event_codes[i].listeners.size != 0) {
+            DARRAY_DESTROY(system_state->event_codes[i].listeners);
         }
     }
 }
 
-b8 event_register(u16 code, void* listener, OnEventCallback onEvent)
+b8 event_register(u16 code, void* listener, pfn_on_event on_event)
 {
-    if (!initialized) {
+    if (!system_state) {
         LOG_ERROR("registerEvent() called before then event system is initialized");
         return FALSE;
     }
 
-    if (state.eventCodes[code].listeners.capacity == 0) {
-        DARRAY_INIT(state.eventCodes[code].listeners, MEMORY_TAG_APPLICATION);
+    if (system_state->event_codes[code].listeners.capacity == 0) {
+        DARRAY_INIT(system_state->event_codes[code].listeners, MEMORY_TAG_APPLICATION);
     }
 
-    for (u32 i = 0; i < state.eventCodes[code].listeners.size; ++i) {
-        RegisteredListener registered = DARRAY_AT(state.eventCodes[code].listeners, i);
-        if (registered.listener == listener && registered.callback == onEvent) {
+    for (u32 i = 0; i < system_state->event_codes[code].listeners.size; ++i) {
+        registered_listener registered = DARRAY_AT(system_state->event_codes[code].listeners, i);
+        if (registered.listener == listener && registered.callback == on_event) {
             LOG_ERROR("Event has already been registered");
             return FALSE;
         }
     }
 
-    RegisteredListener registered;
+    registered_listener registered;
     registered.listener = listener;
-    registered.callback = onEvent;
-    DARRAY_PUSH(state.eventCodes[code].listeners, registered);
+    registered.callback = on_event;
+    DARRAY_PUSH(system_state->event_codes[code].listeners, registered);
     return TRUE;
 }
 
-b8 event_unregister(u16 code, void const* listener, OnEventCallback onEvent)
+b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event)
 {
-    if (!initialized) {
+    if (!system_state) {
         LOG_ERROR("unregisterEvent() called before then event system is initialized");
         return FALSE;
     }
 
-    if (state.eventCodes[code].listeners.capacity == 0) {
+    if (system_state->event_codes[code].listeners.capacity == 0) {
         LOG_ERROR("No listeners registered for event code %u", code);
         return FALSE;
     }
 
-    for (u32 i = 0; i < state.eventCodes[code].listeners.size; ++i) {
-        RegisteredListener unregistered = DARRAY_AT(state.eventCodes[code].listeners, i);
-        if (unregistered.listener == listener && unregistered.callback == onEvent) {
-            RegisteredListener unregistered;
-            DARRAY_ERASE(state.eventCodes[code].listeners, i, unregistered);
+    for (u32 i = 0; i < system_state->event_codes[code].listeners.size; ++i) {
+        registered_listener unregistered = DARRAY_AT(system_state->event_codes[code].listeners, i);
+        if (unregistered.listener == listener && unregistered.callback == on_event) {
+            registered_listener unregistered;
+            DARRAY_ERASE(system_state->event_codes[code].listeners, i, unregistered);
             return TRUE;
         }
     }
@@ -90,18 +89,18 @@ b8 event_unregister(u16 code, void const* listener, OnEventCallback onEvent)
 
 b8 eventNotify(u16 code, void const* sender, EventContext context)
 {
-    if (!initialized) {
+    if (!system_state) {
         LOG_ERROR("eventNotify() called before then event system is initialized");
         return FALSE;
     }
 
-    if (state.eventCodes[code].listeners.capacity == 0) {
+    if (system_state->event_codes[code].listeners.capacity == 0) {
         // LOG_ERROR("No listeners registered for event code %u", code);
         return FALSE;
     }
 
-    for (u32 i = 0; i < state.eventCodes[code].listeners.size; ++i) {
-        RegisteredListener registered = DARRAY_AT(state.eventCodes[code].listeners, i);
+    for (u32 i = 0; i < system_state->event_codes[code].listeners.size; ++i) {
+        registered_listener registered = DARRAY_AT(system_state->event_codes[code].listeners, i);
         if (registered.callback(code, sender, registered.listener, context)) {
             return TRUE;
         }

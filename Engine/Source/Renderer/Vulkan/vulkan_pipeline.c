@@ -1,7 +1,7 @@
 #include "vulkan_pipeline.h"
 #include "vulkan_utils.h"
-#include "Core/logger.h"
-#include "Core/memory.h"
+#include "core/logger.h"
+#include "core/memory.h"
 #include "math/math_types.h"
 
 b8 vulkan_pipeline_create(

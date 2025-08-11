@@ -1,14 +1,14 @@
 #include "RendererFrontend.h"
 #include "RendererBackend.h"
 #include "core/logger.h"
-#include "Core/memory.h"
+#include "core/memory.h"
 
 static renderer_backend* backend;
 
 static b8 renderer_begin_frame(float deltaTime);
 static b8 rendererEndFrame(float deltaTime);
 
-b8 rendererInit(char const* appName, struct PlatformState* platformState)
+b8 rendererInit(char const* appName, struct platform_state* platformState)
 {
     backend = memory_allocate(sizeof(*backend), MEMORY_TAG_RENDERER);
     renderer_backend_init(RENDERER_BACKEND_TYPE_VULKAN, platformState, backend);
@@ -29,6 +29,10 @@ void rendererDestroy()
 b8 renderer_draw_frame(RenderPacket* packet)
 {
     if (renderer_begin_frame(packet->deltaTime)) {
+
+        
+
+
         b8 result = rendererEndFrame(packet->deltaTime);
         if (!result) {
             LOG_FATAL("Failed to end frame (rendererEndFrame). Shutting down");

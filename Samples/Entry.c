@@ -1,8 +1,9 @@
-#include "game.h"
-#include <Core/memory.h>
-#include <Entry.h>
+#include <entry.h>
 
-b8 createGameState(Game* game)
+#include "game.h"
+#include <core/memory.h>
+
+b8 createGameState(game_instance* game)
 {
     game->specific = memory_allocate(sizeof(GameState), MEMORY_TAG_GAME);
 
@@ -11,11 +12,11 @@ b8 createGameState(Game* game)
     game->onRender = gameOnRender;
     game->onResize = gameOnResize;
 
-    game->appConfig.x = 100;
-    game->appConfig.y = 100;
-    game->appConfig.width = 1280;
-    game->appConfig.height = 720;
-    game->appConfig.name = "Applic";
+    game->app_config.x = 100;
+    game->app_config.y = 100;
+    game->app_config.width = 1280;
+    game->app_config.height = 720;
+    game->app_config.name = "Applic";
 
     return TRUE;
 }

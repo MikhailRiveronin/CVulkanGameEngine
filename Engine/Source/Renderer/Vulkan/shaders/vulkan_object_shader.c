@@ -1,5 +1,5 @@
 #include "vulkan_object_shader.h"
-#include "Core/logger.h"
+#include "core/logger.h"
 #include "Renderer/Vulkan/vulkan_shader_utils.h"
 #include "math/math_types.h"
 #include "Renderer/Vulkan/vulkan_pipeline.h"
@@ -77,4 +77,11 @@ void vulkan_object_shader_use(vulkan_context* context, vulkan_object_shader* sha
         &context->command_buffers.data[frame_index],
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         &shader->pipeline);
+}
+
+void vulkan_object_shader_update_global_state(vulkan_context* context, vulkan_object_shader* shader)
+{
+    u32 current_frame = context->current_frame;
+    VkCommandBuffer command_buffer = context->command_buffers.data[current_frame].handle;
+    VkDescriptorSet descriptor_set = shader->global_descriptor_sets[current_frame];
 }

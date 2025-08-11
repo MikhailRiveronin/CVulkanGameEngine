@@ -1,14 +1,14 @@
 #include "game.h"
-#include <Core/logger.h>
-#include <Core/memory.h>
-#include <Core/Input.h>
+#include <core/logger.h>
+#include <core/memory.h>
+#include <core/input.h>
 
-b8 gameOnInit(struct Game* game)
+b8 gameOnInit(struct game_instance* game)
 {
     return TRUE;
 }
 
-b8 gameOnUpdate(struct Game* game, f64 deltaTime)
+b8 gameOnUpdate(struct game_instance* game, f64 delta_time)
 {
     static u64 alloc_count = 0;
     u64 prev_alloc_count = alloc_count;
@@ -20,11 +20,11 @@ b8 gameOnUpdate(struct Game* game, f64 deltaTime)
     return TRUE;
 }
 
-b8 gameOnRender(struct Game* game, f64 deltaTime)
+b8 gameOnRender(struct game_instance* game, f64 delta_time)
 {
     return TRUE;
 }
 
-void gameOnResize(struct Game* game, i32 width, i32 height)
+void gameOnResize(struct game_instance* game, i32 width, i32 height)
 {
 }

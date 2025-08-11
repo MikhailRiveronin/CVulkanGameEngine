@@ -1,6 +1,6 @@
 #include "memory.h"
 #include "logger.h"
-#include "Platform/Platform.h"
+#include "platform/platform.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -32,38 +32,38 @@ typedef struct memory_stats {
 
 typedef struct memory_system_state {
     memory_stats stats;
-    u64 allocation_count;
+    u64 alloc_count;
 } memory_system_state;
+static memory_system_state* system_state;
 
-static memory_system_state* state;
-
-void memory_init(u64* required_memory_size, void* memory)
+b8 memory_system_startup(u64* memory_size, void* memory)
 {
-    *required_memory_size = sizeof(*state);
+    *memory_size = sizeof(*system_state);
     if (!memory) {
-        return;
+        return TRUE;
     }
 
-    state = memory;
-    state->allocation_count = 0;
-    platform_zero_memory(&state->stats, sizeof(state->stats));
+    system_state = memory;
+    platform_zero_memory(&system_state->stats, sizeof(system_state->stats));
+    system_state->alloc_count = 0;
+    return TRUE;
 }
 
 void memory_destroy(void* memory)
 {
-    state = 0;
+    system_state = 0;
 }
 
-void* memory_allocate(u64 size, MemoryTag tag)
+void* memory_allocate(u64 size, memory_tag tag)
 {
     if (tag == MEMORY_TAG_UNKNOWN) {
         LOG_WARNING("allocate() called using MEMORY_TAG_UNKNOWN. Use another allocation class");
     }
 
-    if (state) {
-        state->stats.allocatedTotal += size;
-        state->stats.allocatedTagged[tag] += size;
-        state->allocation_count++;
+    if (system_state) {
+        system_state->stats.allocatedTotal += size;
+        system_state->stats.allocatedTagged[tag] += size;
+        system_state->alloc_count++;
     }
 
     // TODO: Memory alignment.
@@ -72,14 +72,14 @@ void* memory_allocate(u64 size, MemoryTag tag)
     return ptr;
 }
 
-void memory_free(void* ptr, u64 size, MemoryTag tag)
+void memory_free(void* ptr, u64 size, memory_tag tag)
 {
     if (tag == MEMORY_TAG_UNKNOWN) {
         LOG_WARNING("deallocate() called using MEMORY_TAG_UNKNOWN. Use another allocation class");
     }
 
-    state->stats.allocatedTotal -= size;
-    state->stats.allocatedTagged[tag] -= size;
+    system_state->stats.allocatedTotal -= size;
+    system_state->stats.allocatedTagged[tag] -= size;
 
     // TODO: Memory alignment.
     platformFree(ptr, FALSE);
@@ -111,25 +111,25 @@ void memoryPrintUsageStr()
     sprintf(buffer, "Tagged memory allocations:\n");
 
     for (u32 i = 0; i < MEMORY_TAG_ENUM_COUNT; ++i) {
-        if (state->stats.allocatedTagged[i] > GiB) {
+        if (system_state->stats.allocatedTagged[i] > GiB) {
             sprintf(buffer + strlen(buffer), "    %.2s: %fGiB\n",
                 memoryTagStrings[i],
-                state->stats.allocatedTagged[i] / (float)GiB);
+                system_state->stats.allocatedTagged[i] / (float)GiB);
         }
-        else if (state->stats.allocatedTagged[i] > MiB) {
+        else if (system_state->stats.allocatedTagged[i] > MiB) {
             sprintf(buffer + strlen(buffer), "    %s: %.2fMiB\n",
                 memoryTagStrings[i],
-                state->stats.allocatedTagged[i] / (float)MiB);
+                system_state->stats.allocatedTagged[i] / (float)MiB);
         }
-        else if (state->stats.allocatedTagged[i] > KiB) {
+        else if (system_state->stats.allocatedTagged[i] > KiB) {
             sprintf(buffer + strlen(buffer), "    %s: %.2fKiB\n",
                 memoryTagStrings[i],
-                state->stats.allocatedTagged[i] / (float)KiB);
+                system_state->stats.allocatedTagged[i] / (float)KiB);
         }
         else {
             sprintf(buffer + strlen(buffer), "    %s: %lluB\n",
                 memoryTagStrings[i],
-                state->stats.allocatedTagged[i]);
+                system_state->stats.allocatedTagged[i]);
         }
     }
     LOG_DEBUG("%s", buffer);
@@ -137,8 +137,8 @@ void memoryPrintUsageStr()
 
 u64 memory_allocation_count()
 {
-    if (state) {
-        return state->allocation_count;
+    if (system_state) {
+        return system_state->alloc_count;
     }
     return 0;
 }

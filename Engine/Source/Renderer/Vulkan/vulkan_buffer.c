@@ -2,8 +2,8 @@
 #include "vulkan_device.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_utils.h"
-#include "Core/logger.h"
-#include "Core/memory.h"
+#include "core/logger.h"
+#include "core/memory.h"
 
 b8 vulkan_buffer_create(
     vulkan_context* context,

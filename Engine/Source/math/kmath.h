@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "math_types.h"
-#include "Core/memory.h"
+#include "core/memory.h"
 
 #define K_PI 3.14159265358979323846f
 #define K_PI_2 2.0f * K_PI

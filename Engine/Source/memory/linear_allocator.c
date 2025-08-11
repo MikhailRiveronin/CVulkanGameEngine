@@ -1,18 +1,19 @@
 #include "linear_allocator.h"
-#include "Core/memory.h"
-#include "core/logger.h"
 
-void linear_allocator_create(u64 total, void* memory, linear_allocator* out_allocator)
+#include "core/logger.h"
+#include "core/memory.h"
+
+void linear_allocator_create(u64 total_size, void* memory, linear_allocator* out_allocator)
 {
     if (out_allocator) {
-        out_allocator->total_size = total;
+        out_allocator->total_size = total_size;
         out_allocator->allocated = 0;
         out_allocator->owns_memory = memory == 0;
 
         if (memory) {
             out_allocator->memory = memory;
         } else {
-            out_allocator->memory = memory_allocate(total, MEMORY_TAG_LINEAR_ALLOCATOR);
+            out_allocator->memory = memory_allocate(total_size, MEMORY_TAG_LINEAR_ALLOCATOR);
         }
     }
 }

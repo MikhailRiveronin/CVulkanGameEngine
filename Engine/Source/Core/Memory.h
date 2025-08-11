@@ -2,7 +2,7 @@
 
 #include "defines.h"
 
-typedef enum MemoryTag {
+typedef enum memory_tag {
     MEMORY_TAG_UNKNOWN,
     MEMORY_TAG_ARRAY,
     MEMORY_TAG_DARRAY,
@@ -23,13 +23,13 @@ typedef enum MemoryTag {
     MEMORY_TAG_SCENE,
 
     MEMORY_TAG_ENUM_COUNT
-} MemoryTag;
+} memory_tag;
 
-API void memory_init(u64* required_memory_size, void* memory);
+API b8 memory_system_startup(u64* memory_size, void* memory);
 API void memory_destroy();
 
-API void* memory_allocate(u64 size, MemoryTag tag);
-API void memory_free(void* ptr, u64 size, MemoryTag tag);
+API void* memory_allocate(u64 size, memory_tag tag);
+API void memory_free(void* ptr, u64 size, memory_tag tag);
 
 API void* memorySet(void* dest, i32 value, u64 size);
 API void* memory_zero(void* dest, u64 size);

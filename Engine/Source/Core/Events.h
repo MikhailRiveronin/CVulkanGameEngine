@@ -75,30 +75,30 @@ typedef enum SystemEventCode {
     EVENT_CODE_ENUM_MAX = 0xFF
 } SystemEventCode;
 
-typedef b8 (* OnEventCallback)(u16 code, void const* sender, void const* listener, EventContext context);
+typedef b8 (* pfn_on_event)(u16 code, void const* sender, void const* listener, EventContext context);
 
-b8 eventInit();
-void eventDestroy();
+b8 event_system_startup(u64* memory_size, void* memory);
+void event_system_shutdown(void* memory);
 
 /**
  * Register to listen for when events are sent with the provided code. Events with duplicate
- * listener/callback combos will not be registered again and will cause this to return FALSE.
+ * listener/on_event combos will not be registered again and will cause this to return FALSE.
  * @param code The event code to listen for.
  * @param listener A pointer to a listener instance. Can be 0/NULL.
- * @param onEvent The callback function pointer to be invoked when the event code is fired.
+ * @param on_event The on_event function pointer to be invoked when the event code is fired.
  * @returns TRUE if the event is successfully registered; otherwise false.
  */
-API b8 event_register(u16 code, void* listener, OnEventCallback onEvent);
+API b8 event_register(u16 code, void* listener, pfn_on_event on_event);
 
 /**
  * Unregister from listening for when events are sent with the provided code. If no matching
  * registration is found, this function returns FALSE.
  * @param code The event code to stop listening for.
  * @param listener A pointer to a listener instance. Can be 0/NULL.
- * @param onEvent The callback function pointer to be unregistered.
+ * @param on_event The on_event function pointer to be unregistered.
  * @returns TRUE if the event is successfully unregistered; otherwise false.
  */
-API b8 event_unregister(u16 code, void const* listener, OnEventCallback onEvent);
+API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event);
 
 /**
  * Fires an event to listeners of the given code. If an event handler returns 

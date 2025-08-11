@@ -2,17 +2,17 @@
 
 #include "defines.h"
 
-struct Game;
+struct game_instance;
 
-typedef struct ApplicationConfig {
+typedef struct application_config {
     i32 x;
     i32 y;
     i32 width;
     i32 height;
     char* name;
-} ApplicationConfig;
+} application_config;
 
-API b8 application_init(struct Game* game);
-API b8 applicationRun(void);
+API b8 application_init(struct game_instance* game);
+API b8 application_run(void);
 
 void applicationGetFramebufferSize(u32* width, u32* height);

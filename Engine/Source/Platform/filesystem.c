@@ -1,7 +1,7 @@
 #include "filesystem.h"
 
-#include "Core/logger.h"
-#include "Core/memory.h"
+#include "core/logger.h"
+#include "core/memory.h"
 
 #include <stdio.h>
 #include <string.h>

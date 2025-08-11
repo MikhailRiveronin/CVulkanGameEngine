@@ -1,10 +1,10 @@
 #pragma once
 
 #include "vulkan_types.inl"
-#include "Containers/darray.h"
+#include "containers/darray.h"
 
-struct PlatformState;
+struct platform_state;
 struct vulkan_context;
 
 void vulkanPlatformGetRequiredExtensions(DARRAY_CSTRING* extensions);
-b8 platformCreateVulkanSurface(struct PlatformState* platformState, struct vulkan_context* context);
+b8 platformCreateVulkanSurface(struct platform_state* platformState, struct vulkan_context* context);

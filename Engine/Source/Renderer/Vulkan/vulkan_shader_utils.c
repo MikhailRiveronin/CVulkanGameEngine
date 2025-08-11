@@ -1,8 +1,8 @@
 #include "vulkan_shader_utils.h"
 
-#include "Core/String.h"
-#include "Core/logger.h"
-#include "Core/Memory.h"
+#include "core/string.h"
+#include "core/logger.h"
+#include "core/Memory.h"
 
 #include "platform/filesystem.h"
 

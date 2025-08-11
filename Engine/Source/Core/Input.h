@@ -142,10 +142,10 @@ typedef enum Button {
     BUTTON_ENUM_COUNT
 } Button;
 
-void inputInit();
-void inputDestroy();
+b8 input_system_startup(u64* memory_size, void* memory);
+void input_system_shutdown(void* memory);
 
-void inputUpdate(f64 deltaTime);
+void input_update(f64 deltaTime);
 
 API b8 input_is_key_down(Key key);
 API b8 input_is_key_up(Key key);

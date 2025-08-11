@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "vulkan_types.inl"
-#include "Platform/Platform.h"
+#include "platform/platform.h"
 
 b8 vulkanDeviceCreate(vulkan_context* context);
 void vulkanDeviceDestroy(vulkan_context* context);
