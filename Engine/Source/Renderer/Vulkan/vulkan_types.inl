@@ -142,7 +142,7 @@ typedef struct vulkan_shader_stage {
 
 typedef struct vulkan_pipeline {
     VkPipeline handle;
-    VkPipelineLayout pipeline_layout;
+    VkPipelineLayout layout;
 } vulkan_pipeline;
 
 #define OBJECT_SHADER_STAGE_COUNT 2

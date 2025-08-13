@@ -36,9 +36,9 @@ static void createCommandBuffers(renderer_backend* backend);
 static void regenerateFramebuffers(renderer_backend* backend, VulkanSwapchain* swapchain, vulkan_renderpass* renderpass);
 static b8 recreate_swapchain(renderer_backend* backend);
 
-static b8 create_buffer(vulkan_context* context);
+static b8 create_buffers(vulkan_context* context);
 
-b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct platform_state* platformState)
+b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
 {
     context.allocator = NULL;
     context.findMemoryType = findMemoryType;
@@ -91,7 +91,7 @@ b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct pl
     DARRAY_CSTRING requiredExtensions;
     DARRAY_INIT(requiredExtensions, MEMORY_TAG_STRING);
     DARRAY_PUSH(requiredExtensions, VK_KHR_SURFACE_EXTENSION_NAME);
-    vulkanPlatformGetRequiredExtensions(&requiredExtensions);
+    vulkan_platform_get_required_extensions(&requiredExtensions);
 #ifdef _DEBUG
     DARRAY_PUSH(requiredExtensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
@@ -161,7 +161,7 @@ b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct pl
     LOG_INFO("Debug messenger created");
 #endif
 
-    if (!platformCreateVulkanSurface(platformState, &context)) {
+    if (!platform_create_vulkan_surface(&context)) {
         LOG_ERROR("Failed to create surface");
         return FALSE;
     }
@@ -220,13 +220,45 @@ b8 vulkan_backend_init(renderer_backend* backend, char const* appName, struct pl
         return FALSE;
     }
 
-    create_buffer(&context);
+    create_buffers(&context);
+
+    // TODO: temp code
+    vertex_3d vertices[3];
+    vertices[0].position.x = 0.0;
+    vertices[0].position.y = -0.5;
+    vertices[0].position.z = 0.0;
+    vertices[1].position.x = 0.5;
+    vertices[1].position.y = 0.5;
+    vertices[1].position.z = 0.0;
+    vertices[2].position.x = 0.0;
+    vertices[2].position.y = 0.5;
+    vertices[2].position.z = 0.0;
+
+    u32 indices[3] = { 0, 1, 2 };
+
+    vulkan_buffer_upload_data(
+        &context,
+        context.device.graphicsCommandPool,
+        0, context.device.queues.graphics.handle,
+        &context.object_vertex_buffer,
+        0, sizeof(*vertices) * _countof(vertices),
+        vertices);
+
+    vulkan_buffer_upload_data(
+        &context,
+        context.device.graphicsCommandPool,
+        0, context.device.queues.graphics.handle,
+        &context.object_index_buffer,
+        0, sizeof(*indices) * _countof(indices),
+        indices);
+
+    // TODO: temp code
 
     LOG_INFO("Vulkan renderer initialized");
     return TRUE;
 }
 
-void vulkanBackendDestroy(struct renderer_backend* backend)
+void vulkan_backend_destroy(struct renderer_backend* backend)
 {
     vkDeviceWaitIdle(context.device.handle);
 
@@ -359,6 +391,8 @@ b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 deltaTime)
         command_buffer, &context.main_renderpass,
         context.swapchain.framebuffers.data[context.image_index].handle);
 
+    
+
     return TRUE;
 }
 
@@ -418,6 +452,21 @@ void vulkan_backend_on_resize(renderer_backend* backend, i16 width, i16 height)
 
     LOG_INFO("vulkan_backend_on_resize: width %i, height %i, framebuffer generation %llu",
         width, height, context.framebuffer_generation);
+}
+
+void vulkan_backend_update_object_state(mat4 world)
+{
+    vulkan_command_buffer* command_buffer = &context.command_buffers.data[context.current_frame];
+
+    vulkan_object_shader_update_object_state(&context, &context.object_shader, world);
+
+    // TODO: temp code
+    vulkan_object_shader_use(&context, &context.object_shader);
+
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, offsets);
+    vkCmdBindIndexBuffer(command_buffer->handle, context.object_index_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdDrawIndexed(command_buffer->handle, 3, 1, 0, 0, 0);
 }
 
 #ifdef _DEBUG
@@ -547,7 +596,7 @@ b8 recreate_swapchain(renderer_backend* backend)
     return TRUE;
 }
 
-b8 create_buffer(vulkan_context* context)
+b8 create_buffers(vulkan_context* context)
 {
     VkMemoryPropertyFlagBits memory_property_flag_bits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 

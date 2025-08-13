@@ -112,7 +112,7 @@ void vulkan_buffer_load_data(
     void const* data)
 {
     vulkan_buffer_map_memory(context, buffer, offset, size, flags);
-    memory_copy(buffer->alignment, data, size);
+    memory_copy(buffer->mapped, data, size);
     vulkan_buffer_unmap_memory(context, buffer);
 }
 

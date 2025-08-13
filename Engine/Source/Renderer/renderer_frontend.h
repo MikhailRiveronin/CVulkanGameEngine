@@ -5,8 +5,8 @@
 struct platform_state;
 struct StaticMeshData;
 
-b8 rendererInit(char const* appName, struct platform_state* platformState);
-void rendererDestroy();
+b8 renderer_system_startup(u64* memory_size, void* memory, char const* appName);
+void renderer_system_shutdown();
 
 b8 renderer_draw_frame(RenderPacket* packet);
 

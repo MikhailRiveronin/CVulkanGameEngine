@@ -28,7 +28,7 @@ static LARGE_INTEGER startTime;
 
 LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam);
 
-b8 platform_system_startup(u64* memory_size, void* memory, platform_state* platformState, char const* appName, i32 x, i32 y, i32 width, i32 height)
+b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_state, char const* appName, i32 x, i32 y, i32 width, i32 height)
 {
     *memory_size = sizeof(*system_state);
     if (!memory) {
@@ -36,7 +36,7 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* platf
     }
 
     system_state = memory;
-    platformState->specific = system_state;platformState;
+    plat_state->specific = system_state;
     system_state->hInstance = GetModuleHandleA(NULL);
 
     WNDCLASSEXA wc;
@@ -91,7 +91,7 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* platf
     return TRUE;
 }
 
-void platform_system_shutdown(platform_state* platformState)
+void platform_system_shutdown(platform_state* plat_state)
 {
     if (system_state->hWnd) {
         DestroyWindow(system_state->hWnd);
@@ -99,7 +99,7 @@ void platform_system_shutdown(platform_state* platformState)
     }
 }
 
-b8 platformProcMessages(platform_state* platformState)
+b8 platformProcMessages(platform_state* plat_state)
 {
     MSG message;
     while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
@@ -180,9 +180,8 @@ void platformSleep(u64 ms)
     Sleep(ms);
 }
 
-b8 platformCreateVulkanSurface(platform_state* platformState, vulkan_context* context)
+b8 platform_create_vulkan_surface(vulkan_context* context)
 {
-    platform_system_state* state = platformState->specific;
     VkWin32SurfaceCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     createInfo.pNext = NULL;

@@ -7,7 +7,7 @@
 #include "logger.h"
 #include "memory/linear_allocator.h"
 #include "platform/platform.h"
-#include "Renderer/RendererFrontend.h"
+#include "Renderer/renderer_frontend.h"
 
 typedef struct application_state {
     game_instance* game;
@@ -44,6 +44,11 @@ typedef struct application_state {
         u64 memory_size;
         void* memory;
     } platform_system;
+
+    struct {
+        u64 memory_size;
+        void* memory;
+    } renderer_system;
 } application_state;
 
 static application_state* app_state;
@@ -125,8 +130,16 @@ b8 application_init(game_instance* game)
         return FALSE;
     }
 
-    if (!rendererInit(game->app_config.name, &app_state->platform)) {
-        LOG_FATAL("Failed to initialize renderer. Shutting down");
+    // Renderer
+    renderer_system_startup(&app_state->renderer_system.memory_size, 0, 0);
+    app_state->renderer_system.memory = linear_allocator_allocate(
+        &app_state->system_allocator,
+        app_state->renderer_system.memory_size);
+    if (!renderer_system_startup(
+        &app_state->renderer_system.memory_size,
+        app_state->renderer_system.memory,
+        game->app_config.name)) {
+        LOG_ERROR("Failed to initialize renderer system. Shutting down...");
         return FALSE;
     }
 
@@ -221,7 +234,7 @@ b8 application_run(void)
     event_system_shutdown(app_state->event_system.memory);
     input_system_shutdown(app_state->input_system.memory);
 
-    rendererDestroy();
+    renderer_system_shutdown();
 
     platform_system_shutdown(&app_state->platform);
 

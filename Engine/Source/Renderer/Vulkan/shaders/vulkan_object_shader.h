@@ -9,3 +9,4 @@ void vulkan_object_shader_destroy(vulkan_context* context, vulkan_object_shader*
 void vulkan_object_shader_use(vulkan_context* context, vulkan_object_shader* shader);
 
 void vulkan_object_shader_update_global_state(vulkan_context* context, vulkan_object_shader* shader);
+void vulkan_object_shader_update_object_state(vulkan_context* context, vulkan_object_shader* shader, mat4 world);

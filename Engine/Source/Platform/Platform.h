@@ -10,13 +10,13 @@ typedef struct platform_state {
 b8 platform_system_startup(
     u64* memory_size,
     void* memory,
-    platform_state* platformState,
+    platform_state* plat_state,
     char const* appName,
     i32 x, i32 y,
     i32 width, i32 height);
-void platform_system_shutdown(platform_state* platformState);
+void platform_system_shutdown(platform_state* plat_state);
 
-b8 platformProcMessages(platform_state* platformState);
+b8 platformProcMessages(platform_state* plat_state);
 
 void* platformAllocate(u64 size, b8 aligned);
 void platformFree(void* ptr, b8 aligned);

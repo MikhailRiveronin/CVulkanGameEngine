@@ -34,7 +34,7 @@ b8 vulkan_pipeline_create(
     rasterization_state_create_info.depthClampEnable = VK_FALSE;
     rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
     rasterization_state_create_info.polygonMode = wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
-    rasterization_state_create_info.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE;
     rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
     rasterization_state_create_info.depthBiasEnable = VK_FALSE;
     rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
@@ -125,19 +125,25 @@ b8 vulkan_pipeline_create(
     input_assembly_state_create_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly_state_create_info.primitiveRestartEnable = VK_FALSE;
 
+    // Push constants
+    VkPushConstantRange push_constant_range = {};
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = 2 * sizeof(mat4);
+
     VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
     pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_create_info.pNext = 0;
     pipeline_layout_create_info.flags = 0;
     pipeline_layout_create_info.setLayoutCount = set_layout_count;
     pipeline_layout_create_info.pSetLayouts = set_layouts;
-    pipeline_layout_create_info.pushConstantRangeCount = 0;
-    pipeline_layout_create_info.pPushConstantRanges = 0;
+    pipeline_layout_create_info.pushConstantRangeCount = 1;
+    pipeline_layout_create_info.pPushConstantRanges = &push_constant_range;
     VK_CHECK(vkCreatePipelineLayout(
         context->device.handle,
         &pipeline_layout_create_info,
         context->allocator,
-        &pipeline->pipeline_layout));
+        &pipeline->layout));
 
     VkGraphicsPipelineCreateInfo graphics_pipeline_create_info = {};
     graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -154,7 +160,7 @@ b8 vulkan_pipeline_create(
     graphics_pipeline_create_info.pDepthStencilState = &depth_stencil_state_create_info;
     graphics_pipeline_create_info.pColorBlendState = &color_blend_state_create_info;
     graphics_pipeline_create_info.pDynamicState = &dynamic_state_create_info;
-    graphics_pipeline_create_info.layout = pipeline->pipeline_layout;
+    graphics_pipeline_create_info.layout = pipeline->layout;
     graphics_pipeline_create_info.renderPass = renderpass->handle;
     graphics_pipeline_create_info.subpass = 0;
     graphics_pipeline_create_info.basePipelineHandle = 0;
@@ -184,9 +190,9 @@ void vulkan_graphics_pipeline_destroy(vulkan_context* context, vulkan_pipeline* 
             pipeline->handle = 0;
         }
 
-        if (pipeline->pipeline_layout) {
-            vkDestroyPipelineLayout(context->device.handle, pipeline->pipeline_layout, context->allocator);
-            pipeline->pipeline_layout = 0;
+        if (pipeline->layout) {
+            vkDestroyPipelineLayout(context->device.handle, pipeline->layout, context->allocator);
+            pipeline->layout = 0;
         }
     }
 }
