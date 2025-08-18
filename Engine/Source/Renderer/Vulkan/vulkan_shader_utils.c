@@ -1,6 +1,6 @@
 #include "vulkan_shader_utils.h"
 
-#include "core/string.h"
+#include "core/string_utils.h"
 #include "core/logger.h"
 #include "core/Memory.h"
 

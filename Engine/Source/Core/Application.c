@@ -7,7 +7,7 @@
 #include "logger.h"
 #include "memory/linear_allocator.h"
 #include "platform/platform.h"
-#include "Renderer/renderer_frontend.h"
+#include "renderer/renderer_frontend.h"
 
 typedef struct application_state {
     game_instance* game;
@@ -205,7 +205,7 @@ b8 application_run(void)
             }
 
             // TODO: temporary solution
-            RenderPacket packet;
+            render_packet packet;
             packet.deltaTime = deltaTime;
             renderer_draw_frame(&packet);
 
@@ -238,7 +238,7 @@ b8 application_run(void)
 
     platform_system_shutdown(&app_state->platform);
 
-    memory_destroy();
+    memory_system_shutdown();
 
     return TRUE;
 }

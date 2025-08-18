@@ -2,7 +2,7 @@
 #include "containers/darray.h"
 #include "core/logger.h"
 #include "core/memory.h"
-#include "core/string.h"
+#include "core/string_utils.h"
 
 typedef struct PhysicalDeviceRequirements {
     DARRAY_CSTRING deviceExtensionNames;
@@ -120,7 +120,7 @@ b8 vulkanDeviceCreate(vulkan_context* context)
         context->device.handle,
         &commandPoolcreateInfo,
         context->allocator,
-        &context->device.graphicsCommandPool));
+        &context->device.graphics_command_pool));
     LOG_INFO("Graphics command pool obtained");
 
     return TRUE;
@@ -128,7 +128,7 @@ b8 vulkanDeviceCreate(vulkan_context* context)
 
 void vulkanDeviceDestroy(vulkan_context* context)
 {
-    vkDestroyCommandPool(context->device.handle, context->device.graphicsCommandPool, context->allocator);
+    vkDestroyCommandPool(context->device.handle, context->device.graphics_command_pool, context->allocator);
 
     context->device.queues.graphics.index = -1;
     context->device.queues.compute.index = -1;
@@ -405,7 +405,7 @@ b8 physicalDeviceMeetsRequirements(
                 for (u32 i = 0; i < requirements->deviceExtensionNames.size; ++i) {
                     b8 found = FALSE;
                     for (u32 j = 0; j < availableExtensions.size; ++j) {
-                        if (stringEqual(
+                        if (string_equal(
                                 DARRAY_AT(requirements->deviceExtensionNames, i),
                                 DARRAY_AT(availableExtensions, j).extensionName)) {
                             found = TRUE;

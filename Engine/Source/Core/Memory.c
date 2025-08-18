@@ -49,7 +49,7 @@ b8 memory_system_startup(u64* memory_size, void* memory)
     return TRUE;
 }
 
-void memory_destroy(void* memory)
+void memory_system_shutdown()
 {
     system_state = 0;
 }
@@ -85,14 +85,14 @@ void memory_free(void* ptr, u64 size, memory_tag tag)
     platformFree(ptr, FALSE);
 }
 
-void* memorySet(void* dest, i32 value, u64 size)
+void* memory_set(void* dest, i32 value, u64 size)
 {
     return platformSetMemory(dest, value, size);
 }
 
 void* memory_zero(void* dest, u64 size)
 {
-    return memorySet(dest, 0, size);
+    return memory_set(dest, 0, size);
 }
 
 void* memory_copy(void* dest, void const* src, u64 size)

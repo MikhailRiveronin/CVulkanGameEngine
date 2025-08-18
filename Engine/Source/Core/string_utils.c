@@ -1,4 +1,5 @@
-#include "string.h"
+#include "string_utils.h"
+
 #include "memory.h"
 #include <string.h>
 #include <stdarg.h>
@@ -16,9 +17,18 @@ char const* stringCopy(char const* str)
     return copy;
 }
 
-b8 stringEqual(char const* str0, char const* str1)
+b8 string_equal(char const* str0, char const* str1)
 {
     return strcmp(str0, str1) == 0;
+}
+
+b8 string_equali(char const* str0, char const* str1)
+{
+#ifdef _MSC_VER
+    return _strcmpi(str0, str1);
+#elif
+    return FALSE;
+#endif
 }
 
 void string_format(char* str, char const* format, ...)

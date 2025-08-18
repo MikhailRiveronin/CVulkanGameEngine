@@ -26,12 +26,12 @@ typedef enum memory_tag {
 } memory_tag;
 
 API b8 memory_system_startup(u64* memory_size, void* memory);
-API void memory_destroy();
+API void memory_system_shutdown();
 
 API void* memory_allocate(u64 size, memory_tag tag);
 API void memory_free(void* ptr, u64 size, memory_tag tag);
 
-API void* memorySet(void* dest, i32 value, u64 size);
+API void* memory_set(void* dest, i32 value, u64 size);
 API void* memory_zero(void* dest, u64 size);
 API void* memory_copy(void* dest, void const* src, u64 size);
 

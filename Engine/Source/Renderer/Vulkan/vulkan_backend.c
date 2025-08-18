@@ -8,15 +8,16 @@
 #include "VulkanFramebuffer.h"
 #include "VulkanFence.h"
 #include "vulkan_utils.h"
-#include "shaders/vulkan_object_shader.h"
+#include "shaders/vulkan_material_shader.h"
 #include "math/math_types.h"
 #include "vulkan_buffer.h"
+#include "vulkan_image.h"
 
 #include "containers/darray.h"
 
 #include "core/application.h"
 #include "core/logger.h"
-#include "core/string.h"
+#include "core/string_utils.h"
 
 
 static vulkan_context context;
@@ -38,7 +39,7 @@ static b8 recreate_swapchain(renderer_backend* backend);
 
 static b8 create_buffers(vulkan_context* context);
 
-b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
+b8 vulkan_backend_create(renderer_backend* backend, char const* app_name)
 {
     context.allocator = NULL;
     context.findMemoryType = findMemoryType;
@@ -74,7 +75,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
         for (u32 i = 0; i < requiredLayers.size; ++i) {
             b8 found = FALSE;
             for (u32 j = 0; j < availableLayers.size; ++j) {
-                if (stringEqual(DARRAY_AT(requiredLayers, i), DARRAY_AT(availableLayers, j).layerName)) {
+                if (string_equal(DARRAY_AT(requiredLayers, i), DARRAY_AT(availableLayers, j).layerName)) {
                     found = TRUE;
                     break;
                 }
@@ -110,7 +111,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
         for (u32 i = 0; i < requiredExtensions.size; ++i) {
             b8 found = FALSE;
             for (u32 j = 0; j < availableExtensions.size; ++j) {
-                if (stringEqual(DARRAY_AT(requiredExtensions, i), DARRAY_AT(availableExtensions, j).extensionName)) {
+                if (string_equal(DARRAY_AT(requiredExtensions, i), DARRAY_AT(availableExtensions, j).extensionName)) {
                     found = TRUE;
                     break;
                 }
@@ -215,7 +216,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
     }
 
     // Create builtin shaders
-    if (!vulkan_object_shader_create(&context, &context.object_shader)) {
+    if (!vulkan_material_shader_create(&context, backend->default_diffuse, &context.material_shader)) {
         LOG_ERROR("Error loading built-in basic_lighting shader.");
         return FALSE;
     }
@@ -238,7 +239,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
 
     vulkan_buffer_upload_data(
         &context,
-        context.device.graphicsCommandPool,
+        context.device.graphics_command_pool,
         0, context.device.queues.graphics.handle,
         &context.object_vertex_buffer,
         0, sizeof(*vertices) * _countof(vertices),
@@ -246,11 +247,17 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* appName)
 
     vulkan_buffer_upload_data(
         &context,
-        context.device.graphicsCommandPool,
+        context.device.graphics_command_pool,
         0, context.device.queues.graphics.handle,
         &context.object_index_buffer,
         0, sizeof(*indices) * _countof(indices),
         indices);
+
+    u32 object_id;
+    if (!vulkan_material_shader_acquire_resources(&context, &context.material_shader, &object_id)) {
+        LOG_ERROR("Failed to acquire shader resources");
+        return FALSE;
+    }
 
     // TODO: temp code
 
@@ -267,7 +274,7 @@ void vulkan_backend_destroy(struct renderer_backend* backend)
     vulkan_buffer_destroy(&context, &context.object_index_buffer);
 
     // Shader objects
-    vulkan_object_shader_destroy(&context, &context.object_shader);
+    vulkan_material_shader_destroy(&context, &context.material_shader);
 
     // Sync objects
     for (u32 i = 0; i < context.image_available_semaphors.capacity; ++i) {
@@ -286,7 +293,7 @@ void vulkan_backend_destroy(struct renderer_backend* backend)
     for (u8 i = 0; i < context.command_buffers.size; ++i) {
         vulkanCommandBufferFree(
             &context,
-            context.device.graphicsCommandPool,
+            context.device.graphics_command_pool,
             &DARRAY_AT(context.command_buffers, i));
     }
     DARRAY_DESTROY(context.command_buffers);
@@ -314,8 +321,10 @@ void vulkan_backend_destroy(struct renderer_backend* backend)
     vkDestroyInstance(context.instance, context.allocator);
 }
 
-b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 deltaTime)
+b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 delta_time)
 {
+    context.frame_delta_time = delta_time;
+
     VkDevice device = context.device.handle;
     vulkan_command_buffer* command_buffer = &context.command_buffers.data[context.current_frame];
 
@@ -400,12 +409,12 @@ void vulkan_backend_update_global_state(mat4 view, mat4 proj, vec3 view_pos, vec
 {
     vulkan_command_buffer* command_buffer = &context.command_buffers.data[context.current_frame];
 
-    vulkan_object_shader_use(&context, &context.object_shader);
+    vulkan_material_shader_use(&context, &context.material_shader);
 
-    context.object_shader.global_data.view = view;
-    context.object_shader.global_data.proj = proj;
+    context.material_shader.global_data.view = view;
+    context.material_shader.global_data.proj = proj;
 
-    vulkan_object_shader_update_global_state(&context, &context.object_shader);
+    vulkan_material_shader_update_global_state(&context, &context.material_shader, context.frame_delta_time);
 }
 
 b8 vulkan_backend_end_frame(struct renderer_backend* backend, f64 deltaTime)
@@ -454,19 +463,129 @@ void vulkan_backend_on_resize(renderer_backend* backend, i16 width, i16 height)
         width, height, context.framebuffer_generation);
 }
 
-void vulkan_backend_update_object_state(mat4 world)
+void vulkan_backend_update_object_state(geometry_render_data render_data)
 {
     vulkan_command_buffer* command_buffer = &context.command_buffers.data[context.current_frame];
 
-    vulkan_object_shader_update_object_state(&context, &context.object_shader, world);
+    vulkan_material_shader_update_object_state(&context, &context.material_shader, render_data);
 
     // TODO: temp code
-    vulkan_object_shader_use(&context, &context.object_shader);
+    vulkan_material_shader_use(&context, &context.material_shader);
 
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, offsets);
     vkCmdBindIndexBuffer(command_buffer->handle, context.object_index_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
     vkCmdDrawIndexed(command_buffer->handle, 3, 1, 0, 0, 0);
+}
+
+void vulkan_backend_create_texture(
+    char const* name,
+    b8 auto_release,
+    i32 width,
+    i32 height,
+    i32 channel_count,
+    u8 const* pixels,
+    b8 has_transparency,
+    texture* texture)
+{
+    texture->widht = width;
+    texture->height = height;
+    texture->channel_count = channel_count;
+    texture->generation = INVALID_ID;
+
+    texture->internal_data = memory_allocate(sizeof(vulkan_texture_data), MEMORY_TAG_TEXTURE);
+    vulkan_texture_data* data = texture->internal_data;
+
+    VkDeviceSize image_size = width * height * channel_count;
+
+    VkFormat image_format = VK_FORMAT_R8G8B8_SNORM;
+
+    // Staging buffer
+    VkBufferUsageFlagBits usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VkMemoryPropertyFlagBits memory_properties =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    vulkan_buffer staging;
+    vulkan_buffer_create(&context, image_size, usage, memory_properties, TRUE, &staging);
+
+    vulkan_buffer_load_data(&context, &staging, 0, image_size, 0, pixels);
+
+    vulkan_image_create(
+        &context,
+        VK_IMAGE_TYPE_2D,
+        width, height,
+        image_format,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        TRUE,
+        VK_IMAGE_ASPECT_COLOR_BIT,
+        &data->image);
+
+    VkCommandPool pool = context.device.graphics_command_pool;
+    VkQueue queue = context.device.queues.graphics.handle;
+    vulkan_command_buffer temp_command_buffer;
+    vulkan_command_buffer_allocate_and_begin_single_use(&context, pool, &temp_command_buffer);
+
+    vulkan_image_transition_layout(
+        &context,
+        &temp_command_buffer,
+        &data->image,
+        image_format,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    vulkan_image_copy_from_buffer(&context, &temp_command_buffer, &data->image, staging.handle);
+    vulkan_buffer_destroy(&context, &staging);
+
+    vulkan_image_transition_layout(
+        &context,
+        &temp_command_buffer,
+        &data->image,
+        image_format,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    vulkan_command_buffer_end_single_use(&context, pool, &temp_command_buffer, queue);
+
+    VkSamplerCreateInfo sampler_create_info = {};
+    sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sampler_create_info.pNext = 0;
+    sampler_create_info.flags = 0;
+    sampler_create_info.magFilter = VK_FILTER_LINEAR;
+    sampler_create_info.minFilter = VK_FILTER_LINEAR;
+    sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_create_info.mipLodBias = 0.f;
+    sampler_create_info.anisotropyEnable = VK_TRUE;
+    sampler_create_info.maxAnisotropy = 1.f;
+    sampler_create_info.compareEnable = VK_FALSE;
+    sampler_create_info.compareOp = VK_COMPARE_OP_NEVER;
+    sampler_create_info.minLod = 0.f;
+    sampler_create_info.maxLod = 0.f;
+    sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+    sampler_create_info.unnormalizedCoordinates = VK_FALSE;
+    VK_CHECK(vkCreateSampler(context.device.handle, &sampler_create_info, context.allocator, &data->sampler));
+
+    texture->has_transparency = has_transparency;
+    texture->generation++;
+}
+
+void vulkan_backend_destroy_texture(texture* texture)
+{
+    vkDeviceWaitIdle(context.device.handle);
+
+    vulkan_texture_data* data = texture->internal_data;
+
+    vulkan_image_destroy(&context, &data->image);
+    memory_zero(&data->image, sizeof(data->image));
+    vkDestroySampler(context.device.handle, data->sampler, context.allocator);
+    data->sampler = 0;
+
+    memory_free(texture->internal_data, sizeof(vulkan_texture_data), MEMORY_TAG_TEXTURE);
+    memory_zero(texture, sizeof(*texture));
 }
 
 #ifdef _DEBUG
@@ -515,11 +634,11 @@ void createCommandBuffers(renderer_backend* backend)
     for (u8 i = 0; i < context.swapchain.images.size; ++i) {
         if (DARRAY_AT(context.command_buffers, i).handle) {
             vulkanCommandBufferFree(
-                &context, context.device.graphicsCommandPool,
+                &context, context.device.graphics_command_pool,
                 &DARRAY_AT(context.command_buffers, i));
         }
         vulkanCommandBufferAllocate(
-            &context, context.device.graphicsCommandPool,
+            &context, context.device.graphics_command_pool,
             TRUE, &DARRAY_AT(context.command_buffers, i));
     }
     LOG_DEBUG("Vulkan command buffers created");
@@ -573,7 +692,7 @@ b8 recreate_swapchain(renderer_backend* backend)
 
     // cleanup swapchain
     for (u32 i = 0; i < context.swapchain.images.size; ++i) {
-        vulkanCommandBufferFree(&context, context.device.graphicsCommandPool, &context.command_buffers.data[i]);
+        vulkanCommandBufferFree(&context, context.device.graphics_command_pool, &context.command_buffers.data[i]);
     }
 
     // Framebuffers.

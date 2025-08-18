@@ -129,17 +129,17 @@ void vulkan_buffer_copy(
 {
     vkQueueWaitIdle(queue);
 
-    vulkan_command_buffer temp_comman_buffer;
-    vulkan_command_buffer_allocate_and_begin_single_use(context, pool, &temp_comman_buffer);
+    vulkan_command_buffer temp_command_buffer;
+    vulkan_command_buffer_allocate_and_begin_single_use(context, pool, &temp_command_buffer);
 
     VkBufferCopy buffer_copy = {};
     buffer_copy.srcOffset = source_offset;
     buffer_copy.dstOffset = dest_offset;
     buffer_copy.size = size;
 
-    vkCmdCopyBuffer(temp_comman_buffer.handle, source, dest, 1, &buffer_copy);
+    vkCmdCopyBuffer(temp_command_buffer.handle, source, dest, 1, &buffer_copy);
 
-    vulkan_command_buffer_end_single_use(context, pool, &temp_comman_buffer, queue);
+    vulkan_command_buffer_end_single_use(context, pool, &temp_command_buffer, queue);
 }
 
 void vulkan_buffer_upload_data(

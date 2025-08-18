@@ -195,7 +195,7 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
         LOG_FATAL("Failed to find a supported format");
     }
 
-    vulkanImageCreate(
+    vulkan_image_create(
         context,
         VK_IMAGE_TYPE_2D,
         swapchainExtent.width,
@@ -215,7 +215,7 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
 void destroy(vulkan_context* context, VulkanSwapchain* swapchain)
 {
     vkDeviceWaitIdle(context->device.handle);
-    vulkanImageDestroy(context, &swapchain->depthBuffer);
+    vulkan_image_destroy(context, &swapchain->depthBuffer);
     for (u32 i = 0; i < swapchain->images.size; ++i) {
         vkDestroyImageView(context->device.handle, DARRAY_AT(swapchain->imageViews, i), context->allocator);
     }

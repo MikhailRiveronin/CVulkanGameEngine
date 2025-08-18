@@ -3,7 +3,7 @@
 #include "defines.h"
 #include "core/asserts.h"
 #include "containers/darray.h"
-#include "Renderer/renderer_types.inl"
+#include "renderer/renderer_types.inl"
 #include <vulkan/vulkan.h>
 
 #define VK_CHECK(expr)                                                    \
@@ -60,7 +60,7 @@ typedef struct vulkan_device {
         } present;
     } queues;
 
-    VkCommandPool graphicsCommandPool;
+    VkCommandPool graphics_command_pool;
 
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures features;
@@ -69,13 +69,13 @@ typedef struct vulkan_device {
     VkFormat depthFormat;
 } vulkan_device;
 
-typedef struct VulkanImage {
+typedef struct vulkan_image {
     VkImage handle;
     VkDeviceMemory memory;
     VkImageView view;
     u32 width;
     u32 height;
-} VulkanImage;
+} vulkan_image;
 
 typedef enum VulkanRenderPassState {
     RENDERPASS_READY,
@@ -112,7 +112,7 @@ typedef struct VulkanSwapchain {
     DARRAY(VkImageView) imageViews;
     DARRAY(VulkanFramebuffer) framebuffers;
 
-    VulkanImage depthBuffer;
+    vulkan_image depthBuffer;
 } VulkanSwapchain;
 
 typedef enum VulkanCommandBufferState {
@@ -147,21 +147,48 @@ typedef struct vulkan_pipeline {
 
 #define OBJECT_SHADER_STAGE_COUNT 2
 
-typedef struct vulkan_object_shader {
+#define VULKAN_OBJECT_MAX_OBJECT_COUNT 1024
+
+typedef struct vulkan_descriptor_state {
+    u32 generations[3];
+} vulkan_descriptor_state;
+
+#define VULKAN_OBJECT_SHADER_DESCRIPTOR_COUNT 2
+
+typedef struct vulkan_object_shader_object_state {
+    VkDescriptorSet descriptor_sets[3];
+    vulkan_descriptor_state descriptor_states[VULKAN_OBJECT_SHADER_DESCRIPTOR_COUNT];
+} vulkan_object_shader_object_state;
+
+typedef struct vulkan_material_shader {
     vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
     vulkan_pipeline pipeline;
 
     VkDescriptorPool global_descriptor_pool;
     VkDescriptorSetLayout global_descriptor_set_layout;
+    vulkan_buffer global_ubo;
+
+    VkDescriptorPool object_descriptor_pool;
+    VkDescriptorSetLayout object_descriptor_set_layout;
+    vulkan_buffer object_ubo;
+    u32 object_ubo_index;
+
+    vulkan_object_shader_object_state object_states[VULKAN_OBJECT_MAX_OBJECT_COUNT];
 
     // Triple-buffering
     VkDescriptorSet global_descriptor_sets[3];
+    VkDescriptorSet object_descriptor_sets[3];
 
     global_uniform_data global_data;
-    vulkan_buffer global_ubo;
-} vulkan_object_shader;
+    object_uniform_data object_data;
+
+    // Default textures
+    texture* default_diffuse;
+} vulkan_material_shader;
 
 typedef struct vulkan_context {
+    f32 frame_delta_time;
+
     i16 framebuffer_width;
     i16 framebuffer_height;
     u64 framebuffer_generation;
@@ -195,7 +222,12 @@ typedef struct vulkan_context {
     VkSurfaceKHR surface;
     vulkan_device device;
 
-    vulkan_object_shader object_shader;
+    vulkan_material_shader material_shader;
 
     i32 (* findMemoryType)(u32 memoryTypeBits, VkMemoryPropertyFlags properties);
 } vulkan_context;
+
+typedef struct vulkan_texture_data {
+    vulkan_image image;
+    VkSampler sampler;
+} vulkan_texture_data;

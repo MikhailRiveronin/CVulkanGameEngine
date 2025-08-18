@@ -1,8 +1,8 @@
 #include "renderer_backend.h"
-#include "Vulkan/vulkan_backend.h"
+#include "vulkan/vulkan_backend.h"
 #include "core/memory.h"
 
-b8 renderer_backend_init(RendererBackendType type, renderer_backend* backend)
+b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend)
 {
     switch (type) {
         case RENDERER_BACKEND_TYPE_VULKAN:
@@ -13,6 +13,8 @@ b8 renderer_backend_init(RendererBackendType type, renderer_backend* backend)
             backend->endFrame = vulkan_backend_end_frame;
             backend->on_resize = vulkan_backend_on_resize;
             backend->on_update_object_state = vulkan_backend_update_object_state;
+            backend->create_texture = vulkan_backend_create_texture;
+            backend->destroy_texture = vulkan_backend_destroy_texture;
             backend->frameCount = 0;
             return TRUE;
     }
@@ -28,4 +30,6 @@ void renderer_backend_destroy(renderer_backend* backend)
     backend->endFrame = NULL;
     backend->on_resize = NULL;
     backend->on_update_object_state = 0;
+    backend->create_texture = 0;
+    backend->destroy_texture = 0;
 }
