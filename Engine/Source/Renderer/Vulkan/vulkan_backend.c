@@ -180,8 +180,8 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* app_name)
     vulkan_renderpass_create(
         &context,
         &context.main_renderpass,
-        0.0f, 0.0f, context.framebuffer_width, context.framebuffer_height,
-        0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0);
+        0.f, 0.f, context.framebuffer_width, context.framebuffer_height,
+        0.f, 0.f, 1.f, 1.f, 1.f, 0);
 
     DARRAY_RESERVE(context.swapchain.framebuffers, context.swapchain.images.size, MEMORY_TAG_RENDERER);
     regenerateFramebuffers(backend, &context.swapchain, &context.main_renderpass);
@@ -216,7 +216,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* app_name)
     }
 
     // Create builtin shaders
-    if (!vulkan_material_shader_create(&context, backend->default_diffuse, &context.material_shader)) {
+    if (!vulkan_material_shader_create(&context, &context.material_shader)) {
         LOG_ERROR("Error loading built-in basic_lighting shader.");
         return FALSE;
     }
@@ -377,12 +377,12 @@ b8 vulkan_backend_begin_frame(renderer_backend* backend, f64 delta_time)
     vulkan_command_buffer_begin(command_buffer, FALSE, FALSE, FALSE);
 
     VkViewport viewport = {};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
+    viewport.x = 0.f;
+    viewport.y = 0.f;
     viewport.width = (f32)context.framebuffer_width;
     viewport.height = (f32)context.framebuffer_height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+    viewport.minDepth = 0.f;
+    viewport.maxDepth = 1.f;
 
     VkRect2D scissor = {};
     scissor.offset.x = 0;
@@ -478,25 +478,12 @@ void vulkan_backend_update_object_state(geometry_render_data render_data)
     vkCmdDrawIndexed(command_buffer->handle, 3, 1, 0, 0, 0);
 }
 
-void vulkan_backend_create_texture(
-    char const* name,
-    b8 auto_release,
-    i32 width,
-    i32 height,
-    i32 channel_count,
-    u8 const* pixels,
-    b8 has_transparency,
-    texture* texture)
+void vulkan_backend_create_texture(u8 const* pixels, texture* texture)
 {
-    texture->widht = width;
-    texture->height = height;
-    texture->channel_count = channel_count;
-    texture->generation = INVALID_ID;
-
     texture->internal_data = memory_allocate(sizeof(vulkan_texture_data), MEMORY_TAG_TEXTURE);
     vulkan_texture_data* data = texture->internal_data;
 
-    VkDeviceSize image_size = width * height * channel_count;
+    VkDeviceSize image_size = texture->width * texture->height * texture->channel_count;
 
     VkFormat image_format = VK_FORMAT_R8G8B8_SNORM;
 
@@ -513,7 +500,8 @@ void vulkan_backend_create_texture(
     vulkan_image_create(
         &context,
         VK_IMAGE_TYPE_2D,
-        width, height,
+        texture->width,
+        texture->height,
         image_format,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -569,7 +557,6 @@ void vulkan_backend_create_texture(
     sampler_create_info.unnormalizedCoordinates = VK_FALSE;
     VK_CHECK(vkCreateSampler(context.device.handle, &sampler_create_info, context.allocator, &data->sampler));
 
-    texture->has_transparency = has_transparency;
     texture->generation++;
 }
 

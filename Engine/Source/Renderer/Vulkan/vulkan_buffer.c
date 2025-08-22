@@ -3,7 +3,7 @@
 #include "vulkan_command_buffer.h"
 #include "vulkan_utils.h"
 #include "core/logger.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 b8 vulkan_buffer_create(
     vulkan_context* context,

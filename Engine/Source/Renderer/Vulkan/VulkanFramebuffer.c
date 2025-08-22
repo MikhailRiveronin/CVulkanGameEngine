@@ -1,5 +1,5 @@
 #include "VulkanFramebuffer.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 void vulkanFramebufferCreate(
     vulkan_context* context,

@@ -20,12 +20,12 @@ typedef u32 b32;
 #define FALSE 0
 
 #define INVALID_ID 4294967295u
+#define INVALID_GEN 4294967295u
 
-// Library API.
 #ifdef EXPORT
-#define API __declspec(dllexport)
+#define LIB_API __declspec(dllexport)
 #else
-#define API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 
 #define MAX(a, b) ((a) > (b)) ? (a) : (b)

@@ -145,23 +145,24 @@ typedef struct vulkan_pipeline {
     VkPipelineLayout layout;
 } vulkan_pipeline;
 
-#define OBJECT_SHADER_STAGE_COUNT 2
+#define MATERIAL_SHADER_STAGE_COUNT 2
 
-#define VULKAN_OBJECT_MAX_OBJECT_COUNT 1024
+#define VULKAN_MAX_MATERIAL_COUNT 1024
 
 typedef struct vulkan_descriptor_state {
     u32 generations[3];
 } vulkan_descriptor_state;
 
-#define VULKAN_OBJECT_SHADER_DESCRIPTOR_COUNT 2
+#define VULKAN_MATERIAL_SHADER_DESCRIPTOR_COUNT 2
+#define VULKAN_MATERIAL_SHADER_SAMPLER_COUNT 2
 
-typedef struct vulkan_object_shader_object_state {
+typedef struct vulkan_material_shader_instance_state {
     VkDescriptorSet descriptor_sets[3];
-    vulkan_descriptor_state descriptor_states[VULKAN_OBJECT_SHADER_DESCRIPTOR_COUNT];
-} vulkan_object_shader_object_state;
+    vulkan_descriptor_state descriptor_states[VULKAN_MATERIAL_SHADER_DESCRIPTOR_COUNT];
+} vulkan_material_shader_instance_state;
 
 typedef struct vulkan_material_shader {
-    vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
+    vulkan_shader_stage stages[MATERIAL_SHADER_STAGE_COUNT];
     vulkan_pipeline pipeline;
 
     VkDescriptorPool global_descriptor_pool;
@@ -173,7 +174,9 @@ typedef struct vulkan_material_shader {
     vulkan_buffer object_ubo;
     u32 object_ubo_index;
 
-    vulkan_object_shader_object_state object_states[VULKAN_OBJECT_MAX_OBJECT_COUNT];
+    texture_use sampler_uses[VULKAN_MATERIAL_SHADER_SAMPLER_COUNT];
+
+    vulkan_material_shader_instance_state instance_states[VULKAN_MAX_MATERIAL_COUNT];
 
     // Triple-buffering
     VkDescriptorSet global_descriptor_sets[3];
@@ -181,9 +184,6 @@ typedef struct vulkan_material_shader {
 
     global_uniform_data global_data;
     object_uniform_data object_data;
-
-    // Default textures
-    texture* default_diffuse;
 } vulkan_material_shader;
 
 typedef struct vulkan_context {

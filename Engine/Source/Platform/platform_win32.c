@@ -23,10 +23,11 @@ static u16 charAttributes[] = {
     FOREGROUND_GREEN,
     FOREGROUND_GREEN };
 
-static f64 countRate;
-static LARGE_INTEGER startTime;
+static f64 count_rate;
+static LARGE_INTEGER start_time;
 
 LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam);
+static void setup_clock();
 
 b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_state, char const* appName, i32 x, i32 y, i32 width, i32 height)
 {
@@ -83,10 +84,7 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_
 
     ShowWindow(system_state->hWnd, SW_SHOWNORMAL);
 
-    LARGE_INTEGER countsPerSecond;
-    QueryPerformanceFrequency(&countsPerSecond);
-    countRate = 1.0 / (f64)countsPerSecond.QuadPart;
-    QueryPerformanceCounter(&startTime);
+    setup_clock();
 
     return TRUE;
 }
@@ -170,9 +168,13 @@ void platformWriteError(char const *message)
 
 f64 platform_get_absolute_time()
 {
+    if (system_state == 0) {
+        setup_clock();
+    }
+
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    return (f64)now.QuadPart * countRate;
+    return (f64)now.QuadPart * count_rate;
 }
 
 void platformSleep(u64 ms)
@@ -300,4 +302,12 @@ LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam
     }
 
     return DefWindowProcA(hWnd, message, wParam, lParam);
+}
+
+void setup_clock()
+{
+    LARGE_INTEGER countsPerSecond;
+    QueryPerformanceFrequency(&countsPerSecond);
+    count_rate = 1.0 / (f64)countsPerSecond.QuadPart;
+    QueryPerformanceCounter(&start_time);
 }

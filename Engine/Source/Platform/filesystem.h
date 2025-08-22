@@ -19,9 +19,9 @@ typedef enum file_modes {
  * @param path The path of the file to be checked.
  * @returns True if exists; otherwise false.
  */
-API b8 filesystem_exists(char const* path);
+LIB_API b8 filesystem_exists(char const* path);
 
-/** 
+/**
  * Attempt to open file located at path.
  * @param path The path of the file to be opened.
  * @param mode Mode flags for the file when opened (read/write). See file_modes enum in filesystem.h.
@@ -29,31 +29,33 @@ API b8 filesystem_exists(char const* path);
  * @param out_handle A pointer to a file_handle structure which holds the handle information.
  * @returns True if opened successfully; otherwise false.
  */
-API b8 filesystem_open(char const* path, file_modes mode, b8 binary, file_handle* out_handle);
+LIB_API b8 filesystem_open(char const* path, file_modes mode, b8 binary, file_handle* out_handle);
 
-/** 
+/**
  * Closes the provided handle to a file.
  * @param handle A pointer to a file_handle structure which holds the handle to be closed.
  */
-API void filesystem_close(file_handle* handle);
+LIB_API void filesystem_close(file_handle* handle);
 
-/** 
- * Reads up to a newline or EOF. Allocates *line_buf, which must be freed by the caller.
+/**
+ * Reads up to a newline or EOF.
  * @param handle A pointer to a file_handle structure.
- * @param line_buf A pointer to a character array which will be allocated and populated by this method.
+ * @param max_length The maximum length to be read from the line.
+ * @param line_buf A pointer to a character array populated by this method. Must already be allocated.
+ * @param out_line_length A pointer to hold the line length read from the file.
  * @returns True if successful; otherwise false.
  */
-API b8 filesystem_read_line(file_handle* handle, char** line_buf);
+LIB_API b8 filesystem_read_line(file_handle* handle, u64 max_length, char** line_buf, u64* line_length);
 
-/** 
+/**
  * Writes text to the provided file, appending a '\n' afterward.
  * @param handle A pointer to a file_handle structure.
  * @param text The text to be written.
  * @returns True if successful; otherwise false.
  */
-API b8 filesystem_write_line(file_handle* handle, char const* text);
+LIB_API b8 filesystem_write_line(file_handle* handle, char const* text);
 
-/** 
+/**
  * Reads up to data_size bytes of data into out_bytes_read. 
  * Allocates *out_data, which must be freed by the caller.
  * @param handle A pointer to a file_handle structure.
@@ -62,9 +64,9 @@ API b8 filesystem_write_line(file_handle* handle, char const* text);
  * @param out_bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
  * @returns True if successful; otherwise false.
  */
-API b8 filesystem_read(file_handle* handle, u64 data_size, void* out_data, u64* out_bytes_read);
+LIB_API b8 filesystem_read(file_handle* handle, u64 data_size, void* out_data, u64* out_bytes_read);
 
-/** 
+/**
  * Reads up to data_size bytes of data into out_bytes_read. 
  * Allocates *out_bytes, which must be freed by the caller.
  * @param handle A pointer to a file_handle structure.
@@ -72,9 +74,9 @@ API b8 filesystem_read(file_handle* handle, u64 data_size, void* out_data, u64* 
  * @param out_bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
  * @returns True if successful; otherwise false.
  */
-API b8 filesystem_read_all_bytes(file_handle* handle, u8** out_bytes, u64* out_bytes_read);
+LIB_API b8 filesystem_read_all_bytes(file_handle* handle, u8** out_bytes, u64* out_bytes_read);
 
-/** 
+/**
  * Writes provided data to the file.
  * @param handle A pointer to a file_handle structure.
  * @param data_size The size of the data in bytes.
@@ -82,4 +84,4 @@ API b8 filesystem_read_all_bytes(file_handle* handle, u8** out_bytes, u64* out_b
  * @param out_bytes_written A pointer to a number which will be populated with the number of bytes actually written to the file.
  * @returns True if successful; otherwise false.
  */
-API b8 filesystem_write(file_handle* handle, u64 data_size, void const* data, u64* out_bytes_written);
+LIB_API b8 filesystem_write(file_handle* handle, u64 data_size, void const* data, u64* out_bytes_written);

@@ -1,4 +1,4 @@
-#include "memory.h"
+#include "memory_utils.h"
 #include "logger.h"
 #include "platform/platform.h"
 
@@ -78,8 +78,10 @@ void memory_free(void* ptr, u64 size, memory_tag tag)
         LOG_WARNING("deallocate() called using MEMORY_TAG_UNKNOWN. Use another allocation class");
     }
 
-    system_state->stats.allocatedTotal -= size;
-    system_state->stats.allocatedTagged[tag] -= size;
+    if (system_state != 0) {
+        system_state->stats.allocatedTotal -= size;
+        system_state->stats.allocatedTagged[tag] -= size;
+    }
 
     // TODO: Memory alignment.
     platformFree(ptr, FALSE);

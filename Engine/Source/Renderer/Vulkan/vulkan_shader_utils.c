@@ -2,14 +2,14 @@
 
 #include "core/string_utils.h"
 #include "core/logger.h"
-#include "core/Memory.h"
+#include "core/memory_utils.h"
 
 #include "platform/filesystem.h"
 
 b8 create_shader_module(
     vulkan_context* context,
-    const char* name,
-    const char* type_str,
+    char const* name,
+    char const* type_str,
     VkShaderStageFlagBits shader_stage_flag,
     u32 stage_index,
     vulkan_shader_stage* shader_stages)

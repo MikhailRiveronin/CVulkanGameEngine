@@ -1,7 +1,7 @@
 #include "linear_allocator.h"
 
 #include "core/logger.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 void linear_allocator_create(u64 total_size, void* memory, linear_allocator* out_allocator)
 {
@@ -37,7 +37,7 @@ void* linear_allocator_allocate(linear_allocator* allocator, u64 size)
     if (allocator && allocator->memory) {
         if (allocator->allocated + size > allocator->total_size) {
             u64 remaining = allocator->total_size - allocator->allocated;
-            LOG_ERROR("linear_allocator_allocate - Tried to allocate %lluB, only %lluB remaining.", size, remaining);
+            LOG_ERROR("linear_allocator_allocate: Tried to allocate %lluB, only %lluB remaining.", size, remaining);
             return 0;
         }
 

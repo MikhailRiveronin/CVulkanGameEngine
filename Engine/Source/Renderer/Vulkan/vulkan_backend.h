@@ -16,13 +16,5 @@ void vulkan_backend_on_resize(renderer_backend* backend, i16 width, i16 height);
 
 void vulkan_backend_update_object_state(geometry_render_data render_data);
 
-void vulkan_backend_create_texture(
-    char const* name,
-    b8 auto_release,
-    i32 width,
-    i32 height,
-    i32 channel_count,
-    u8 const* pixels,
-    b8 has_transparency,
-    texture* texture);
+void vulkan_backend_create_texture(u8 const* pixels, texture* texture);
 void vulkan_backend_destroy_texture(texture* texture);

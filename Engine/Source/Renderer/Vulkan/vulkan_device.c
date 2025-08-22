@@ -1,7 +1,7 @@
 #include "vulkan_device.h"
 #include "containers/darray.h"
 #include "core/logger.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 #include "core/string_utils.h"
 
 typedef struct PhysicalDeviceRequirements {
@@ -64,7 +64,7 @@ b8 vulkanDeviceCreate(vulkan_context* context)
     }
 
     DARRAY_DEFINE(VkDeviceQueueCreateInfo, queueCreateInfos, indexCount, MEMORY_TAG_RENDERER);
-    f32 queuePriority = 1.0f;
+    f32 queuePriority = 1.f;
     for (u8 i = 0; i < indexCount; ++i) {
         VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;

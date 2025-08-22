@@ -147,17 +147,17 @@ void input_system_shutdown(void* memory);
 
 void input_update(f64 deltaTime);
 
-API b8 input_is_key_down(Key key);
-API b8 input_is_key_up(Key key);
-API b8 input_was_key_down(Key key);
-API b8 input_was_key_up(Key key);
+LIB_API b8 input_is_key_down(Key key);
+LIB_API b8 input_is_key_up(Key key);
+LIB_API b8 input_was_key_down(Key key);
+LIB_API b8 input_was_key_up(Key key);
 
 void inputProcessKey(Key key, b8 pressed);
 
-API b8 inputIsButtonDown(Button button);
-API b8 inputIsButtonUp(Button button);
-API b8 inputWasButtonyDown(Button button);
-API b8 inputWasButtonyUp(Button button);
+LIB_API b8 inputIsButtonDown(Button button);
+LIB_API b8 inputIsButtonUp(Button button);
+LIB_API b8 inputWasButtonyDown(Button button);
+LIB_API b8 inputWasButtonyUp(Button button);
 void inputGetMousePosition(i16* x, i16* y);
 void inputGetPreviousMousePosition(i16* x, i16* y);
 

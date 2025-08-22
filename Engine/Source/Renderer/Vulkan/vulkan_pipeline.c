@@ -1,7 +1,7 @@
 #include "vulkan_pipeline.h"
 #include "vulkan_utils.h"
 #include "core/logger.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 #include "math/math_types.h"
 
 b8 vulkan_pipeline_create(
@@ -37,10 +37,10 @@ b8 vulkan_pipeline_create(
     rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE;
     rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
     rasterization_state_create_info.depthBiasEnable = VK_FALSE;
-    rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
-    rasterization_state_create_info.depthBiasClamp = 0.0f;
-    rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
-    rasterization_state_create_info.lineWidth = 1.0f;
+    rasterization_state_create_info.depthBiasConstantFactor = 0.f;
+    rasterization_state_create_info.depthBiasClamp = 0.f;
+    rasterization_state_create_info.depthBiasSlopeFactor = 0.f;
+    rasterization_state_create_info.lineWidth = 1.f;
 
     VkPipelineMultisampleStateCreateInfo multisample_state_create_info = {};
     multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -48,7 +48,7 @@ b8 vulkan_pipeline_create(
     multisample_state_create_info.flags = 0;
     multisample_state_create_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
     multisample_state_create_info.sampleShadingEnable = VK_FALSE;
-    multisample_state_create_info.minSampleShading = 0.0f;
+    multisample_state_create_info.minSampleShading = 0.f;
     multisample_state_create_info.pSampleMask = 0;
     multisample_state_create_info.alphaToCoverageEnable = VK_FALSE;
     multisample_state_create_info.alphaToOneEnable = VK_FALSE;
@@ -87,10 +87,10 @@ b8 vulkan_pipeline_create(
     color_blend_state_create_info.logicOp = VK_LOGIC_OP_COPY;
     color_blend_state_create_info.attachmentCount = 1;
     color_blend_state_create_info.pAttachments = &color_blend_attachment_state;
-    color_blend_state_create_info.blendConstants[0] = 0.0f;
-    color_blend_state_create_info.blendConstants[1] = 0.0f;
-    color_blend_state_create_info.blendConstants[2] = 0.0f;
-    color_blend_state_create_info.blendConstants[3] = 0.0f;
+    color_blend_state_create_info.blendConstants[0] = 0.f;
+    color_blend_state_create_info.blendConstants[1] = 0.f;
+    color_blend_state_create_info.blendConstants[2] = 0.f;
+    color_blend_state_create_info.blendConstants[3] = 0.f;
 
     VkDynamicState dynamic_states[] = {
         VK_DYNAMIC_STATE_VIEWPORT,

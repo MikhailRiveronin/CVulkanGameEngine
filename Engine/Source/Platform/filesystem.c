@@ -1,23 +1,28 @@
 #include "filesystem.h"
 
 #include "core/logger.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
-b8 filesystem_exists(const char* path)
+b8 filesystem_exists(char const* path)
 {
+#ifdef _MSC_VER
+    struct _stat buffer;
+    return _stat(path, &buffer);
+#else
     struct stat buffer;
     return stat(path, &buffer) == 0;
+#endif
 }
 
-b8 filesystem_open(const char* path, file_modes mode, b8 binary, file_handle* out_handle)
+b8 filesystem_open(char const* path, file_modes mode, b8 binary, file_handle* out_handle)
 {
     out_handle->is_valid = FALSE;
     out_handle->handle = 0;
-    const char* mode_str;
+    char const* mode_str;
 
     if ((mode & FILE_MODE_READ) != 0 && (mode & FILE_MODE_WRITE) != 0) {
         mode_str = binary ? "w+b" : "w+";
@@ -52,22 +57,20 @@ void filesystem_close(file_handle* handle)
     }
 }
 
-b8 filesystem_read_line(file_handle* handle, char** line_buf)
+b8 filesystem_read_line(file_handle* handle, u64 max_length, char** line_buf, u64* line_length)
 {
-    if (handle->handle) {
-        // Since we are reading a single line, it should be safe to assume this is enough characters.
-        char buffer[32000];
-        if (fgets(buffer, 32000, (FILE*)handle->handle) != 0) {
-            u64 length = strlen(buffer);
-            *line_buf = memory_allocate((sizeof(char) * length) + 1, MEMORY_TAG_STRING);
-            strcpy(*line_buf, buffer);
+    if (handle->handle && line_buf && line_length && max_length > 0) {
+        char* buf = *line_buf;
+        if (fgets(buf, max_length, (FILE*)handle->handle) != 0) {
+            *line_length = strlen(*line_buf);
             return TRUE;
         }
     }
+
     return FALSE;
 }
 
-b8 filesystem_write_line(file_handle* handle, const char* text)
+b8 filesystem_write_line(file_handle* handle, char const* text)
 {
     if (handle->handle) {
         i32 result = fputs(text, (FILE*)handle->handle);

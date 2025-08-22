@@ -1,16 +1,16 @@
 #include <entry.h>
 
 #include "game.h"
-#include <core/memory.h>
+#include <core/memory_utils.h>
 
-b8 createGameState(game_instance* game)
+b8 createGameState(game* game)
 {
-    game->specific = memory_allocate(sizeof(GameState), MEMORY_TAG_GAME);
+    game->state = memory_allocate(sizeof(game_state), MEMORY_TAG_GAME);
 
-    game->onInit = gameOnInit;
-    game->onUpdate = gameOnUpdate;
-    game->onRender = gameOnRender;
-    game->onResize = gameOnResize;
+    game->onInit = game_init;
+    game->onUpdate = game_update;
+    game->onRender = game_render;
+    game->onResize = game_resize;
 
     game->app_config.x = 100;
     game->app_config.y = 100;

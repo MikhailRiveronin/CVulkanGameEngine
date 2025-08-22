@@ -19,9 +19,9 @@ typedef struct logger_system_state {
 } logger_system_state;
 static logger_system_state* system_state;
 
-b8 logger_system_startup(u64* memory_size, void* memory)
+b8 logger_system_startup(u64* required_memory, void* memory)
 {
-    *memory_size = sizeof(*system_state);
+    *required_memory = sizeof(*system_state);
     if (!memory) {
         return TRUE;
     }

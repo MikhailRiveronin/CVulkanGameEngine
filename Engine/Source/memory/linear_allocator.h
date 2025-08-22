@@ -9,8 +9,8 @@ typedef struct linear_allocator {
     b8 owns_memory;
 } linear_allocator;
 
-API void linear_allocator_create(u64 total_size, void* memory, linear_allocator* allocator);
-API void linear_allocator_destroy(linear_allocator* allocator);
+LIB_API void linear_allocator_create(u64 total_size, void* memory, linear_allocator* allocator);
+LIB_API void linear_allocator_destroy(linear_allocator* allocator);
 
-API void* linear_allocator_allocate(linear_allocator* allocator, u64 size);
-API void linear_allocator_free_all(linear_allocator* allocator);
+LIB_API void* linear_allocator_allocate(linear_allocator* allocator, u64 size);
+LIB_API void linear_allocator_free_all(linear_allocator* allocator);

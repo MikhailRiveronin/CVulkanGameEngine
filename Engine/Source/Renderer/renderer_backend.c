@@ -1,6 +1,6 @@
 #include "renderer_backend.h"
 #include "vulkan/vulkan_backend.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend)
 {

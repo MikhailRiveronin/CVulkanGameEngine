@@ -25,17 +25,14 @@ typedef struct object_uniform_data {
 } object_uniform_data;
 
 typedef struct geometry_render_data {
-    u32 object_id;
     mat4 world;
-    texture* textures[16];
+    material* material;
 } geometry_render_data;
 
 struct platform_state;
 struct texture;
 
 typedef struct renderer_backend {
-    texture* default_diffuse;
-
     struct platform_state* plat_state;
     u64 frameCount;
 
@@ -49,15 +46,7 @@ typedef struct renderer_backend {
 
     void (* on_update_object_state)(geometry_render_data render_data);
 
-    void (* create_texture)(
-        char const* name,
-        b8 auto_release,
-        i32 width,
-        i32 height,
-        i32 channel_count,
-        u8 const* pixels,
-        b8 has_transparency,
-        struct texture* texture);
+    void (* create_texture)(u8 const* pixels, struct texture* texture);
     void (* destroy_texture)(struct texture* texture);
 } renderer_backend;
 

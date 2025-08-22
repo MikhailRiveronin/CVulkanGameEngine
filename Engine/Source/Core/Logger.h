@@ -28,10 +28,10 @@ typedef enum LogLevel {
  * @param memory 0 if just requesting memory requirement, otherwise allocated block of memory.
  * @return b8 True on success; otherwise false.
  */
-b8 logger_system_startup(u64* memory_size, void* memory);
+b8 logger_system_startup(u64* required_memory, void* memory);
 void logger_system_shutdown(void* memory);
 
-API void logOutput(LogLevel level, char const* message, ...);
+LIB_API void logOutput(LogLevel level, char const* message, ...);
 
 #define LOG_FATAL(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__)
 #define LOG_ERROR(message, ...) logOutput(LOG_LEVEL_ERROR, message, ##__VA_ARGS__)

@@ -88,7 +88,7 @@ void event_system_shutdown(void* memory);
  * @param on_event The on_event function pointer to be invoked when the event code is fired.
  * @returns TRUE if the event is successfully registered; otherwise false.
  */
-API b8 event_register(u16 code, void* listener, pfn_on_event on_event);
+LIB_API b8 event_register(u16 code, void* listener, pfn_on_event on_event);
 
 /**
  * Unregister from listening for when events are sent with the provided code. If no matching
@@ -98,7 +98,7 @@ API b8 event_register(u16 code, void* listener, pfn_on_event on_event);
  * @param on_event The on_event function pointer to be unregistered.
  * @returns TRUE if the event is successfully unregistered; otherwise false.
  */
-API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event);
+LIB_API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event);
 
 /**
  * Fires an event to listeners of the given code. If an event handler returns 
@@ -108,4 +108,4 @@ API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event);
  * @param context The event data.
  * @returns TRUE if handled, otherwise FALSE.
  */
-API b8 eventNotify(u16 code, void const* sender, EventContext context);
+LIB_API b8 eventNotify(u16 code, void const* sender, EventContext context);

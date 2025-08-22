@@ -285,7 +285,7 @@ RECENT REVISION HISTORY:
 // both of these constants can be reconfigured through this interface:
 //
 //     stbi_hdr_to_ldr_gamma(2.2f);
-//     stbi_hdr_to_ldr_scale(1.0f);
+//     stbi_hdr_to_ldr_scale(1.f);
 //
 // (note, do not use _inverse_ constants; stbi_image will invert them
 // appropriately).
@@ -299,7 +299,7 @@ RECENT REVISION HISTORY:
 // be promoted to floating point values, run through the inverse of
 // constants corresponding to the above:
 //
-//     stbi_ldr_to_hdr_scale(1.0f);
+//     stbi_ldr_to_hdr_scale(1.f);
 //     stbi_ldr_to_hdr_gamma(2.2f);
 //
 // Finally, given a filename (or an open file or memory block--see header
@@ -1570,13 +1570,13 @@ STBIDEF int      stbi_is_hdr_from_callbacks(stbi_io_callbacks const *clbk, void 
 }
 
 #ifndef STBI_NO_LINEAR
-static float stbi__l2h_gamma=2.2f, stbi__l2h_scale=1.0f;
+static float stbi__l2h_gamma=2.2f, stbi__l2h_scale=1.f;
 
 STBIDEF void   stbi_ldr_to_hdr_gamma(float gamma) { stbi__l2h_gamma = gamma; }
 STBIDEF void   stbi_ldr_to_hdr_scale(float scale) { stbi__l2h_scale = scale; }
 #endif
 
-static float stbi__h2l_gamma_i=1.0f/2.2f, stbi__h2l_scale_i=1.0f;
+static float stbi__h2l_gamma_i=1.f/2.2f, stbi__h2l_scale_i=1.f;
 
 STBIDEF void   stbi_hdr_to_ldr_gamma(float gamma) { stbi__h2l_gamma_i = 1/gamma; }
 STBIDEF void   stbi_hdr_to_ldr_scale(float scale) { stbi__h2l_scale_i = 1/scale; }
@@ -1866,12 +1866,12 @@ static float   *stbi__ldr_to_hdr(stbi_uc *data, int x, int y, int comp)
    if (comp & 1) n = comp; else n = comp-1;
    for (i=0; i < x*y; ++i) {
       for (k=0; k < n; ++k) {
-         output[i*comp + k] = (float) (pow(data[i*comp+k]/255.0f, stbi__l2h_gamma) * stbi__l2h_scale);
+         output[i*comp + k] = (float) (pow(data[i*comp+k]/255.f, stbi__l2h_gamma) * stbi__l2h_scale);
       }
    }
    if (n < comp) {
       for (i=0; i < x*y; ++i) {
-         output[i*comp + n] = data[i*comp + n]/255.0f;
+         output[i*comp + n] = data[i*comp + n]/255.f;
       }
    }
    STBI_FREE(data);
@@ -3656,7 +3656,7 @@ static stbi_uc *stbi__resample_row_generic(stbi_uc *out, stbi_uc *in_near, stbi_
 
 // this is a reduced-precision calculation of YCbCr-to-RGB introduced
 // to make sure the code produces the same results in both SIMD and scalar
-#define stbi__float2fixed(x)  (((int) ((x) * 4096.0f + 0.5f)) << 8)
+#define stbi__float2fixed(x)  (((int) ((x) * 4096.f + 0.5f)) << 8)
 static void stbi__YCbCr_to_RGB_row(stbi_uc *out, const stbi_uc *y, const stbi_uc *pcb, const stbi_uc *pcr, int count, int step)
 {
    int i;
@@ -3694,10 +3694,10 @@ static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y, stbi_uc cons
    if (step == 4) {
       // this is a fairly straightforward implementation and not super-optimized.
       __m128i signflip  = _mm_set1_epi8(-0x80);
-      __m128i cr_const0 = _mm_set1_epi16(   (short) ( 1.40200f*4096.0f+0.5f));
-      __m128i cr_const1 = _mm_set1_epi16( - (short) ( 0.71414f*4096.0f+0.5f));
-      __m128i cb_const0 = _mm_set1_epi16( - (short) ( 0.34414f*4096.0f+0.5f));
-      __m128i cb_const1 = _mm_set1_epi16(   (short) ( 1.77200f*4096.0f+0.5f));
+      __m128i cr_const0 = _mm_set1_epi16(   (short) ( 1.40200f*4096.f+0.5f));
+      __m128i cr_const1 = _mm_set1_epi16( - (short) ( 0.71414f*4096.f+0.5f));
+      __m128i cb_const0 = _mm_set1_epi16( - (short) ( 0.34414f*4096.f+0.5f));
+      __m128i cb_const1 = _mm_set1_epi16(   (short) ( 1.77200f*4096.f+0.5f));
       __m128i y_bias = _mm_set1_epi8((char) (unsigned char) 128);
       __m128i xw = _mm_set1_epi16(255); // alpha channel
 
@@ -3753,10 +3753,10 @@ static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y, stbi_uc cons
    if (step == 4) {
       // this is a fairly straightforward implementation and not super-optimized.
       uint8x8_t signflip = vdup_n_u8(0x80);
-      int16x8_t cr_const0 = vdupq_n_s16(   (short) ( 1.40200f*4096.0f+0.5f));
-      int16x8_t cr_const1 = vdupq_n_s16( - (short) ( 0.71414f*4096.0f+0.5f));
-      int16x8_t cb_const0 = vdupq_n_s16( - (short) ( 0.34414f*4096.0f+0.5f));
-      int16x8_t cb_const1 = vdupq_n_s16(   (short) ( 1.77200f*4096.0f+0.5f));
+      int16x8_t cr_const0 = vdupq_n_s16(   (short) ( 1.40200f*4096.f+0.5f));
+      int16x8_t cr_const1 = vdupq_n_s16( - (short) ( 0.71414f*4096.f+0.5f));
+      int16x8_t cb_const0 = vdupq_n_s16( - (short) ( 0.34414f*4096.f+0.5f));
+      int16x8_t cb_const1 = vdupq_n_s16(   (short) ( 1.77200f*4096.f+0.5f));
 
       for (; i+7 < count; i += 8) {
          // load
@@ -6285,9 +6285,9 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
          for (i=0; i < w*h; ++i) {
             stbi__uint16 *pixel = (stbi__uint16 *) out + 4*i;
             if (pixel[3] != 0 && pixel[3] != 65535) {
-               float a = pixel[3] / 65535.0f;
-               float ra = 1.0f / a;
-               float inv_a = 65535.0f * (1 - ra);
+               float a = pixel[3] / 65535.f;
+               float ra = 1.f / a;
+               float inv_a = 65535.f * (1 - ra);
                pixel[0] = (stbi__uint16) (pixel[0]*ra + inv_a);
                pixel[1] = (stbi__uint16) (pixel[1]*ra + inv_a);
                pixel[2] = (stbi__uint16) (pixel[2]*ra + inv_a);
@@ -6297,9 +6297,9 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
          for (i=0; i < w*h; ++i) {
             unsigned char *pixel = out + 4*i;
             if (pixel[3] != 0 && pixel[3] != 255) {
-               float a = pixel[3] / 255.0f;
-               float ra = 1.0f / a;
-               float inv_a = 255.0f * (1 - ra);
+               float a = pixel[3] / 255.f;
+               float ra = 1.f / a;
+               float inv_a = 255.f * (1 - ra);
                pixel[0] = (unsigned char) (pixel[0]*ra + inv_a);
                pixel[1] = (unsigned char) (pixel[1]*ra + inv_a);
                pixel[2] = (unsigned char) (pixel[2]*ra + inv_a);
@@ -7133,7 +7133,7 @@ static void stbi__hdr_convert(float *output, stbi_uc *input, int req_comp)
    if ( input[3] != 0 ) {
       float f1;
       // Exponent
-      f1 = (float) ldexp(1.0f, input[3] - (int)(128 + 8));
+      f1 = (float) ldexp(1.f, input[3] - (int)(128 + 8));
       if (req_comp <= 2)
          output[0] = (input[0] + input[1] + input[2]) * f1 / 3;
       else {

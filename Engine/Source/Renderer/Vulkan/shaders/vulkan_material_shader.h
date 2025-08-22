@@ -3,7 +3,7 @@
 #include "renderer/vulkan/vulkan_types.inl"
 #include "renderer/renderer_types.inl"
 
-b8 vulkan_material_shader_create(vulkan_context* context, texture* default_diffuse, vulkan_material_shader* shader);
+b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader* shader);
 void vulkan_material_shader_destroy(vulkan_context* context, vulkan_material_shader* shader);
 
 void vulkan_material_shader_use(vulkan_context* context, vulkan_material_shader* shader);
@@ -14,5 +14,5 @@ void vulkan_material_shader_update_object_state(
     vulkan_material_shader* shader,
     geometry_render_data render_data);
 
-b8 vulkan_material_shader_acquire_resources(vulkan_context* context, vulkan_material_shader* shader, u32* object_id);
-void vulkan_material_shader_release_resources(vulkan_context* context, vulkan_material_shader* shader, u32 object_id);
+b8 vulkan_material_shader_acquire_resources(vulkan_context* context, vulkan_material_shader* shader, material* material);
+void vulkan_material_shader_release_resources(vulkan_context* context, vulkan_material_shader* shader, material* material);

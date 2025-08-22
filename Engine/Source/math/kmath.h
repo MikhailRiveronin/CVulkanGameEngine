@@ -2,23 +2,23 @@
 
 #include "defines.h"
 #include "math_types.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 #define K_PI 3.14159265358979323846f
-#define K_PI_2 2.0f * K_PI
+#define K_PI_2 2.f * K_PI
 #define K_HALF_PI 0.5f * K_PI
 #define K_QUARTER_PI 0.25f * K_PI
-#define K_ONE_OVER_PI 1.0f / K_PI
-#define K_ONE_OVER_TWO_PI 1.0f / K_PI_2
+#define K_ONE_OVER_PI 1.f / K_PI
+#define K_ONE_OVER_TWO_PI 1.f / K_PI_2
 #define K_SQRT_TWO 1.41421356237309504880f
 #define K_SQRT_THREE 1.73205080756887729352f
 #define K_SQRT_ONE_OVER_TWO 0.70710678118654752440f
 #define K_SQRT_ONE_OVER_THREE 0.57735026918962576450f
-#define K_DEG2RAD_MULTIPLIER K_PI / 180.0f
-#define K_RAD2DEG_MULTIPLIER 180.0f / K_PI
+#define K_DEG2RAD_MULTIPLIER K_PI / 180.f
+#define K_RAD2DEG_MULTIPLIER 180.f / K_PI
 
 // The multiplier to convert seconds to milliseconds.
-#define K_SEC_TO_MS_MULTIPLIER 1000.0f
+#define K_SEC_TO_MS_MULTIPLIER 1000.f
 
 // The multiplier to convert milliseconds to seconds.
 #define K_MS_TO_SEC_MULTIPLIER 0.001f
@@ -32,12 +32,12 @@
 // ------------------------------------------
 // General math functions
 // ------------------------------------------
-API f32 ksin(f32 x);
-API f32 kcos(f32 x);
-API f32 ktan(f32 x);
-API f32 kacos(f32 x);
-API f32 ksqrt(f32 x);
-API f32 kabs(f32 x);
+LIB_API f32 ksin(f32 x);
+LIB_API f32 kcos(f32 x);
+LIB_API f32 ktan(f32 x);
+LIB_API f32 kacos(f32 x);
+LIB_API f32 ksqrt(f32 x);
+LIB_API f32 kabs(f32 x);
 
 /**
  * Indicates if the value is a power of 2. 0 is considered _not_ a power of 2.
@@ -49,11 +49,11 @@ KINLINE b8 is_power_of_2(u64 value)
     return (value != 0) && ((value & (value - 1)) == 0);
 }
 
-API i32 krandom();
-API i32 krandom_in_range(i32 min, i32 max);
+LIB_API i32 krandom();
+LIB_API i32 krandom_in_range(i32 min, i32 max);
 
-API f32 fkrandom();
-API f32 fkrandom_in_range(f32 min, f32 max);
+LIB_API f32 fkrandom();
+LIB_API f32 fkrandom_in_range(f32 min, f32 max);
 
 // ------------------------------------------
 // Vector 2
@@ -74,45 +74,45 @@ KINLINE vec2 vec2_create(f32 x, f32 y) {
 }
 
 /**
- * @brief Creates and returns a 2-component vector with all components set to 0.0f.
+ * @brief Creates and returns a 2-component vector with all components set to 0.f.
  */
 KINLINE vec2 vec2_zero() {
-    return (vec2){0.0f, 0.0f};
+    return (vec2){0.f, 0.f};
 }
 
 /**
- * @brief Creates and returns a 2-component vector with all components set to 1.0f.
+ * @brief Creates and returns a 2-component vector with all components set to 1.f.
  */
 KINLINE vec2 vec2_one() {
-    return (vec2){1.0f, 1.0f};
+    return (vec2){1.f, 1.f};
 }
 
 /**
  * @brief Creates and returns a 2-component vector pointing up (0, 1).
  */
 KINLINE vec2 vec2_up() {
-    return (vec2){0.0f, 1.0f};
+    return (vec2){0.f, 1.f};
 }
 
 /**
  * @brief Creates and returns a 2-component vector pointing down (0, -1).
  */
 KINLINE vec2 vec2_down() {
-    return (vec2){0.0f, -1.0f};
+    return (vec2){0.f, -1.f};
 }
 
 /**
  * @brief Creates and returns a 2-component vector pointing left (-1, 0).
  */
 KINLINE vec2 vec2_left() {
-    return (vec2){-1.0f, 0.0f};
+    return (vec2){-1.f, 0.f};
 }
 
 /**
  * @brief Creates and returns a 2-component vector pointing right (1, 0).
  */
 KINLINE vec2 vec2_right() {
-    return (vec2){1.0f, 0.0f};
+    return (vec2){1.f, 0.f};
 }
 
 /**
@@ -283,59 +283,59 @@ KINLINE vec4 vec3_to_vec4(vec3 vector, f32 w) {
 }
 
 /**
- * @brief Creates and returns a 3-component vector with all components set to 0.0f.
+ * @brief Creates and returns a 3-component vector with all components set to 0.f.
  */
 KINLINE vec3 vec3_zero() {
-    return (vec3){0.0f, 0.0f, 0.0f};
+    return (vec3){0.f, 0.f, 0.f};
 }
 
 /**
- * @brief Creates and returns a 3-component vector with all components set to 1.0f.
+ * @brief Creates and returns a 3-component vector with all components set to 1.f.
  */
 KINLINE vec3 vec3_one() {
-    return (vec3){1.0f, 1.0f, 1.0f};
+    return (vec3){1.f, 1.f, 1.f};
 }
 
 /**
  * @brief Creates and returns a 3-component vector pointing up (0, 1, 0).
  */
 KINLINE vec3 vec3_up() {
-    return (vec3){0.0f, 1.0f, 0.0f};
+    return (vec3){0.f, 1.f, 0.f};
 }
 
 /**
  * @brief Creates and returns a 3-component vector pointing down (0, -1, 0).
  */
 KINLINE vec3 vec3_down() {
-    return (vec3){0.0f, -1.0f, 0.0f};
+    return (vec3){0.f, -1.f, 0.f};
 }
 
 /**
  * @brief Creates and returns a 3-component vector pointing left (-1, 0, 0).
  */
 KINLINE vec3 vec3_left() {
-    return (vec3){-1.0f, 0.0f, 0.0f};
+    return (vec3){-1.f, 0.f, 0.f};
 }
 
 /**
  * @brief Creates and returns a 3-component vector pointing right (1, 0, 0).
  */
 KINLINE vec3 vec3_right() {
-    return (vec3){1.0f, 0.0f, 0.0f};
+    return (vec3){1.f, 0.f, 0.f};
 }
 
 /**
  * @brief Creates and returns a 3-component vector pointing forward (0, 0, -1).
  */
 KINLINE vec3 vec3_forward() {
-    return (vec3){0.0f, 0.0f, -1.0f};
+    return (vec3){0.f, 0.f, -1.f};
 }
 
 /**
  * @brief Creates and returns a 3-component vector pointing backward (0, 0, 1).
  */
 KINLINE vec3 vec3_back() {
-    return (vec3){0.0f, 0.0f, 1.0f};
+    return (vec3){0.f, 0.f, 1.f};
 }
 
 /**
@@ -577,17 +577,17 @@ KINLINE vec4 vec4_from_vec3(vec3 vector, f32 w) {
 }
 
 /**
- * @brief Creates and returns a 3-component vector with all components set to 0.0f.
+ * @brief Creates and returns a 3-component vector with all components set to 0.f.
  */
 KINLINE vec4 vec4_zero() {
-    return (vec4){0.0f, 0.0f, 0.0f, 0.0f};
+    return (vec4){0.f, 0.f, 0.f, 0.f};
 }
 
 /**
- * @brief Creates and returns a 3-component vector with all components set to 1.0f.
+ * @brief Creates and returns a 3-component vector with all components set to 1.f.
  */
 KINLINE vec4 vec4_one() {
-    return (vec4){1.0f, 1.0f, 1.0f, 1.0f};
+    return (vec4){1.f, 1.f, 1.f, 1.f};
 }
 
 /**
@@ -721,10 +721,10 @@ KINLINE f32 vec4_dot_f32(
 KINLINE mat4 mat4_identity() {
     mat4 out_matrix;
     memory_zero(out_matrix.data, sizeof(f32) * 16);
-    out_matrix.data[0] = 1.0f;
-    out_matrix.data[5] = 1.0f;
-    out_matrix.data[10] = 1.0f;
-    out_matrix.data[15] = 1.0f;
+    out_matrix.data[0] = 1.f;
+    out_matrix.data[5] = 1.f;
+    out_matrix.data[10] = 1.f;
+    out_matrix.data[15] = 1.f;
     return out_matrix;
 }
 
@@ -771,13 +771,13 @@ KINLINE mat4 mat4_mul(mat4 matrix_0, mat4 matrix_1) {
 KINLINE mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near_clip, f32 far_clip) {
     mat4 out_matrix = mat4_identity();
 
-    f32 lr = 1.0f / (left - right);
-    f32 bt = 1.0f / (bottom - top);
-    f32 nf = 1.0f / (near_clip - far_clip);
+    f32 lr = 1.f / (left - right);
+    f32 bt = 1.f / (bottom - top);
+    f32 nf = 1.f / (near_clip - far_clip);
 
-    out_matrix.data[0] = -2.0f * lr;
-    out_matrix.data[5] = -2.0f * bt;
-    out_matrix.data[10] = 2.0f * nf;
+    out_matrix.data[0] = -2.f * lr;
+    out_matrix.data[5] = -2.f * bt;
+    out_matrix.data[10] = 2.f * nf;
 
     out_matrix.data[12] = (left + right) * lr;
     out_matrix.data[13] = (top + bottom) * bt;
@@ -798,11 +798,11 @@ KINLINE mat4 mat4_perspective(f32 fov_radians, f32 aspect_ratio, f32 near_clip, 
     f32 half_tan_fov = ktan(fov_radians * 0.5f);
     mat4 out_matrix;
     memory_zero(out_matrix.data, sizeof(f32) * 16);
-    out_matrix.data[0] = 1.0f / (aspect_ratio * half_tan_fov);
-    out_matrix.data[5] = 1.0f / half_tan_fov;
+    out_matrix.data[0] = 1.f / (aspect_ratio * half_tan_fov);
+    out_matrix.data[5] = 1.f / half_tan_fov;
     out_matrix.data[10] = -((far_clip + near_clip) / (far_clip - near_clip));
-    out_matrix.data[11] = -1.0f;
-    out_matrix.data[14] = -((2.0f * far_clip * near_clip) / (far_clip - near_clip));
+    out_matrix.data[11] = -1.f;
+    out_matrix.data[14] = -((2.f * far_clip * near_clip) / (far_clip - near_clip));
     return out_matrix;
 }
 
@@ -841,7 +841,7 @@ KINLINE mat4 mat4_look_at(vec3 position, vec3 target, vec3 up) {
     out_matrix.data[12] = -vec3_dot(x_axis, position);
     out_matrix.data[13] = -vec3_dot(y_axis, position);
     out_matrix.data[14] = vec3_dot(z_axis, position);
-    out_matrix.data[15] = 1.0f;
+    out_matrix.data[15] = 1.f;
 
     return out_matrix;
 }
@@ -915,7 +915,7 @@ KINLINE mat4 mat4_inverse(mat4 matrix) {
     o[2] = (t2 * m[1] + t7 * m[5] + t10 * m[13]) - (t3 * m[1] + t6 * m[5] + t11 * m[13]);
     o[3] = (t5 * m[1] + t8 * m[5] + t11 * m[9]) - (t4 * m[1] + t9 * m[5] + t10 * m[9]);
 
-    f32 d = 1.0f / (m[0] * o[0] + m[4] * o[1] + m[8] * o[2] + m[12] * o[3]);
+    f32 d = 1.f / (m[0] * o[0] + m[4] * o[1] + m[8] * o[2] + m[12] * o[3]);
 
     o[0] = d * o[0];
     o[1] = d * o[1];
@@ -1097,7 +1097,7 @@ KINLINE vec3 mat4_right(mat4 matrix) {
 // ------------------------------------------
 
 KINLINE quat quat_identity() {
-    return (quat){0, 0, 0, 1.0f};
+    return (quat){0, 0, 0, 1.f};
 }
 
 KINLINE f32 quat_normal(quat q) {
@@ -1169,17 +1169,17 @@ KINLINE mat4 quat_to_mat4(quat q) {
 
     quat n = quat_normalize(q);
 
-    out_matrix.data[0] = 1.0f - 2.0f * n.y * n.y - 2.0f * n.z * n.z;
-    out_matrix.data[1] = 2.0f * n.x * n.y - 2.0f * n.z * n.w;
-    out_matrix.data[2] = 2.0f * n.x * n.z + 2.0f * n.y * n.w;
+    out_matrix.data[0] = 1.f - 2.f * n.y * n.y - 2.f * n.z * n.z;
+    out_matrix.data[1] = 2.f * n.x * n.y - 2.f * n.z * n.w;
+    out_matrix.data[2] = 2.f * n.x * n.z + 2.f * n.y * n.w;
 
-    out_matrix.data[4] = 2.0f * n.x * n.y + 2.0f * n.z * n.w;
-    out_matrix.data[5] = 1.0f - 2.0f * n.x * n.x - 2.0f * n.z * n.z;
-    out_matrix.data[6] = 2.0f * n.y * n.z - 2.0f * n.x * n.w;
+    out_matrix.data[4] = 2.f * n.x * n.y + 2.f * n.z * n.w;
+    out_matrix.data[5] = 1.f - 2.f * n.x * n.x - 2.f * n.z * n.z;
+    out_matrix.data[6] = 2.f * n.y * n.z - 2.f * n.x * n.w;
 
-    out_matrix.data[8] = 2.0f * n.x * n.z - 2.0f * n.y * n.w;
-    out_matrix.data[9] = 2.0f * n.y * n.z + 2.0f * n.x * n.w;
-    out_matrix.data[10] = 1.0f - 2.0f * n.x * n.x - 2.0f * n.y * n.y;
+    out_matrix.data[8] = 2.f * n.x * n.z - 2.f * n.y * n.w;
+    out_matrix.data[9] = 2.f * n.y * n.z + 2.f * n.x * n.w;
+    out_matrix.data[10] = 1.f - 2.f * n.x * n.x - 2.f * n.y * n.y;
 
     return out_matrix;
 }
@@ -1190,24 +1190,24 @@ KINLINE mat4 quat_to_rotation_matrix(quat q, vec3 center) {
 
     f32* o = out_matrix.data;
     o[0] = (q.x * q.x) - (q.y * q.y) - (q.z * q.z) + (q.w * q.w);
-    o[1] = 2.0f * ((q.x * q.y) + (q.z * q.w));
-    o[2] = 2.0f * ((q.x * q.z) - (q.y * q.w));
+    o[1] = 2.f * ((q.x * q.y) + (q.z * q.w));
+    o[2] = 2.f * ((q.x * q.z) - (q.y * q.w));
     o[3] = center.x - center.x * o[0] - center.y * o[1] - center.z * o[2];
 
-    o[4] = 2.0f * ((q.x * q.y) - (q.z * q.w));
+    o[4] = 2.f * ((q.x * q.y) - (q.z * q.w));
     o[5] = -(q.x * q.x) + (q.y * q.y) - (q.z * q.z) + (q.w * q.w);
-    o[6] = 2.0f * ((q.y * q.z) + (q.x * q.w));
+    o[6] = 2.f * ((q.y * q.z) + (q.x * q.w));
     o[7] = center.y - center.x * o[4] - center.y * o[5] - center.z * o[6];
 
-    o[8] = 2.0f * ((q.x * q.z) + (q.y * q.w));
-    o[9] = 2.0f * ((q.y * q.z) - (q.x * q.w));
+    o[8] = 2.f * ((q.x * q.z) + (q.y * q.w));
+    o[9] = 2.f * ((q.y * q.z) - (q.x * q.w));
     o[10] = -(q.x * q.x) - (q.y * q.y) + (q.z * q.z) + (q.w * q.w);
     o[11] = center.z - center.x * o[8] - center.y * o[9] - center.z * o[10];
 
-    o[12] = 0.0f;
-    o[13] = 0.0f;
-    o[14] = 0.0f;
-    o[15] = 1.0f;
+    o[12] = 0.f;
+    o[13] = 0.f;
+    o[14] = 0.f;
+    o[15] = 1.f;
     return out_matrix;
 }
 
@@ -1238,7 +1238,7 @@ KINLINE quat quat_slerp(quat q_0, quat q_1, f32 percentage) {
     // the shorter path. Note that v1 and -v1 are equivalent when
     // the negation is applied to all four components. Fix by
     // reversing one quaternion.
-    if (dot < 0.0f) {
+    if (dot < 0.f) {
         v1.x = -v1.x;
         v1.y = -v1.y;
         v1.z = -v1.z;

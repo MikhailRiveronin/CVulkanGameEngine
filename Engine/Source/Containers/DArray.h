@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "core/asserts.h"
-#include "core/memory.h"
+#include "core/memory_utils.h"
 
 #define DARRAY_MIN_CAPACITY 1
 #define DARRAY_EXPAND_FACTOR 2
