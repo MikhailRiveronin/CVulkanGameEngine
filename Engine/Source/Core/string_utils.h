@@ -157,3 +157,11 @@ LIB_API b8 string_to_u64(char* str, u64* u);
  * @return True if parsed successfully; otherwise false.
  */
 LIB_API b8 string_to_bool(char* str, b8* b);
+
+/**
+ * @brief Empties the provided string by setting the first character to 0.
+ * 
+ * @param str The string to be emptied.
+ * @return A pointer to str. 
+ */
+LIB_API char* string_empty(char* str);

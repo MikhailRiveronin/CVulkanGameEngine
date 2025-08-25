@@ -8,9 +8,13 @@
 #include "memory/linear_allocator.h"
 #include "platform/platform.h"
 #include "renderer/renderer_frontend.h"
+#include "string_utils.h"
+#include "math/kmath.h"
 
 // Systems
 #include "systems/texture_system.h"
+#include "systems/material_system.h"
+#include "systems/geometry_system.h"
 
 typedef struct application_state {
     game* game;
@@ -57,13 +61,57 @@ typedef struct application_state {
         u64 required_memory;
         void* memory;
     } texture_system;
+
+    struct {
+        u64 required_memory;
+        void* memory;
+    } material_system;
+
+    struct {
+        u64 required_memory;
+        void* memory;
+    } geometry_system;
+
+    // TODO: temp
+    geometry* test_geometry;
+    // TODO: end temp
 } application_state;
 
 static application_state* app_state;
 
-b8 applicationOnEvent(u16 code, void const* sender, void const* listener, EventContext context);
-b8 applicationOnKey(u16 code, void const* sender, void const* listener, EventContext context);
-b8 application_on_resize(u16 code, void const* sender, void const* listener, EventContext context);
+b8 applicationOnEvent(u16 code, void const* sender, void const* listener, event_context context);
+b8 applicationOnKey(u16 code, void const* sender, void const* listener, event_context context);
+b8 application_on_resize(u16 code, void const* sender, void const* listener, event_context context);
+
+// TODO: temp
+b8 event_on_debug_event(u16 code, void* sender, void* listener_inst, event_context data) {
+    const char* names[3] = {
+        "cobblestone",
+        "paving",
+        "paving2"};
+    static i8 choice = 2;
+
+    // Save off the old name.
+    const char* old_name = names[choice];
+
+    choice++;
+    choice %= 3;
+
+    // Acquire the new texture.
+    if (app_state->test_geometry) {
+        app_state->test_geometry->material->diffuse_map.texture = texture_system_acquire_texture(names[choice], TRUE);
+        if (!app_state->test_geometry->material->diffuse_map.texture) {
+            LOG_WARNING("event_on_debug_event no texture! using default");
+            app_state->test_geometry->material->diffuse_map.texture = texture_system_get_default_texture();
+        }
+
+        // Release the old texture.
+        texture_system_release_texture(old_name);
+    }
+
+    return TRUE;
+}
+// TODO: end temp
 
 b8 application_init(game* game)
 {
@@ -159,7 +207,33 @@ b8 application_init(game* game)
         return FALSE;
     }
 
-    if (!app_state->game->onInit(app_state->game)) {
+    material_system_config material_sys_config;
+    material_sys_config.max_material_count = 4096;
+    material_system_startup(&app_state->material_system.required_memory, 0, material_sys_config);
+    app_state->material_system.memory = linear_allocator_allocate(&app_state->systems_allocator, app_state->material_system.required_memory);
+    if (!material_system_startup(&app_state->material_system.required_memory, app_state->material_system.memory, material_sys_config)) {
+        LOG_FATAL("Failed to initialize material system. Application cannot continue.");
+        return FALSE;
+    }
+
+    geometry_system_config geometry_sys_config;
+    geometry_sys_config.max_geometry_count = 4096;
+    geometry_system_startup(&app_state->geometry_system.required_memory, 0, geometry_sys_config);
+    app_state->geometry_system.memory = linear_allocator_allocate(&app_state->systems_allocator, app_state->material_system.required_memory);
+    if (!geometry_system_startup(&app_state->geometry_system.required_memory, app_state->geometry_system.memory, geometry_sys_config)) {
+        LOG_FATAL("Failed to initialize geometry system. Application cannot continue.");
+        return FALSE;
+    }
+
+    // Load up a plane configuration, and load geometry from it.
+    geometry_config g_config = geometry_system_generate_plane_config(15.0f, 5.0f, 5, 5, 5.0f, 2.0f, "test geometry", "test_material");
+    app_state->test_geometry = geometry_system_acquire_from_config(g_config, TRUE);
+
+    // Clean up the allocations for the geometry config.
+    memory_free(g_config.vertices, sizeof(vertex_3d) * g_config.vertex_count, MEMORY_TAG_ARRAY);
+    memory_free(g_config.indices, sizeof(u32) * g_config.index_count, MEMORY_TAG_ARRAY);
+
+    if (!app_state->game->init(app_state->game)) {
         LOG_FATAL("Failed to initialize game");
         return FALSE;
     }
@@ -170,11 +244,14 @@ b8 application_init(game* game)
     event_register(EVENT_CODE_APPLICATION_QUIT, NULL, applicationOnEvent);
     event_register(EVENT_CODE_KEY_PRESSED, NULL, applicationOnKey);
     event_register(EVENT_CODE_RESIZE, NULL, application_on_resize);
+    // TODO: temp
+    event_register(EVENT_CODE_DEBUG0, 0, event_on_debug_event);
+    // TODO: end temp
 
     app_state->suspended = FALSE;
 
     // TODO: What for?
-    app_state->game->onResize(app_state->game, app_state->width, app_state->height);
+    app_state->game->resize(app_state->game, app_state->width, app_state->height);
 
     return TRUE;
 }
@@ -204,17 +281,17 @@ b8 application_run(void)
         if (!app_state->suspended) {
             clock_update(&app_state->clock);
             f64 currentTime = app_state->clock.elapsed;
-            f64 deltaTime = currentTime - app_state->lastTime;
+            f64 delta_time = currentTime - app_state->lastTime;
             f64 frameStartTime = platform_get_absolute_time();
 
 
-            if (!app_state->game->onUpdate(app_state->game, deltaTime)) {
+            if (!app_state->game->update(app_state->game, delta_time)) {
                 LOG_FATAL("Game update failed");
                 app_state->running = FALSE;
                 break;
             }
 
-            if (!app_state->game->onRender(app_state->game, deltaTime)) {
+            if (!app_state->game->render(app_state->game, delta_time)) {
                 LOG_FATAL("Game render failed");
                 app_state->running = FALSE;
                 break;
@@ -222,7 +299,17 @@ b8 application_run(void)
 
             // TODO: temporary solution
             render_packet packet;
-            packet.deltaTime = deltaTime;
+            packet.delta_time = delta_time;
+
+            // TODO: temp
+            geometry_render_data test_render;
+            test_render.geometry = app_state->test_geometry;
+            test_render.world = mat4_identity();
+
+            packet.geometry_count = 1;
+            packet.geometries = &test_render;
+            // TODO: end temp
+
             renderer_frontend_draw_frame(&packet);
 
             f64 frameEndTime = platform_get_absolute_time();
@@ -238,7 +325,7 @@ b8 application_run(void)
                 frameCount++;
             }
 
-            input_update(deltaTime);
+            input_update(delta_time);
             app_state->lastTime = currentTime;
         }
     }
@@ -246,9 +333,14 @@ b8 application_run(void)
     event_unregister(EVENT_CODE_APPLICATION_QUIT, NULL, applicationOnEvent);
     event_unregister(EVENT_CODE_KEY_PRESSED, NULL, applicationOnEvent);
     event_unregister(EVENT_CODE_RESIZE, NULL, application_on_resize);
+    // TODO: temp
+    event_unregister(EVENT_CODE_DEBUG0, 0, event_on_debug_event);
+    // TODO: end temp
 
     event_system_shutdown(app_state->event_system.memory);
     input_system_shutdown(app_state->input_system.memory);
+    geometry_system_shutdown(app_state->geometry_system.memory);
+    material_system_shutdown();
     texture_system_shutdown();
     renderer_system_shutdown();
 
@@ -265,7 +357,7 @@ void applicationGetFramebufferSize(u32* width, u32* height)
     *height = app_state->height;
 }
 
-b8 applicationOnEvent(u16 code, void const* sender, void const* listener, EventContext context)
+b8 applicationOnEvent(u16 code, void const* sender, void const* listener, event_context context)
 {
     switch (code) {
         case EVENT_CODE_APPLICATION_QUIT:
@@ -276,7 +368,7 @@ b8 applicationOnEvent(u16 code, void const* sender, void const* listener, EventC
     return FALSE;
 }
 
-b8 applicationOnKey(u16 code, void const* sender, void const* listener, EventContext context)
+b8 applicationOnKey(u16 code, void const* sender, void const* listener, event_context context)
 {
     switch (code) {
         case EVENT_CODE_KEY_PRESSED: {
@@ -284,8 +376,8 @@ b8 applicationOnKey(u16 code, void const* sender, void const* listener, EventCon
             switch (keyCode) {
                 case KEY_ESCAPE: {
                     LOG_INFO("ESC key pressed");
-                    EventContext context = {};
-                    eventNotify(EVENT_CODE_APPLICATION_QUIT, NULL, context);
+                    event_context context = {};
+                    event_notify(EVENT_CODE_APPLICATION_QUIT, NULL, context);
                     return TRUE;
                 }
                 default:
@@ -302,7 +394,7 @@ b8 applicationOnKey(u16 code, void const* sender, void const* listener, EventCon
     return FALSE;
 }
 
-b8 application_on_resize(u16 code, void const* sender, void const* listener, EventContext context)
+b8 application_on_resize(u16 code, void const* sender, void const* listener, event_context context)
 {
     if (code == EVENT_CODE_RESIZE) {
         i16 width = context.as.i16[0];
@@ -323,7 +415,7 @@ b8 application_on_resize(u16 code, void const* sender, void const* listener, Eve
                     LOG_INFO("Window restored. Resuming application");
                     app_state->suspended = FALSE;
                 }
-                app_state->game->onResize(app_state->game, width, height);
+                app_state->game->resize(app_state->game, width, height);
                 renderer_frontend_resize(width, height);
             }
         }

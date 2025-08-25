@@ -162,3 +162,8 @@ void vulkan_buffer_upload_data(
     vulkan_buffer_copy(context, pool, fence, queue, staging.handle, 0, buffer->handle, offset, size);
     vulkan_buffer_destroy(context, &staging);
 }
+
+void vulkan_buffer_free_data(vulkan_buffer* buffer, u64 offset, u64 size) {
+    // TODO: Free this in the buffer.
+    // TODO: update free list with this range being free.
+}

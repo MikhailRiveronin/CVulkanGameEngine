@@ -17,7 +17,7 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-    if (!game.onInit || !game.onUpdate || !game.onRender || !game.onResize) {
+    if (!game.init || !game.update || !game.render || !game.resize) {
         LOG_FATAL("Game function pointers must be assigned");
         return EXIT_FAILURE;
     }

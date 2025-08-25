@@ -30,21 +30,21 @@ static material_system_state* system_state;
 static b8 create_default_material();
 static b8 load_material(material_config config, material* m);
 static void destroy_material(material* m);
-static b8 load_configuration_file(const char* path, material_config* config);
+static b8 load_configuration_file(char const* path, material_config* config);
 
-b8 material_system_startup(u64* required_memory, void* memory, material_system_config config)
+b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_system_config config)
 {
     if (config.max_material_count == 0) {
-        KFATAL("material_system_startup: config.max_material_count must be > 0");
+        LOG_FATAL("material_system_startup: config.max_material_count must be > 0");
         return FALSE;
     }
 
     u64 struct_requirement = sizeof(material_system_state);
     u64 array_requirement = sizeof(material) * config.max_material_count;
     u64 hashtable_requirement = sizeof(material_reference) * config.max_material_count;
-    *required_memory = struct_requirement + array_requirement + hashtable_requirement;
+    *state_size_in_bytes = struct_requirement + array_requirement + hashtable_requirement;
 
-    if (system_state == 0) {
+    if (!memory) {
         return TRUE;
     }
 
@@ -66,7 +66,7 @@ b8 material_system_startup(u64* required_memory, void* memory, material_system_c
     invalid_ref.auto_release = FALSE;
     invalid_ref.handle = INVALID_ID;  // Primary reason for needing default values.
     invalid_ref.reference_count = 0;
-    hashtable_fill(&system_state->material_reference_table, &invalid_ref);
+    hash_table_fill(&system_state->material_reference_table, &invalid_ref);
 
     for (u32 i = 0; i < system_state->config.max_material_count; ++i) {
         system_state->registered_materials[i].id = INVALID_ID;
@@ -75,7 +75,7 @@ b8 material_system_startup(u64* required_memory, void* memory, material_system_c
     }
 
     if (!create_default_material(system_state)) {
-        KFATAL("Failed to create default material. Application cannot continue.");
+        LOG_FATAL("Failed to create default material. Application cannot continue.");
         return FALSE;
     }
 
@@ -97,18 +97,18 @@ void material_system_shutdown()
     system_state = 0;
 }
 
-material* material_system_acquire(const char* name)
+material* material_system_acquire_material(char const* name)
 {
     material_config config;
 
-    char* format_str = "assets/materials/%s.%s";
+    char* format_str = "D:/Projects/CVulkanGameEngine/assets/materials/%s.%s";
     char full_file_path[512];
 
     // TODO: try different extensions
     string_format(full_file_path, format_str, name, "kmt");
     if (!load_configuration_file(full_file_path, &config)) {
         LOG_ERROR(
-            "material_system_acquire: Failed to load material file: '%s'. Null pointer will be returned",
+            "material_system_acquire_material: Failed to load material file: '%s'. Null pointer will be returned",
             full_file_path);
         return 0;
     }
@@ -119,7 +119,7 @@ material* material_system_acquire(const char* name)
 material* material_system_acquire_from_config(material_config config)
 {
     // Return default material.
-    if (strings_equali(config.name, DEFAULT_MATERIAL_NAME)) {
+    if (string_equali(config.name, DEFAULT_MATERIAL_NAME)) {
         return &system_state->default_material;
     }
 
@@ -146,7 +146,7 @@ material* material_system_acquire_from_config(material_config config)
 
             // Make sure an empty slot was actually found.
             if (!m || ref.handle == INVALID_ID) {
-                KFATAL("material_system_acquire - Material system cannot hold anymore materials. Adjust configuration to allow more.");
+                LOG_FATAL("material_system_acquire_material - Material system cannot hold anymore materials. Adjust configuration to allow more.");
                 return 0;
             }
 
@@ -179,10 +179,10 @@ material* material_system_acquire_from_config(material_config config)
     return 0;
 }
 
-void material_system_release(const char* name)
+void material_system_release(char const* name)
 {
     // Ignore release requests for the default material.
-    if (strings_equali(name, DEFAULT_MATERIAL_NAME)) {
+    if (string_equali(name, DEFAULT_MATERIAL_NAME)) {
         return;
     }
     material_reference ref;
@@ -213,6 +213,16 @@ void material_system_release(const char* name)
     }
 }
 
+material* material_system_get_default_material()
+{
+    if (system_state) {
+        return &system_state->default_material;
+    }
+
+    LOG_FATAL("material_system_get_default_material: Called before system_state is initialized");
+    return 0;
+}
+
 b8 load_material(material_config config, material* m)
 {
     memory_zero(m, sizeof(material));
@@ -226,7 +236,7 @@ b8 load_material(material_config config, material* m)
     // Diffuse map
     if (string_length(config.diffuse_map_name) > 0) {
         m->diffuse_map.use = TEXTURE_USE_MAP_DIFFUSE;
-        m->diffuse_map.texture = texture_system_acquire(config.diffuse_map_name, TRUE);
+        m->diffuse_map.texture = texture_system_acquire_texture(config.diffuse_map_name, TRUE);
         if (!m->diffuse_map.texture) {
             LOG_WARNING("Unable to load texture '%s' for material '%s', using default.", config.diffuse_map_name, m->name);
             m->diffuse_map.texture = texture_system_get_default_texture();
@@ -240,7 +250,7 @@ b8 load_material(material_config config, material* m)
     // TODO: other maps
 
     // Send it off to the renderer to acquire resources.
-    if (!renderer_create_material(m)) {
+    if (!renderer_frontend_create_material(m)) {
         LOG_ERROR("Failed to acquire renderer resources for material '%s'.", m->name);
         return FALSE;
     }
@@ -254,11 +264,11 @@ void destroy_material(material* m)
 
     // Release texture references.
     if (m->diffuse_map.texture) {
-        texture_system_release(m->diffuse_map.texture->name);
+        texture_system_release_texture(m->diffuse_map.texture->name);
     }
 
     // Release renderer resources.
-    renderer_destroy_material(m);
+    renderer_frontend_destroy_material(m);
 
     // Zero it out, invalidate IDs.
     memory_zero(m, sizeof(material));
@@ -277,19 +287,19 @@ b8 create_default_material()
     system_state->default_material.diffuse_map.use = TEXTURE_USE_MAP_DIFFUSE;
     system_state->default_material.diffuse_map.texture = texture_system_get_default_texture();
 
-    if (!renderer_create_material(&system_state->default_material)) {
-        KFATAL("Failed to acquire renderer resources for default texture. Application cannot continue.");
+    if (!renderer_frontend_create_material(&system_state->default_material)) {
+        LOG_FATAL("Failed to acquire renderer resources for default texture. Application cannot continue.");
         return FALSE;
     }
 
     return TRUE;
 }
 
-b8 load_configuration_file(const char* path, material_config* config)
+b8 load_configuration_file(char const* path, material_config* config)
 {
     file_handle f;
     if (!filesystem_open(path, FILE_MODE_READ, FALSE, &f)) {
-        KERROR("load_configuration_file - unable to open material file for reading: '%s'.", path);
+        LOG_ERROR("load_configuration_file: Unable to open material file for reading: '%s'.", path);
         return FALSE;
     }
 
@@ -332,13 +342,13 @@ b8 load_configuration_file(const char* path, material_config* config)
         char* trimmed_value = string_trim(raw_value);
 
         // Process the variable.
-        if (strings_equali(trimmed_var_name, "version")) {
+        if (string_equali(trimmed_var_name, "version")) {
             // TODO: version
-        } else if (strings_equali(trimmed_var_name, "name")) {
+        } else if (string_equali(trimmed_var_name, "name")) {
             string_ncopy(config->name, trimmed_value, MATERIAL_NAME_MAX_LENGTH);
-        } else if (strings_equali(trimmed_var_name, "diffuse_map_name")) {
+        } else if (string_equali(trimmed_var_name, "diffuse_map_name")) {
             string_ncopy(config->diffuse_map_name, trimmed_value, TEXTURE_NAME_MAX_LENGTH);
-        } else if (strings_equali(trimmed_var_name, "diffuse_colour")) {
+        } else if (string_equali(trimmed_var_name, "diffuse_colour")) {
             // Parse the colour
             if (!string_to_vec4(trimmed_value, &config->diffuse_colour)) {
                 LOG_WARNING("Error parsing diffuse_colour in file '%s'. Using default of white instead.", path);

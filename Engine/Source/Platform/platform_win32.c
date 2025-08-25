@@ -102,8 +102,8 @@ b8 platformProcMessages(platform_state* plat_state)
     MSG message;
     while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
         if (message.message == WM_QUIT) {
-            EventContext context = {};
-            eventNotify(EVENT_CODE_APPLICATION_QUIT, NULL, context);
+            event_context context = {};
+            event_notify(EVENT_CODE_APPLICATION_QUIT, NULL, context);
             break;
         }
 
@@ -212,10 +212,10 @@ LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam
             i32 width = rect.right - rect.left;
             i32 height = rect.bottom - rect.top;
 
-            EventContext context;
+            event_context context;
             context.as.i16[0] = width;
             context.as.i16[1] = height;
-            eventNotify(EVENT_CODE_RESIZE, NULL, context);
+            event_notify(EVENT_CODE_RESIZE, NULL, context);
             return 0;
         }
         case WM_ERASEBKGND:

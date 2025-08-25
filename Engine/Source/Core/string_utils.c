@@ -27,7 +27,8 @@ b8 string_equal(char const* str0, char const* str1)
 b8 string_equali(char const* str0, char const* str1)
 {
 #ifdef _MSC_VER
-    return _strcmpi(str0, str1);
+    b8 result = !_stricmp(str0, str1);
+    return result;
 #elif
     return FALSE;
 #endif
@@ -253,4 +254,13 @@ b8 string_to_bool(char* str, b8* b) {
     }
 
     return FALSE;
+}
+
+char* string_empty(char* str)
+{
+    if (str) {
+        str[0] = 0;
+    }
+
+    return str;
 }

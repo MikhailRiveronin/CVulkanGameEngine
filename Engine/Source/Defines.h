@@ -20,7 +20,6 @@ typedef u32 b32;
 #define FALSE 0
 
 #define INVALID_ID 4294967295u
-#define INVALID_GEN 4294967295u
 
 #ifdef EXPORT
 #define LIB_API __declspec(dllexport)

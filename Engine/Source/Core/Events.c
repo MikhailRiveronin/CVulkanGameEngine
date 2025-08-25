@@ -87,7 +87,7 @@ b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event)
     return FALSE;
 }
 
-b8 eventNotify(u16 code, void const* sender, EventContext context)
+b8 event_notify(u16 code, void const* sender, event_context context)
 {
     if (!system_state) {
         LOG_ERROR("eventNotify() called before then event system is initialized");

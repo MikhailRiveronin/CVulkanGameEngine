@@ -2,7 +2,7 @@
 
 #include "defines.h"
 
-typedef struct EventContext {
+typedef struct event_context {
     union {
         i64 i64[2];
         u64 u64[2];
@@ -20,7 +20,7 @@ typedef struct EventContext {
 
         char c[16];
     } as;
-} EventContext;
+} event_context;
 
 
 // System internal event codes. Application should use codes beyond 255.
@@ -72,10 +72,16 @@ typedef enum SystemEventCode {
      */
     EVENT_CODE_RESIZE = 0x08,
 
+    EVENT_CODE_DEBUG0 = 0x10,
+    EVENT_CODE_DEBUG1 = 0x11,
+    EVENT_CODE_DEBUG2 = 0x12,
+    EVENT_CODE_DEBUG3 = 0x13,
+    EVENT_CODE_DEBUG4 = 0x14,
+
     EVENT_CODE_ENUM_MAX = 0xFF
 } SystemEventCode;
 
-typedef b8 (* pfn_on_event)(u16 code, void const* sender, void const* listener, EventContext context);
+typedef b8 (* pfn_on_event)(u16 code, void const* sender, void const* listener, event_context context);
 
 b8 event_system_startup(u64* memory_size, void* memory);
 void event_system_shutdown(void* memory);
@@ -108,4 +114,4 @@ LIB_API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_even
  * @param context The event data.
  * @returns TRUE if handled, otherwise FALSE.
  */
-LIB_API b8 eventNotify(u16 code, void const* sender, EventContext context);
+LIB_API b8 event_notify(u16 code, void const* sender, event_context context);

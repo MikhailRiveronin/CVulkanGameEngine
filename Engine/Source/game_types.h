@@ -4,10 +4,10 @@
 #include "core/application.h"
 
 typedef struct game {
-    b8 (* onInit)(struct game* game);
-    b8 (* onUpdate)(struct game* game, f64 deltaTime);
-    b8 (* onRender)(struct game* game, f64 deltaTime);
-    void (* onResize)(struct game* game, i32 width, i32 height);
+    b8 (* init)(struct game* game);
+    b8 (* update)(struct game* game, f64 deltaTime);
+    b8 (* render)(struct game* game, f64 deltaTime);
+    void (* resize)(struct game* game, u32 width, u32 height);
     
     // Game-specific state
     void* state;

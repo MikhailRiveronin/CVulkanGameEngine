@@ -57,3 +57,4 @@ void vulkan_buffer_upload_data(
     u64 offset,
     u64 size,
     void const* data);
+void vulkan_buffer_free_data(vulkan_buffer* buffer, u64 offset, u64 size);

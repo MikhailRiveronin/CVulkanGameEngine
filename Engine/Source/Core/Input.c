@@ -104,9 +104,9 @@ void inputProcessKey(Key key, b8 pressed)
     if (system_state->keyboard.keys[key] != pressed) {
         system_state->keyboard.keys[key] = pressed;
 
-        EventContext context;
+        event_context context;
         context.as.u16[0] = key;
-        eventNotify(pressed ? EVENT_CODE_KEY_PRESSED : EVENT_CODE_KEY_RELEASED, NULL, context);
+        event_notify(pressed ? EVENT_CODE_KEY_PRESSED : EVENT_CODE_KEY_RELEASED, NULL, context);
     }
 }
 
@@ -168,9 +168,9 @@ void inputProcessButton(Button button, b8 pressed)
     if (system_state->mouse.buttons[button] != pressed) {
         system_state->mouse.buttons[button] = pressed;
 
-        EventContext context;
+        event_context context;
         context.as.u16[0] = button;
-        eventNotify(pressed ? EVENT_CODE_BUTTON_PRESSED : EVENT_CODE_BUTTON_RELEASED, NULL, context);
+        event_notify(pressed ? EVENT_CODE_BUTTON_PRESSED : EVENT_CODE_BUTTON_RELEASED, NULL, context);
     }
 }
 
@@ -182,16 +182,16 @@ void inputProcessMouseMove(i16 x, i16 y)
         system_state->mouse.x = x;
         system_state->mouse.y = y;
 
-        EventContext context;
+        event_context context;
         context.as.u16[0] = x;
         context.as.u16[1] = y;
-        eventNotify(EVENT_CODE_MOUSE_MOVED, NULL, context);
+        event_notify(EVENT_CODE_MOUSE_MOVED, NULL, context);
     }
 }
 
 void inputProcessMouseWheel(i8 zDelta)
 {
-    EventContext context;
+    event_context context;
     context.as.i8[0] = zDelta;
-    eventNotify(EVENT_CODE_MOUSE_WHEEL, NULL, context);
+    event_notify(EVENT_CODE_MOUSE_WHEEL, NULL, context);
 }

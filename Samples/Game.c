@@ -3,6 +3,7 @@
 #include <core/input.h>
 #include <core/logger.h>
 #include <core/memory_utils.h>
+#include <core/events.h>
 #include <math/kmath.h>
 
 // TODO: Temp
@@ -31,6 +32,12 @@ b8 game_update(game* game, f64 delta_time)
     alloc_count = memory_allocation_count();
     if (input_is_key_up('M') && input_was_key_down('M')) {
         LOG_DEBUG("Allocations: %llu (%llu this frame)", alloc_count, alloc_count - prev_alloc_count);
+    }
+
+    if (input_is_key_up('T') && input_was_key_down('T')) {
+        LOG_DEBUG("Swapping texture!");
+        event_context context = {};
+        event_notify(EVENT_CODE_DEBUG0, game, context);
     }
 
     game_state* state = (game_state*)game->state;

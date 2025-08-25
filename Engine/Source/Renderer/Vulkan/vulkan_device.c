@@ -30,7 +30,13 @@ static b8 physicalDeviceMeetsRequirements(
     PhysicalDeviceRequirements const* requirements,
     PhysicalDeviceQueueFamilyInfo* queueFamilyInfo,
     VulkanSwapchainSupportInfo* swapchainSupportInfo);
-
+static b8 find_supported_format(
+    VkPhysicalDevice physical_device,
+    VkImageTiling tiling,
+    VkFormatFeatureFlags format_features,
+    VkFormat const* candidates,
+    u32 candidate_count,
+    VkFormat* format);
 
 b8 vulkanDeviceCreate(vulkan_context* context)
 {
@@ -193,24 +199,20 @@ void vulkan_device_query_swapchain_support(
 
 b8 vulkan_device_detect_depth_format(vulkan_device* device)
 {
-    VkFormat candidates[3] = {
-        VK_FORMAT_D32_SFLOAT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
-        VK_FORMAT_D24_UNORM_S8_UINT };
+    VkFormat candidates[] = { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+    VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+    VkFormatFeatureFlags format_features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    u32 flags = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    for (u64 i = 0; i < _countof(candidates); ++i) {
-        VkFormatProperties properties;
-        vkGetPhysicalDeviceFormatProperties(device->physical_device, candidates[i], &properties);
-        if ((properties.linearTilingFeatures & flags) == flags) {
-            device->depthFormat = candidates[i];
-            return TRUE;
-        }
-        else if ((properties.optimalTilingFeatures & flags) == flags) {
-            device->depthFormat = candidates[i];
-            return TRUE;
-        }
+    VkFormat format;
+    if (find_supported_format(
+        device->physical_device, tiling,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        candidates, _countof(candidates), &format)) {
+        device->depthFormat = format;
+        return TRUE;
     }
+
+    LOG_FATAL("vulkan_device_detect_depth_format: Failed to find a format for depth buffer");
     return FALSE;
 }
 
@@ -431,5 +433,31 @@ b8 physicalDeviceMeetsRequirements(
         }
         return TRUE;
     }
+    return FALSE;
+}
+
+b8 find_supported_format(
+    VkPhysicalDevice physical_device,
+    VkImageTiling tiling,
+    VkFormatFeatureFlags format_features,
+    VkFormat const* candidates,
+    u32 candidate_count,
+    VkFormat* format)
+{
+    for (u32 i = 0; i < candidate_count; ++i) {
+        VkFormatProperties properties;
+        vkGetPhysicalDeviceFormatProperties(physical_device, candidates[i], &properties);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & format_features == format_features)) {
+            *format = candidates[i];
+            return TRUE;
+        }
+
+        if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & format_features == format_features)) {
+            *format = candidates[i];
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }
