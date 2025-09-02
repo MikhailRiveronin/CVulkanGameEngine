@@ -15,6 +15,7 @@
 #include "systems/texture_system.h"
 #include "systems/material_system.h"
 #include "systems/geometry_system.h"
+#include "systems/resource_system.h"
 
 typedef struct application_state {
     game* game;
@@ -55,6 +56,11 @@ typedef struct application_state {
     struct {
         u64 required_memory;
         void* memory;
+    } resource_system;
+
+    struct {
+        u64 required_memory;
+        void* memory;
     } renderer_system;
 
     struct {
@@ -74,6 +80,7 @@ typedef struct application_state {
 
     // TODO: temp
     geometry* test_geometry;
+    geometry* test_ui_geometry;
     // TODO: end temp
 } application_state;
 
@@ -84,7 +91,8 @@ b8 applicationOnKey(u16 code, void const* sender, void const* listener, event_co
 b8 application_on_resize(u16 code, void const* sender, void const* listener, event_context context);
 
 // TODO: temp
-b8 event_on_debug_event(u16 code, void* sender, void* listener_inst, event_context data) {
+b8 event_on_debug_event(u16 code, void const* sender, void const* listener_inst, event_context data)
+{
     const char* names[3] = {
         "cobblestone",
         "paving",
@@ -178,6 +186,16 @@ b8 application_init(game* game)
         app_state->game->app_config.x, app_state->game->app_config.y,
         app_state->game->app_config.width, app_state->game->app_config.height)) {
         LOG_FATAL("application_init: Failed to initialize platform system. Shutting down...");
+        return FALSE;
+    }
+
+    resource_system_config resource_sys_config;
+    resource_sys_config.asset_base_path = "../assets";
+    resource_sys_config.max_loader_count = 32;
+    resource_system_startup(&app_state->resource_system.required_memory, 0, resource_sys_config);
+    app_state->resource_system.memory = linear_allocator_allocate(&app_state->systems_allocator, app_state->resource_system.required_memory);
+    if(!resource_system_startup(&app_state->resource_system.required_memory, app_state->resource_system.memory, resource_sys_config)) {
+        LOG_FATAL("Failed to initialize resource system. Aborting application.");
         return FALSE;
     }
 
@@ -310,6 +328,9 @@ b8 application_run(void)
             packet.geometries = &test_render;
             // TODO: end temp
 
+            packet.ui_geometry_count = 0;
+            packet.ui_geometries = 0;
+
             renderer_frontend_draw_frame(&packet);
 
             f64 frameEndTime = platform_get_absolute_time();
@@ -343,7 +364,7 @@ b8 application_run(void)
     material_system_shutdown();
     texture_system_shutdown();
     renderer_system_shutdown();
-
+    resource_system_shutdown(app_state->resource_system.memory);
     platform_system_shutdown(&app_state->platform);
 
     memory_system_shutdown();

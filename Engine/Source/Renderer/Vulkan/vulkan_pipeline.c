@@ -7,15 +7,17 @@
 b8 vulkan_pipeline_create(
     vulkan_context* context,
     vulkan_renderpass* renderpass,
-    u32 vertex_attribute_description_count,
-    VkVertexInputAttributeDescription* vertex_attribute_descriptions,
+    u32 stride,
+    u32 attribute_count,
+    VkVertexInputAttributeDescription* attributes,
     u32 set_layout_count,
     VkDescriptorSetLayout* set_layouts,
     u32 stage_count,
     VkPipelineShaderStageCreateInfo* stages,
     VkViewport viewport,
     VkRect2D scissor,
-    b8 wireframe,
+    b8 is_wireframe,
+    b8 depth_test_enabled,
     vulkan_pipeline* pipeline)
 {
     VkPipelineViewportStateCreateInfo viewport_state_create_info;
@@ -33,7 +35,7 @@ b8 vulkan_pipeline_create(
     rasterization_state_create_info.flags = 0;
     rasterization_state_create_info.depthClampEnable = VK_FALSE;
     rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
-    rasterization_state_create_info.polygonMode = wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
+    rasterization_state_create_info.polygonMode = is_wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
     rasterization_state_create_info.cullMode = VK_CULL_MODE_NONE;
     rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
     rasterization_state_create_info.depthBiasEnable = VK_FALSE;
@@ -106,7 +108,7 @@ b8 vulkan_pipeline_create(
 
     VkVertexInputBindingDescription vertex_input_binding_description = {};
     vertex_input_binding_description.binding = 0;
-    vertex_input_binding_description.stride = sizeof(vertex_3d);
+    vertex_input_binding_description.stride = stride;
     vertex_input_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info = {};
@@ -115,8 +117,8 @@ b8 vulkan_pipeline_create(
     vertex_input_state_create_info.flags = 0;
     vertex_input_state_create_info.vertexBindingDescriptionCount = 1;
     vertex_input_state_create_info.pVertexBindingDescriptions = &vertex_input_binding_description;
-    vertex_input_state_create_info.vertexAttributeDescriptionCount = vertex_attribute_description_count;
-    vertex_input_state_create_info.pVertexAttributeDescriptions = vertex_attribute_descriptions;
+    vertex_input_state_create_info.vertexAttributeDescriptionCount = attribute_count;
+    vertex_input_state_create_info.pVertexAttributeDescriptions = attributes;
 
     VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info = {};
     input_assembly_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -157,7 +159,7 @@ b8 vulkan_pipeline_create(
     graphics_pipeline_create_info.pViewportState = &viewport_state_create_info;
     graphics_pipeline_create_info.pRasterizationState = &rasterization_state_create_info;
     graphics_pipeline_create_info.pMultisampleState = &multisample_state_create_info;
-    graphics_pipeline_create_info.pDepthStencilState = &depth_stencil_state_create_info;
+    graphics_pipeline_create_info.pDepthStencilState = depth_test_enabled ? &depth_stencil_state_create_info : 0;
     graphics_pipeline_create_info.pColorBlendState = &color_blend_state_create_info;
     graphics_pipeline_create_info.pDynamicState = &dynamic_state_create_info;
     graphics_pipeline_create_info.layout = pipeline->layout;
@@ -182,7 +184,7 @@ b8 vulkan_pipeline_create(
 
 
 
-void vulkan_graphics_pipeline_destroy(vulkan_context* context, vulkan_pipeline* pipeline)
+void vulkan_pipeline_destroy(vulkan_context* context, vulkan_pipeline* pipeline)
 {
     if (pipeline) {
         if (pipeline->handle) {

@@ -166,8 +166,8 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
     }
     VK_CHECK(vkGetSwapchainImagesKHR(context->device.handle, swapchain->handle, &swapchainImageCount, swapchain->images.data));
 
-    DARRAY_RESERVE(swapchain->imageViews, swapchain->images.size, MEMORY_TAG_RENDERER);
-    swapchain->imageViews.size = swapchain->images.size;
+    DARRAY_RESERVE(swapchain->image_views, swapchain->images.size, MEMORY_TAG_RENDERER);
+    swapchain->image_views.size = swapchain->images.size;
     for (u8 i = 0; i < swapchain->images.size; ++i) {
         VkImageViewCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -187,7 +187,7 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
             context->device.handle,
             &createInfo,
             context->allocator,
-            &DARRAY_AT(swapchain->imageViews, i)));
+            &DARRAY_AT(swapchain->image_views, i)));
     }
 
     if (!vulkan_device_detect_depth_format(&context->device)) {
@@ -206,7 +206,7 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         TRUE,
         VK_IMAGE_ASPECT_DEPTH_BIT,
-        &swapchain->depthBuffer);
+        &swapchain->depth_buffer);
 
     LOG_INFO("Swapchain created");
     return TRUE;
@@ -215,9 +215,9 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
 void destroy(vulkan_context* context, VulkanSwapchain* swapchain)
 {
     vkDeviceWaitIdle(context->device.handle);
-    vulkan_image_destroy(context, &swapchain->depthBuffer);
+    vulkan_image_destroy(context, &swapchain->depth_buffer);
     for (u32 i = 0; i < swapchain->images.size; ++i) {
-        vkDestroyImageView(context->device.handle, DARRAY_AT(swapchain->imageViews, i), context->allocator);
+        vkDestroyImageView(context->device.handle, DARRAY_AT(swapchain->image_views, i), context->allocator);
     }
     vkDestroySwapchainKHR(context->device.handle, swapchain->handle, context->allocator);
 }

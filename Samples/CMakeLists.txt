@@ -29,6 +29,24 @@ add_custom_command(TARGET Main POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     BYPRODUCTS ${CMAKE_BINARY_DIR}/assets/shaders/Builtin.ObjectShader.frag.spv)
 
+message("assets/shaders/Builtin.UIShader.vert.glsl -> bin/assets/shaders/Builtin.UIShader.vert.spv")
+add_custom_command(TARGET Main POST_BUILD
+    COMMAND $ENV{VULKAN_SDK}/Bin/glslc.exe
+        -fshader-stage=vert
+        ${CMAKE_SOURCE_DIR}/assets/shaders/Builtin.ObjectShader.vert.glsl
+        -o ${CMAKE_BINARY_DIR}/assets/shaders/Builtin.ObjectShader.vert.spv
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/assets/shaders/Builtin.ObjectShader.vert.spv)
+
+message("assets/shaders/Builtin.UIShader.frag.glsl -> bin/assets/shaders/Builtin.UIShader.frag.spv")
+add_custom_command(TARGET Main POST_BUILD
+    COMMAND $ENV{VULKAN_SDK}/Bin/glslc.exe
+        -fshader-stage=frag
+        ${CMAKE_SOURCE_DIR}/assets/shaders/Builtin.ObjectShader.frag.glsl
+        -o ${CMAKE_BINARY_DIR}/assets/shaders/Builtin.ObjectShader.frag.spv
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/assets/shaders/Builtin.ObjectShader.frag.spv)
+
 message("Copying assets...")
 add_custom_command(TARGET Main POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

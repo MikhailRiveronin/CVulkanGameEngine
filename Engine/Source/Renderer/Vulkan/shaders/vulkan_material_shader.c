@@ -145,11 +145,17 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
     if(!vulkan_pipeline_create(
         context,
         &context->main_renderpass,
-        _countof(vertexAttributeDescriptions), vertexAttributeDescriptions,
-        _countof(descriptor_set_layouts), descriptor_set_layouts,
-        MATERIAL_SHADER_STAGE_COUNT, shader_stage_create_infos,
-        viewport, scissor,
+        sizeof(vertex_3d),
+        _countof(vertexAttributeDescriptions),
+        vertexAttributeDescriptions,
+        _countof(descriptor_set_layouts),
+        descriptor_set_layouts,
+        MATERIAL_SHADER_STAGE_COUNT,
+        shader_stage_create_infos,
+        viewport,
+        scissor,
         FALSE,
+        TRUE,
         &shader->pipeline)) {
         LOG_ERROR("Failed to create pipeline");
         return FALSE;
@@ -200,7 +206,7 @@ void vulkan_material_shader_destroy(vulkan_context* context, vulkan_material_sha
 
     vulkan_buffer_destroy(context, &shader->global_ubo);
     vulkan_buffer_destroy(context, &shader->object_ubo);
-    vulkan_graphics_pipeline_destroy(context, &shader->pipeline); 
+    vulkan_pipeline_destroy(context, &shader->pipeline); 
     vkDestroyDescriptorPool(context->device.handle, shader->global_descriptor_pool, context->allocator);
     vkDestroyDescriptorSetLayout(context->device.handle, shader->global_descriptor_set_layout, context->allocator);
     vkDestroyDescriptorPool(context->device.handle, shader->object_descriptor_pool, context->allocator);
@@ -263,7 +269,7 @@ void vulkan_material_shader_update_global_state(vulkan_context* context, vulkan_
 void vulkan_material_shader_set_model(vulkan_context* context, struct vulkan_material_shader* shader, mat4 model)
 {
     if (context && shader) {
-        u32 image_index = context->image_index;
+        u32 image_index = context->current_image;
         VkCommandBuffer command_buffer = context->command_buffers.data[image_index].handle;
 
         vkCmdPushConstants(command_buffer, shader->pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mat4), &model);

@@ -11,7 +11,7 @@ u64 string_length(char const* str)
     return strlen(str);
 }
 
-char const* string_duplicate(char const* str)
+char* string_duplicate(char const* str)
 {
     u64 length = string_length(str);
     char* copy = memory_allocate(length + 1, MEMORY_TAG_STRING);

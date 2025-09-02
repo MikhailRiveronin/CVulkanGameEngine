@@ -22,8 +22,10 @@ void renderer_frontend_destroy_material(material* material);
 
 b8 renderer_create_geometry(
     geometry* geometry,
+    u32 vertex_size,
     u32 vertex_count,
-    vertex_3d const* vertices,
+    void const* vertices,
+    u32 index_size,
     u32 index_count,
     u32 const* indices);
 void renderer_destroy_geometry(geometry* geometry);

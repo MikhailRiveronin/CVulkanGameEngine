@@ -10,6 +10,11 @@ typedef enum renderer_backend_type {
     RENDERER_BACKEND_TYPE_DIRECTX
 } renderer_backend_type;
 
+typedef enum builtin_renderpass {
+    BUILTIN_RENDERPASS_WORLD = 0x01,
+    BUILTIN_RENDERPASS_UI = 0x02
+} builtin_renderpass;
+
 typedef struct global_uniform_data {
     mat4 view;
     mat4 proj;
@@ -45,20 +50,19 @@ typedef struct renderer_backend {
     void (* resize)(struct renderer_backend* backend, i16 width, i16 height);
     
     void (* update_global_state)(mat4 view, mat4 proj, vec3 view_pos, vec4 ambient_color, i32 mode);
+    void (* update_global_ui_state)(mat4 proj, mat4 view, i32 mode);
     void (* draw_geometry)(geometry_render_data render_data);
 
     void (* create_texture)(u8 const* pixels, texture* texture);
     void (* destroy_texture)(texture* texture);
 
+    b8 (*begin_renderpass)(struct renderer_backend* backend, u8 renderpass_id);
+    b8 (*end_renderpass)(struct renderer_backend* backend, u8 renderpass_id);
+
     b8 (* create_material)(material* material);
     void (* destroy_material)(material* material);
 
-    b8 (* create_geometry)(
-        geometry* geometry,
-        u32 vertex_count,
-        vertex_3d const* vertices,
-        u32 index_count,
-        u32 const* indices);
+    b8 (* create_geometry)(geometry* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices);
     void (* destroy_geometry)(geometry* geometry);
 } renderer_backend;
 
@@ -67,4 +71,7 @@ typedef struct render_packet {
 
     u32 geometry_count;
     geometry_render_data* geometries;
+
+    u32 ui_geometry_count;
+    geometry_render_data* ui_geometries;
 } render_packet;

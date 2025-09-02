@@ -7,6 +7,8 @@
 #include "renderer/renderer_frontend.h"
 #include "third_party/stb_image.h"
 
+#include "systems/resource_system.h"
+
 typedef struct texture_reference {
     u32 id;
     u64 reference_count;
@@ -242,58 +244,50 @@ void destroy_default_textures()
 
 b8 load_texture(char const* filename, texture* t)
 {
-    char* format = "D:/Projects/CVulkanGameEngine/build/assets/textures/%s.%s";
-    char absolute_path[512];
-    string_format(absolute_path, format, filename, "png");
-
-    texture temp;
-    i32 desired_channels = 4;
-    u8* data = stbi_load(
-        absolute_path,
-        &temp.width,
-        &temp.height,
-        (i32*)&temp.channel_count,
-        desired_channels);
-    temp.channel_count = desired_channels;
-
-    if (data) {
-        u32 total_size = temp.width * temp.height * temp.channel_count;
-        b8 has_transparency = FALSE;
-        for (u32 i = 0; i < total_size; i += temp.channel_count) {
-            u8 alpha = data[i + 3];
-            if (alpha < 255) {
-                has_transparency = TRUE;
-                break;
-            }
-        }
-
-        string_ncopy(temp.name, filename, TEXTURE_NAME_MAX_LENGTH);
-        temp.generation = INVALID_ID;
-        temp.has_transparency = has_transparency;
-
-        renderer_frontend_create_texture(data, &temp);
-
-        texture old = *t;
-        *t = temp;
-        renderer_frontend_destroy_texture(&old);
-
-        if (t->generation == INVALID_ID) {
-            t->generation = 0;
-        } else {
-            t->generation = t->generation + 1;
-        }
-
-        stbi_image_free(data);
-
-        return TRUE;
+    resource img_resource;
+    if (!resource_system_load(filename, RESOURCE_TYPE_IMAGE, &img_resource)) {
+        LOG_ERROR("Failed to load image resource for texture '%s'", filename);
+        return FALSE;
     }
 
-    char const* failure = stbi_failure_reason();
-    if (failure != 0) {
-        LOG_WARNING("load_texture: Failed to load texture '%s': %s", absolute_path, failure);
+    image_resource_data* resource_data = img_resource.data;
+
+    texture temp_texture;
+    temp_texture.width = resource_data->width;
+    temp_texture.height = resource_data->height;
+    temp_texture.channel_count = resource_data->channel_count;
+
+    u32 current_generation = t->generation;
+    t->generation = INVALID_ID;
+
+    u32 total_size = temp_texture.width * temp_texture.height * temp_texture.channel_count;
+    b8 has_transparency = FALSE;
+    for (u32 i = 0; i < total_size; i += temp_texture.channel_count) {
+        u8 alpha = resource_data->pixels[i + 3];
+        if (alpha < 255) {
+            has_transparency = TRUE;
+            break;
+        }
     }
 
-    return FALSE;
+    string_ncopy(temp_texture.name, filename, TEXTURE_NAME_MAX_LENGTH);
+    temp_texture.generation = INVALID_ID;
+    temp_texture.has_transparency = has_transparency;
+
+    renderer_frontend_create_texture(resource_data->pixels, &temp_texture);
+
+    texture old = *t;
+    *t = temp_texture;
+    renderer_frontend_destroy_texture(&old);
+
+    if (current_generation == INVALID_ID) {
+        t->generation = 0;
+    } else {
+        t->generation = current_generation + 1;
+    }
+
+    resource_system_unload(&img_resource);
+    return TRUE;
 }
 
 void destroy_texture(texture* t)

@@ -15,6 +15,9 @@ typedef struct renderer_system_state {
     mat4 proj;
     mat4 view;
 
+    mat4 ui_projection;
+    mat4 ui_view;
+
     f32 near;
     f32 far;
 } renderer_system_state;
@@ -47,6 +50,10 @@ b8 renderer_system_startup(u64* memory_size, void* memory, char const* app_name)
     system_state->view = mat4_translation((vec3){30, 0, 0.0f});
     system_state->view = mat4_inverse(system_state->view);
 
+    // UI projection/view
+    system_state->ui_projection = mat4_orthographic(0, 1280.0f, 720.0f, 0, -100.f, 100.0f);  // Intentionally flipped on y axis.
+    system_state->ui_view = mat4_inverse(mat4_identity());
+
     return TRUE;
 }
 
@@ -61,12 +68,45 @@ void renderer_system_shutdown()
 b8 renderer_frontend_draw_frame(render_packet* packet)
 {
     if (renderer_begin_frame(packet->delta_time)) {
+        // World renderpass
+        if (!system_state->backend.begin_renderpass(&system_state->backend, BUILTIN_RENDERPASS_WORLD)) {
+            LOG_ERROR("backend.begin_renderpass -> BUILTIN_RENDERPASS_WORLD failed. Application shutting down...");
+            return FALSE;
+        }
+
         system_state->backend.update_global_state(system_state->view, system_state->proj, vec3_zero(), vec4_one(), 0);
 
         u32 count = packet->geometry_count;
         for (u32 i = 0; i < count; ++i) {
             system_state->backend.draw_geometry(packet->geometries[i]);
         }
+
+        if (!system_state->backend.end_renderpass(&system_state->backend, BUILTIN_RENDERPASS_WORLD)) {
+            LOG_ERROR("backend.end_renderpass -> BUILTIN_RENDERPASS_WORLD failed. Application shutting down...");
+            return FALSE;
+        }
+        // End world renderpass
+
+        // UI renderpass
+        if (!system_state->backend.begin_renderpass(&system_state->backend, BUILTIN_RENDERPASS_UI)) {
+            LOG_ERROR("backend.begin_renderpass -> BUILTIN_RENDERPASS_UI failed. Application shutting down...");
+            return FALSE;
+        }
+
+        // Update UI global state
+        system_state->backend.update_global_ui_state(system_state->ui_projection, system_state->ui_view, 0);
+
+        // Draw ui geometries.
+        count = packet->ui_geometry_count;
+        for (u32 i = 0; i < count; ++i) {
+            system_state->backend.draw_geometry(packet->ui_geometries[i]);
+        }
+
+        if (!system_state->backend.end_renderpass(&system_state->backend, BUILTIN_RENDERPASS_UI)) {
+            LOG_ERROR("backend.end_renderpass -> BUILTIN_RENDERPASS_UI failed. Application shutting down...");
+            return FALSE;
+        }
+        // End UI renderpass
 
         b8 result = rendererEndFrame(packet->delta_time);
         if (!result) {
@@ -85,6 +125,7 @@ void renderer_frontend_resize(i16 width, i16 height)
             width / height,
             system_state->near,
             system_state->far);
+        system_state->ui_projection = mat4_orthographic(0, (f32)width, (f32)height, 0, -100.f, 100.0f); // Intentionally flipped on y axis.
         system_state->backend.resize(&system_state->backend, width, height);
     } else {
         LOG_ERROR("renderer_frontend_resize: system_state->backend is NULL");
@@ -128,14 +169,9 @@ void renderer_frontend_destroy_material(material* material)
     system_state->backend.destroy_material(material);
 }
 
-b8 renderer_create_geometry(
-    geometry* geometry,
-    u32 vertex_count,
-    vertex_3d const* vertices,
-    u32 index_count,
-    u32 const* indices)
+b8 renderer_create_geometry(geometry* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices)
 {
-    return system_state->backend.create_geometry(geometry, vertex_count, vertices, index_count, indices);
+    return system_state->backend.create_geometry(geometry, vertex_size, vertex_count, vertices, index_size, index_count, indices);
 }
 
 void renderer_destroy_geometry(geometry* geometry)

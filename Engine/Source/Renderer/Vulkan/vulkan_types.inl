@@ -88,31 +88,28 @@ typedef enum VulkanRenderPassState {
 
 typedef struct vulkan_renderpass {
     VkRenderPass handle;
-    f32 x, y, width, height;
-    f32 r, g, b, a;
+    vec4 render_area;
+    vec4 clear_colour;
 
     f32 depth;
     u32 stencil;
 
+    u8 clear_flags;
+    b8 has_prev_pass;
+    b8 has_next_pass;
+
     VulkanRenderPassState state;
 } vulkan_renderpass;
-
-typedef struct VulkanFramebuffer {
-    VkFramebuffer handle;
-    u32 attachmentCount;
-    VkImageView* attachments;
-    vulkan_renderpass* renderpass;
-} VulkanFramebuffer;
 
 typedef struct VulkanSwapchain {
     VkSwapchainKHR handle;
     VkSurfaceFormatKHR surfaceFormat;
     u8 frames_in_flight;
     DARRAY(VkImage) images;
-    DARRAY(VkImageView) imageViews;
-    DARRAY(VulkanFramebuffer) framebuffers;
+    DARRAY(VkImageView) image_views;
+    VkFramebuffer framebuffers[3];
 
-    vulkan_image depthBuffer;
+    vulkan_image depth_buffer;
 } VulkanSwapchain;
 
 typedef enum VulkanCommandBufferState {
@@ -128,11 +125,6 @@ typedef struct vulkan_command_buffer {
     VkCommandBuffer handle;
     VulkanCommandBufferState state;
 } vulkan_command_buffer;
-
-typedef struct VulkanFence {
-    VkFence handle;
-    b8 signaled;
-} VulkanFence;
 
 typedef struct vulkan_shader_stage {
     VkShaderModuleCreateInfo create_info;
@@ -167,10 +159,10 @@ typedef struct vulkan_geometry_data {
     u32 id;
     u32 generation;
     u32 vertex_count;
-    u32 vertex_size;
+    u32 vertex_element_size;
     u32 vertex_buffer_offset;
     u32 index_count;
-    u32 index_size;
+    u32 index_element_size;
     u32 index_buffer_offset;
 } vulkan_geometry_data;
 
@@ -204,6 +196,74 @@ typedef struct vulkan_material_shader {
     material_uniform_data object_data;
 } vulkan_material_shader;
 
+#define UI_SHADER_STAGE_COUNT 2
+#define VULKAN_UI_SHADER_DESCRIPTOR_COUNT 2
+#define VULKAN_UI_SHADER_SAMPLER_COUNT 1
+
+// Max number of ui control instances
+// TODO: make configurable
+#define VULKAN_MAX_UI_COUNT 1024
+
+typedef struct vulkan_ui_shader_instance_state {
+    // Per frame
+    VkDescriptorSet descriptor_sets[3];
+
+    // Per descriptor
+    vulkan_descriptor_state descriptor_states[VULKAN_UI_SHADER_DESCRIPTOR_COUNT];
+} vulkan_ui_shader_instance_state;
+
+/**
+ * @brief Vulkan-specific uniform buffer object for the ui shader. 
+ */
+typedef struct vulkan_ui_shader_global_ubo {
+    mat4 projection;   // 64 bytes
+    mat4 view;         // 64 bytes
+    mat4 m_reserved0;  // 64 bytes, reserved for future use
+    mat4 m_reserved1;  // 64 bytes, reserved for future use
+} vulkan_ui_shader_global_ubo;
+
+/**
+ * @brief Vulkan-specific ui material instance uniform buffer object for the ui shader. 
+ */
+typedef struct vulkan_ui_shader_instance_ubo {
+    vec4 diffuse_color;  // 16 bytes
+    vec4 v_reserved0;    // 16 bytes, reserved for future use
+    vec4 v_reserved1;    // 16 bytes, reserved for future use
+    vec4 v_reserved2;    // 16 bytes, reserved for future use
+} vulkan_ui_shader_instance_ubo;
+
+typedef struct vulkan_ui_shader {
+    // vertex, fragment
+    vulkan_shader_stage stages[UI_SHADER_STAGE_COUNT];
+
+    VkDescriptorPool global_descriptor_pool;
+    VkDescriptorSetLayout global_descriptor_set_layout;
+
+    // One descriptor set per frame - max 3 for triple-buffering.
+    VkDescriptorSet global_descriptor_sets[3];
+
+    // Global uniform object.
+    global_uniform_data global_ubo;
+
+    // Global uniform buffer.
+    vulkan_buffer global_uniform_buffer;
+
+    VkDescriptorPool object_descriptor_pool;
+    VkDescriptorSetLayout object_descriptor_set_layout;
+    // Object uniform buffers.
+    vulkan_buffer object_uniform_buffer;
+    // TODO: manage a free list of some kind here instead.
+    u32 object_uniform_buffer_index;
+
+    texture_use sampler_uses[VULKAN_UI_SHADER_SAMPLER_COUNT];
+
+    // TODO: make dynamic
+    vulkan_ui_shader_instance_state instance_states[VULKAN_MAX_UI_COUNT];
+
+    vulkan_pipeline pipeline;
+
+} vulkan_ui_shader;
+
 typedef struct vulkan_context {
     f32 frame_delta_time;
 
@@ -220,17 +280,20 @@ typedef struct vulkan_context {
 
     VulkanSwapchain swapchain;
     b8 recreating_swapchain;
-    u32 image_index;
+    u32 current_image;
 
     // Sync objects
     DARRAY(VkSemaphore) image_available_semaphors;
     DARRAY(VkSemaphore) render_complete_semaphors;
-    DARRAY(VulkanFence) fences_in_flight;
-    DARRAY(VulkanFence*) imagesInFlight;
+
+    VkFence fences_in_flight[2];
+    VkFence* images_in_flight[3];
+
     u32 current_frame;
 
     DARRAY(vulkan_command_buffer) command_buffers;
     vulkan_renderpass main_renderpass;
+    vulkan_renderpass ui_renderpass;
 
     VkInstance instance;
     VkAllocationCallbacks* allocator;
@@ -241,6 +304,10 @@ typedef struct vulkan_context {
     vulkan_device device;
 
     vulkan_material_shader material_shader;
+    vulkan_ui_shader ui_shader;
+
+    // Framebuffers used for world rendering, one per frame
+    VkFramebuffer world_framebuffers[3];
 
     i32 (* findMemoryType)(u32 memoryTypeBits, VkMemoryPropertyFlags properties);
 
