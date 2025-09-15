@@ -5,7 +5,7 @@
 
 static u64 hash_name(char const* name, u32 element_count);
 
-void hash_table_create(u64 element_size, u32 element_count, void* memory, b8 is_pointer_type, hash_table* table)
+void hashtable_create(u64 element_size, u32 element_count, void* memory, b8 is_pointer_type, hashtable* table)
 {
     if (!memory || !table) {
         LOG_ERROR("hashtable_create failed! Pointer to memory and out_hashtable are required.");
@@ -24,7 +24,7 @@ void hash_table_create(u64 element_size, u32 element_count, void* memory, b8 is_
     memory_zero(table->memory, element_size * element_count);
 }
 
-void hash_table_destroy(hash_table* table)
+void hashtable_destroy(hashtable* table)
 {
     if (table) {
         // TODO: If using allocator above, free memory here.
@@ -32,7 +32,7 @@ void hash_table_destroy(hash_table* table)
     }
 }
 
-b8 hash_table_set(hash_table* table, char const* name, void* value)
+b8 hashtable_set(hashtable* table, char const* name, void* value)
 {
     if (!table || !name || !value) {
         LOG_WARNING("hashtable_set requires table, name and value to exist.");
@@ -48,7 +48,7 @@ b8 hash_table_set(hash_table* table, char const* name, void* value)
     return TRUE;
 }
 
-b8 hash_table_set_ptr(hash_table* table, char const* name, void** value)
+b8 hashtable_set_ptr(hashtable* table, char const* name, void** value)
 {
     if (!table || !name) {
         LOG_WARNING("hashtable_set_ptr requires table and name  to exist.");
@@ -64,7 +64,7 @@ b8 hash_table_set_ptr(hash_table* table, char const* name, void** value)
     return TRUE;
 }
 
-b8 hash_table_get(hash_table* table, char const* name, void* value)
+b8 hashtable_get(hashtable* table, char const* name, void* value)
 {
     if (!table || !name || !value) {
         LOG_WARNING("hashtable_get requires table, name and value to exist.");
@@ -80,7 +80,7 @@ b8 hash_table_get(hash_table* table, char const* name, void* value)
     return TRUE;
 }
 
-b8 hash_table_get_ptr(hash_table* table, char const* name, void** value)
+b8 hashtable_get_ptr(hashtable* table, char const* name, void** value)
 {
     if (!table || !name) {
         LOG_WARNING("hashtable_set_ptr requires table and name  to exist.");
@@ -96,7 +96,7 @@ b8 hash_table_get_ptr(hash_table* table, char const* name, void** value)
     return *value;
 }
 
-b8 hash_table_fill(hash_table* table, void* value)
+b8 hashtable_fill(hashtable* table, void* value)
 {
     if (!table || !value) {
         LOG_WARNING("hashtable_set requires table, name and value to exist.");

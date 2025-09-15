@@ -2,7 +2,7 @@
 
 #include "core/logger.h"
 #include "core/memory_utils.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 #include "math/kmath.h"
 
 #include "renderer/vulkan/vulkan_shader_utils.h"
@@ -134,8 +134,8 @@ b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader
     VkPipelineShaderStageCreateInfo stage_create_infos[UI_SHADER_STAGE_COUNT];
     memory_zero(stage_create_infos, sizeof(stage_create_infos));
     for (u32 i = 0; i < UI_SHADER_STAGE_COUNT; ++i) {
-        stage_create_infos[i].sType = out_shader->stages[i].shader_stage_create_info.sType;
-        stage_create_infos[i] = out_shader->stages[i].shader_stage_create_info;
+        stage_create_infos[i].sType = out_shader->stages[i].create_info.sType;
+        stage_create_infos[i] = out_shader->stages[i].create_info;
     }
 
     if (!vulkan_pipeline_create(
@@ -217,8 +217,8 @@ void vulkan_ui_shader_destroy(vulkan_context* context, struct vulkan_ui_shader* 
 
     // Destroy shader modules.
     for (u32 i = 0; i < UI_SHADER_STAGE_COUNT; ++i) {
-        vkDestroyShaderModule(context->device.handle, shader->stages[i].handle, context->allocator);
-        shader->stages[i].handle = 0;
+        vkDestroyShaderModule(context->device.handle, shader->stages[i].module, context->allocator);
+        shader->stages[i].module = 0;
     }
 }
 

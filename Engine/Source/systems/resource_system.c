@@ -1,9 +1,6 @@
 #include "resource_system.h"
 
 #include "core/logger.h"
-#include "core/string_utils.h"
-
-// Known resource loaders.
 #include "resources/loaders/text_loader.h"
 #include "resources/loaders/binary_loader.h"
 #include "resources/loaders/image_loader.h"
@@ -16,72 +13,69 @@ typedef struct resource_system_state {
 
 static resource_system_state* system_state;
 
-b8 load(const char* name, resource_loader* loader, resource* out_resource);
+b8 load(char const* name, resource_loader* loader, resource* resource);
 
-b8 resource_system_startup(u64* memory_requirement, void* state, resource_system_config config) {
+b8 resource_system_startup(u64* state_size_in_bytes, void* memory, resource_system_config config)
+{
     if (config.max_loader_count == 0) {
-        LOG_FATAL("resource_system_startup failed because config.max_loader_count==0.");
+        LOG_FATAL("resource_system_startup: Failed to startup resource system because config.max_loader_count == 0");
         return FALSE;
     }
 
-    *memory_requirement = sizeof(resource_system_state) + (sizeof(resource_loader) * config.max_loader_count);
+    u64 state_struct_size_in_bytes = sizeof(*system_state);
+    u64 array_size_in_bytes = config.max_loader_count * sizeof(resource_loader);
+    *state_size_in_bytes = state_struct_size_in_bytes + array_size_in_bytes;
 
-    if (!state) {
+    if (!memory) {
         return TRUE;
     }
 
-    system_state = state;
+    system_state = memory;
     system_state->config = config;
 
-    void* array_block = (char*)state + sizeof(resource_system_state);
+    void* array_block = (char*)system_state + state_struct_size_in_bytes;
     system_state->registered_loaders = array_block;
 
-    // Invalidate all loaders
     u32 count = config.max_loader_count;
     for (u32 i = 0; i < count; ++i) {
         system_state->registered_loaders[i].id = INVALID_ID;
     }
 
-    // NOTE: Auto-register known loader types here.
     resource_system_register_loader(text_resource_loader_create());
-    resource_system_register_loader(binary_resource_loader_create());
-    resource_system_register_loader(image_resource_loader_create());
-    resource_system_register_loader(material_resource_loader_create());
+    resource_system_register_loader(binary_loader_create());
+    resource_system_register_loader(image_loader_create());
+    resource_system_register_loader(material_loader_create());
 
-    LOG_INFO("Resource system initialized with base path '%s'.", config.asset_base_path);
-
+    LOG_INFO("resource_system_startup: asset folder path '%s'", config.asset_folder_path);
     return TRUE;
 }
 
-void resource_system_shutdown(void* state)
+void resource_system_shutdown()
 {
     if (system_state) {
         system_state = 0;
     }
 }
 
-b8 resource_system_register_loader(resource_loader loader)
+b8 resource_system_register_loader(resource_loader new_loader)
 {
     if (system_state) {
         u32 count = system_state->config.max_loader_count;
-        // Ensure no loaders for the given type already exist
         for (u32 i = 0; i < count; ++i) {
-            resource_loader* l = &system_state->registered_loaders[i];
-            if (l->id != INVALID_ID) {
-                if (l->type == loader.type) {
-                    LOG_ERROR("resource_system_register_loader - Loader of type %d already exists and will not be registered.", loader.type);
-                    return FALSE;
-                } else if (loader.custom_type && string_length(loader.custom_type) > 0 && string_equali(l->custom_type, loader.custom_type)) {
-                    LOG_ERROR("resource_system_register_loader - Loader of custom type %s already exists and will not be registered.", loader.custom_type);
+            resource_loader* loader = &system_state->registered_loaders[i];
+            if (loader->id != INVALID_ID) {
+                if (loader->type == new_loader.type) {
+                    LOG_ERROR("resource_system_register_loader: Loader has already been registered");
                     return FALSE;
                 }
             }
         }
+
         for (u32 i = 0; i < count; ++i) {
             if (system_state->registered_loaders[i].id == INVALID_ID) {
-                system_state->registered_loaders[i] = loader;
+                system_state->registered_loaders[i] = new_loader;
                 system_state->registered_loaders[i].id = i;
-                LOG_TRACE("Loader registered.");
+                LOG_TRACE("resource_system_register_loader: Loader with id '%d' registered", system_state->registered_loaders[i].id);
                 return TRUE;
             }
         }
@@ -90,68 +84,51 @@ b8 resource_system_register_loader(resource_loader loader)
     return FALSE;
 }
 
-b8 resource_system_load(const char* name, resource_type type, resource* out_resource)
+b8 resource_system_load(char const* name, resource_type type, resource* resource)
 {
-    if (system_state && type != RESOURCE_TYPE_CUSTOM) {
-        // Select loader.
+    if (system_state) {
         u32 count = system_state->config.max_loader_count;
         for (u32 i = 0; i < count; ++i) {
-            resource_loader* l = &system_state->registered_loaders[i];
-            if (l->id != INVALID_ID && l->type == type) {
-                return load(name, l, out_resource);
+            resource_loader* loader = &system_state->registered_loaders[i];
+            if (loader->id != INVALID_ID && loader->type == type) {
+                return load(name, loader, resource);
             }
         }
     }
 
-    out_resource->loader_id = INVALID_ID;
-    LOG_ERROR("resource_system_load - No loader for type %d was found.", type);
+    resource->loader_id = INVALID_ID;
+    LOG_ERROR("resource_system_load: Loader for required type hasn't yet been registered");
     return FALSE;
 }
 
-b8 resource_system_load_custom(const char* name, const char* custom_type, resource* out_resource)
+void resource_system_unload(resource* resource)
 {
-    if (system_state && custom_type && string_length(custom_type) > 0) {
-        // Select loader.
-        u32 count = system_state->config.max_loader_count;
-        for (u32 i = 0; i < count; ++i) {
-            resource_loader* l = &system_state->registered_loaders[i];
-            if (l->id != INVALID_ID && l->type == RESOURCE_TYPE_CUSTOM && string_equali(l->custom_type, custom_type)) {
-                return load(name, l, out_resource);
-            }
-        }
-    }
-
-    out_resource->loader_id = INVALID_ID;
-    LOG_ERROR("resource_system_load_custom - No loader for type %s was found.", custom_type);
-    return FALSE;
-}
-
-void resource_system_unload(resource* resource) {
     if (system_state && resource) {
         if (resource->loader_id != INVALID_ID) {
-            resource_loader* l = &system_state->registered_loaders[resource->loader_id];
-            if (l->id != INVALID_ID && l->unload) {
-                l->unload(l, resource);
+            resource_loader* loader = &system_state->registered_loaders[resource->loader_id];
+            if (loader->id != INVALID_ID && loader->unload) {
+                loader->unload(loader, resource);
             }
         }
     }
 }
 
-const char* resource_system_base_path() {
+char const* resource_system_asset_folder_path()
+{
     if (system_state) {
-        return system_state->config.asset_base_path;
+        return system_state->config.asset_folder_path;
     }
 
-    LOG_ERROR("resource_system_base_path called before initialization, returning empty string.");
+    LOG_WARNING("resource_system_asset_folder_path: Resource system hasn't been initialized yet. Empty string will be returned");
     return "";
 }
 
-b8 load(const char* name, resource_loader* loader, resource* out_resource) {
-    if (!name || !loader || !loader->load || !out_resource) {
-        out_resource->loader_id = INVALID_ID;
+b8 load(char const* name, resource_loader* loader, resource* resource)
+{
+    if (!name || !loader || !loader->load || !resource) {
+        resource->loader_id = INVALID_ID;
         return FALSE;
     }
 
-    out_resource->loader_id = loader->id;
-    return loader->load(loader, name, out_resource);
+    return loader->load(loader, name, resource);
 }

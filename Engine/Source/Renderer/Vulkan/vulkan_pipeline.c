@@ -2,7 +2,7 @@
 #include "vulkan_utils.h"
 #include "core/logger.h"
 #include "core/memory_utils.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 
 b8 vulkan_pipeline_create(
     vulkan_context* context,

@@ -1,22 +1,20 @@
 #pragma once
 
 #include "defines.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 
-// Pre-defined resource types.
 typedef enum resource_type {
     RESOURCE_TYPE_TEXT,
     RESOURCE_TYPE_BINARY,
     RESOURCE_TYPE_IMAGE,
     RESOURCE_TYPE_MATERIAL,
-    RESOURCE_TYPE_STATIC_MESH,
-    RESOURCE_TYPE_CUSTOM
+    RESOURCE_TYPE_STATIC_MESH
 } resource_type;
 
 typedef struct resource {
+    char const* name;
     u32 loader_id;
-    const char* name;
-    char* full_path;
+    char* complete_path;
     u64 data_size;
     void* data;
 } resource;

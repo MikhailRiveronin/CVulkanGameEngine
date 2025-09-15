@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 #include "resources/resource_types.h"
 
 typedef enum renderer_backend_type {
@@ -15,12 +15,7 @@ typedef enum builtin_renderpass {
     BUILTIN_RENDERPASS_UI = 0x02
 } builtin_renderpass;
 
-typedef struct global_uniform_data {
-    mat4 view;
-    mat4 proj;
-    mat4 reserved0;
-    mat4 reserved1;
-} global_uniform_data;
+
 
 typedef struct material_uniform_data {
     vec4 diffuse_color;

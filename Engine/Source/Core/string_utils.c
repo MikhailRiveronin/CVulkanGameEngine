@@ -68,7 +68,8 @@ char* string_trim(char* str) {
     return str;
 }
 
-void string_mid(char* dest, char const* source, i32 start, i32 length) {
+void string_mid(char* dest, char const* source, i32 start, i32 length)
+{
     if (length == 0) {
         return;
     }

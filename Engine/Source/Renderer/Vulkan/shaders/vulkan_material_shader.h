@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderer_types.inl"
-#include "renderer/vulkan/vulkan_types.inl"
+#include "renderer/vulkan/vulkan_types.h"
 
 b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader* shader);
 void vulkan_material_shader_destroy(vulkan_context* context, vulkan_material_shader* shader);

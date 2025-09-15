@@ -1,26 +1,23 @@
 #include "vulkan_material_shader.h"
+
 #include "core/logger.h"
-#include "renderer/vulkan/vulkan_shader_utils.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
+#include "renderer/vulkan/vulkan_utils.h"
 #include "renderer/vulkan/vulkan_pipeline.h"
 #include "renderer/vulkan/vulkan_buffer.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 #include "math/kmath.h"
-
-#define BUILTIN_SHADER_NAME_OBJECT "Builtin.ObjectShader"
 
 VkDeviceSize calculateUniformBufferAlignment(vulkan_context* context, VkDeviceSize size);
 
 b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader* shader)
 {
-    char stage_type_strs[MATERIAL_SHADER_STAGE_COUNT][5] = { "vert", "frag" };
-    VkShaderStageFlagBits stage_types[MATERIAL_SHADER_STAGE_COUNT] = {
-        VK_SHADER_STAGE_VERTEX_BIT,
-        VK_SHADER_STAGE_FRAGMENT_BIT };
+    char stage_strs[MATERIAL_SHADER_STAGE_COUNT][5] = { "vert", "frag" };
+    VkShaderStageFlagBits stage_types[MATERIAL_SHADER_STAGE_COUNT] = { VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT };
 
     for (u32 i = 0; i < MATERIAL_SHADER_STAGE_COUNT; ++i) {
-        if (!create_shader_module(context, BUILTIN_SHADER_NAME_OBJECT, stage_type_strs[i], stage_types[i], i, shader->stages)) {
-            LOG_ERROR("Unable to create %s shader module for '%s'.", stage_type_strs[i], BUILTIN_SHADER_NAME_OBJECT);
+        if (!create_shader_module(context, PREDEFINED_MATERIAL_SHADER_NAME, stage_strs[i], stage_types[i], i, shader->stages)) {
+            LOG_ERROR("vulkan_material_shader_create: Failed to create shader module '%s'", PREDEFINED_MATERIAL_SHADER_NAME);
             return FALSE;
         }
     }
@@ -135,7 +132,7 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
 
     VkPipelineShaderStageCreateInfo shader_stage_create_infos[MATERIAL_SHADER_STAGE_COUNT];
     for (u32 i = 0; i < MATERIAL_SHADER_STAGE_COUNT; ++i) {
-        shader_stage_create_infos[i] = shader->stages[i].shader_stage_create_info;
+        shader_stage_create_infos[i] = shader->stages[i].create_info;
     }
 
     VkDescriptorSetLayout descriptor_set_layouts[] = {
@@ -214,8 +211,8 @@ void vulkan_material_shader_destroy(vulkan_context* context, vulkan_material_sha
 
 
     for (u32 i = 0; i < MATERIAL_SHADER_STAGE_COUNT; ++i) {
-        vkDestroyShaderModule(context->device.handle, shader->stages[i].handle, context->allocator);
-        shader->stages[i].handle = 0;
+        vkDestroyShaderModule(context->device.handle, shader->stages[i].module, context->allocator);
+        shader->stages[i].module = 0;
     }
 }
 

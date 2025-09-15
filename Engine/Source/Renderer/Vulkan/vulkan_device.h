@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "vulkan_types.inl"
+#include "vulkan_types.h"
 #include "platform/platform.h"
 
 b8 vulkanDeviceCreate(vulkan_context* context);

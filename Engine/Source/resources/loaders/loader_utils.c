@@ -10,9 +10,9 @@ b8 resource_unload(struct resource_loader* self, resource* resource, memory_tag 
         return FALSE;
     }
 
-    u32 path_length = string_length(resource->full_path);
+    u32 path_length = string_length(resource->complete_path);
     if (path_length) {
-        memory_free(resource->full_path, sizeof(char) * path_length + 1, MEMORY_TAG_STRING);
+        memory_free(resource->complete_path, sizeof(char) * path_length + 1, MEMORY_TAG_STRING);
     }
 
     if (resource->data) {

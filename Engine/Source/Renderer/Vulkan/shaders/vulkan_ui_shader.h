@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/vulkan/vulkan_types.inl"
+#include "renderer/vulkan/vulkan_types.h"
 #include "renderer/renderer_types.inl"
 
 b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader);

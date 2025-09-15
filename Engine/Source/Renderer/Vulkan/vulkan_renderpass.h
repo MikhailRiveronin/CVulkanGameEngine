@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_types.inl"
+#include "vulkan_types.h"
 
 typedef enum renderpass_clear_flag {
     RENDERPASS_CLEAR_NONE_FLAG = 0x0,

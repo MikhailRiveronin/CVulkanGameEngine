@@ -5,8 +5,6 @@
 #include "core/memory_utils.h"
 #include "core/string_utils.h"
 #include "renderer/renderer_frontend.h"
-#include "third_party/stb_image.h"
-
 #include "systems/resource_system.h"
 
 typedef struct texture_reference {
@@ -18,7 +16,7 @@ typedef struct texture_reference {
 typedef struct texture_system_state {
     texture_system_config config;
     texture* registered_textures;
-    hash_table texture_references;
+    hashtable texture_references;
     texture default_texture;
 } texture_system_state;
 
@@ -27,7 +25,7 @@ static texture_system_state* system_state;
 static b8 create_default_textures();
 static void destroy_default_textures();
 
-static b8 load_texture(char const* filename, texture* t);
+static b8 load_texture(char const* name, texture* t);
 static void destroy_texture(texture* t);
 
 b8 texture_system_startup(u64* state_size_in_bytes, void* memory, texture_system_config config)
@@ -60,7 +58,7 @@ b8 texture_system_startup(u64* state_size_in_bytes, void* memory, texture_system
     }
 
     void* hash_table_block = (char*)array_block + array_size_in_bytes;
-    hash_table_create(
+    hashtable_create(
         sizeof(texture_reference), texture_count,
         hash_table_block, FALSE, &system_state->texture_references);
 
@@ -68,7 +66,7 @@ b8 texture_system_startup(u64* state_size_in_bytes, void* memory, texture_system
     invalid_ref.id = INVALID_ID;
     invalid_ref.reference_count = 0;
     invalid_ref.auto_release = FALSE;
-    hash_table_fill(&system_state->texture_references, &invalid_ref);
+    hashtable_fill(&system_state->texture_references, &invalid_ref);
 
     create_default_textures(system_state);
     return TRUE;
@@ -100,7 +98,7 @@ texture* texture_system_acquire_texture(char const* name, b8 auto_release)
     }
 
     texture_reference ref;
-    if (system_state && hash_table_get(&system_state->texture_references, name, &ref)) {
+    if (system_state && hashtable_get(&system_state->texture_references, name, &ref)) {
         // auto_release can only be set the first time a texture is loaded
         if (ref.reference_count == 0) {
             ref.auto_release = auto_release;
@@ -137,7 +135,7 @@ texture* texture_system_acquire_texture(char const* name, b8 auto_release)
                 name, ref.reference_count);
         }
 
-        hash_table_set(&system_state->texture_references, name, &ref);
+        hashtable_set(&system_state->texture_references, name, &ref);
         return &system_state->registered_textures[ref.id];
     }
 
@@ -157,7 +155,7 @@ void texture_system_release_texture(char const* name)
     string_ncopy(name_copy, name, TEXTURE_NAME_MAX_LENGTH);
 
     texture_reference ref;
-    if (system_state && hash_table_get(&system_state->texture_references, name_copy, &ref)) {
+    if (system_state && hashtable_get(&system_state->texture_references, name_copy, &ref)) {
         if (ref.reference_count == 0) {
             LOG_WARNING("texture_system_release_texture: Tried to release non-existent texture '%s'", name_copy);
             return;
@@ -178,7 +176,7 @@ void texture_system_release_texture(char const* name)
                 name_copy, ref.reference_count, ref.auto_release ? "TRUE" : "FALSE");
         }
 
-        hash_table_set(&system_state->texture_references, name_copy, &ref);
+        hashtable_set(&system_state->texture_references, name_copy, &ref);
         return;
     }
 
@@ -242,15 +240,15 @@ void destroy_default_textures()
     }
 }
 
-b8 load_texture(char const* filename, texture* t)
+b8 load_texture(char const* name, texture* t)
 {
-    resource img_resource;
-    if (!resource_system_load(filename, RESOURCE_TYPE_IMAGE, &img_resource)) {
-        LOG_ERROR("Failed to load image resource for texture '%s'", filename);
+    resource image_resource;
+    if (!resource_system_load(name, RESOURCE_TYPE_IMAGE, &image_resource)) {
+        LOG_ERROR("load_texture: Failed to load image resource for texture '%s'", name);
         return FALSE;
     }
 
-    image_resource_data* resource_data = img_resource.data;
+    image_resource_data* resource_data = image_resource.data;
 
     texture temp_texture;
     temp_texture.width = resource_data->width;
@@ -270,7 +268,7 @@ b8 load_texture(char const* filename, texture* t)
         }
     }
 
-    string_ncopy(temp_texture.name, filename, TEXTURE_NAME_MAX_LENGTH);
+    string_ncopy(temp_texture.name, name, TEXTURE_NAME_MAX_LENGTH);
     temp_texture.generation = INVALID_ID;
     temp_texture.has_transparency = has_transparency;
 
@@ -286,7 +284,8 @@ b8 load_texture(char const* filename, texture* t)
         t->generation = current_generation + 1;
     }
 
-    resource_system_unload(&img_resource);
+    resource_system_unload(&image_resource);
+
     return TRUE;
 }
 

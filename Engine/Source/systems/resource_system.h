@@ -4,27 +4,24 @@
 
 typedef struct resource_system_config {
     u32 max_loader_count;
-    // The relative base path for assets.
-    char* asset_base_path;
+    char* asset_folder_path;
 } resource_system_config;
 
 typedef struct resource_loader {
     u32 id;
     resource_type type;
-    const char* custom_type;
-    const char* type_path;
-    b8 (* load)(struct resource_loader* self, const char* name, resource* out_resource);
+    char const* resource_folder_path;
+
+    b8 (* load)(struct resource_loader* self, char const* name, resource* resource);
     void (* unload)(struct resource_loader* self, resource* resource);
 } resource_loader;
 
-b8 resource_system_startup(u64* memory_requirement, void* state, resource_system_config config);
-void resource_system_shutdown(void* state);
+b8 resource_system_startup(u64* state_size_in_bytes, void* memory, resource_system_config config);
+void resource_system_shutdown();
 
-LIB_API b8 resource_system_register_loader(resource_loader loader);
+b8 resource_system_register_loader(resource_loader new_loader);
 
-LIB_API b8 resource_system_load(const char* name, resource_type type, resource* out_resource);
-LIB_API b8 resource_system_load_custom(const char* name, const char* custom_type, resource* out_resource);
+b8 resource_system_load(char const* name, resource_type type, resource* resource);
+void resource_system_unload(resource* resource);
 
-LIB_API void resource_system_unload(resource* resource);
-
-LIB_API const char* resource_system_base_path();
+char const* resource_system_asset_folder_path();

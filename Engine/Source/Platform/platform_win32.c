@@ -2,7 +2,7 @@
 #include "core/logger.h"
 #include "core/input.h"
 #include "core/events.h"
-#include "renderer/vulkan/vulkan_types.inl"
+#include "renderer/vulkan/vulkan_types.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

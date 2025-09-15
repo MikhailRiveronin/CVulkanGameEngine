@@ -173,7 +173,7 @@ b8 create_geometry(geometry_system_state* state, geometry_config config, geometr
 
     // Acquire the material
     if (string_length(config.material_name) > 0) {
-        g->material = material_system_acquire_material(config.material_name);
+        g->material = material_system_acquire(config.material_name);
         if (!g->material) {
             g->material = material_system_get_default_material();
         }
@@ -278,7 +278,7 @@ b8 create_default_geometries(geometry_system_state* state)
     return TRUE;
 }
 
-geometry_config geometry_system_generate_plane_config(f32 width, f32 height, u32 x_segment_count, u32 y_segment_count, f32 tile_x, f32 tile_y, const char* name, const char* material_name) {
+geometry_config geometry_system_generate_plane_config(f32 width, f32 height, u32 x_segment_count, u32 y_segment_count, f32 tile_x, f32 tile_y, char const* name, char const* material_name) {
     if (width == 0) {
         LOG_WARNING("Width must be nonzero. Defaulting to one.");
         width = 1.0f;

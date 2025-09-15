@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_types.inl"
+#include "vulkan_types.h"
 
 /**
  * Returns the string representation of result.
@@ -15,3 +15,11 @@ char const* vulkan_result_string(VkResult result, b8 get_extended);
  * @returns True if success; otherwise false. Defaults to true for unknown result types.
  */
 b8 vulkan_result_is_success(VkResult result);
+
+b8 create_shader_module(
+    vulkan_context* context,
+    char const* name,
+    char const* stage_str,
+    VkShaderStageFlagBits stage_type,
+    u32 stage_index,
+    vulkan_shader_stage* stages);

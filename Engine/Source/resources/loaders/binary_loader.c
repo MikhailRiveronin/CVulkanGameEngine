@@ -10,7 +10,7 @@
 
 #include "platform/filesystem.h"
 
-b8 binary_loader_load(struct resource_loader* self, const char* name, resource* out_resource) {
+b8 binary_loader_load(struct resource_loader* self, char const* name, resource* out_resource) {
     if (!self || !name || !out_resource) {
         return FALSE;
     }
@@ -19,14 +19,14 @@ b8 binary_loader_load(struct resource_loader* self, const char* name, resource* 
     char full_file_path[512];
     string_format(full_file_path, format_str, "D:/Projects/CVulkanGameEngine/build/assets", name);
 
-    file_handle f;
-    if (!filesystem_open(full_file_path, FILE_MODE_READ, TRUE, &f)) {
+    filehandle f;
+    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, TRUE, &f)) {
         LOG_ERROR("binary_loader_load - unable to open file for binary reading: '%s'.", full_file_path);
         return FALSE;
     }
 
     // TODO: Should be using an allocator here.
-    out_resource->full_path = string_duplicate(full_file_path);
+    out_resource->complete_path = string_duplicate(full_file_path);
 
     u64 file_size = 0;
     if (!filesystem_size(&f, &file_size)) {
@@ -38,7 +38,7 @@ b8 binary_loader_load(struct resource_loader* self, const char* name, resource* 
     // TODO: Should be using an allocator here.
     u8* resource_data = memory_allocate(sizeof(u8) * file_size, MEMORY_TAG_ARRAY);
     u64 read_size = 0;
-    if (!filesystem_read_all_bytes(&f, resource_data, &read_size)) {
+    if (!filesystem_read_all(&f, resource_data, &read_size)) {
         LOG_ERROR("Unable to binary read file: %s.", full_file_path);
         filesystem_close(&f);
         return FALSE;
@@ -59,13 +59,13 @@ void binary_loader_unload(struct resource_loader* self, resource* resource) {
     }
 }
 
-resource_loader binary_resource_loader_create() {
+resource_loader binary_loader_create() {
     resource_loader loader;
     loader.type = RESOURCE_TYPE_BINARY;
     loader.custom_type = 0;
     loader.load = binary_loader_load;
     loader.unload = binary_loader_unload;
-    loader.type_path = "";
+    loader.resource_folder_path = "";
 
     return loader;
 }

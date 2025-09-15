@@ -2,16 +2,13 @@
 
 #include "clock.h"
 #include "events.h"
-#include "input.h"
 #include "game_types.h"
+#include "input.h"
 #include "logger.h"
+#include "string_utils.h"
 #include "memory/linear_allocator.h"
 #include "platform/platform.h"
 #include "renderer/renderer_frontend.h"
-#include "string_utils.h"
-#include "math/kmath.h"
-
-// Systems
 #include "systems/texture_system.h"
 #include "systems/material_system.h"
 #include "systems/geometry_system.h"
@@ -93,14 +90,14 @@ b8 application_on_resize(u16 code, void const* sender, void const* listener, eve
 // TODO: temp
 b8 event_on_debug_event(u16 code, void const* sender, void const* listener_inst, event_context data)
 {
-    const char* names[3] = {
+    char const* names[3] = {
         "cobblestone",
         "paving",
         "paving2"};
     static i8 choice = 2;
 
     // Save off the old name.
-    const char* old_name = names[choice];
+    char const* old_name = names[choice];
 
     choice++;
     choice %= 3;
@@ -190,7 +187,7 @@ b8 application_init(game* game)
     }
 
     resource_system_config resource_sys_config;
-    resource_sys_config.asset_base_path = "../assets";
+    resource_sys_config.asset_folder_path = "D:/Projects/CVulkanGameEngine/assets";
     resource_sys_config.max_loader_count = 32;
     resource_system_startup(&app_state->resource_system.required_memory, 0, resource_sys_config);
     app_state->resource_system.memory = linear_allocator_allocate(&app_state->systems_allocator, app_state->resource_system.required_memory);
@@ -364,7 +361,7 @@ b8 application_run(void)
     material_system_shutdown();
     texture_system_shutdown();
     renderer_system_shutdown();
-    resource_system_shutdown(app_state->resource_system.memory);
+    resource_system_shutdown();
     platform_system_shutdown(&app_state->platform);
 
     memory_system_shutdown();

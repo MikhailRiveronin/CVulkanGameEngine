@@ -8,7 +8,7 @@
 #include "vulkan_utils.h"
 #include "shaders/vulkan_material_shader.h"
 #include "shaders/vulkan_ui_shader.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 #include "vulkan_buffer.h"
 #include "vulkan_image.h"
 

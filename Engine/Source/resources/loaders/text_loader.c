@@ -9,20 +9,20 @@
 
 #include "platform/filesystem.h"
 
-b8 text_loader_load(struct resource_loader* self, const char* name, resource* out_resource) {
+b8 text_loader_load(struct resource_loader* self, char const* name, resource* out_resource) {
     if (!self || !name || !out_resource) {
         return FALSE;
     }
 
     char* format_str = "%s/%s/%s%s";
     char full_file_path[512];
-    string_format(full_file_path, format_str, resource_system_base_path(), self->type_path, name, "");
+    string_format(full_file_path, format_str, resource_system_asset_folder_path(), self->resource_folder_path, name, "");
 
     // TODO: Should be using an allocator here.
-    out_resource->full_path = string_duplicate(full_file_path);
+    out_resource->complete_path = string_duplicate(full_file_path);
 
-    file_handle f;
-    if (!filesystem_open(full_file_path, FILE_MODE_READ, FALSE, &f)) {
+    filehandle f;
+    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, FALSE, &f)) {
         LOG_ERROR("text_loader_load - unable to open file for text reading: '%s'.", full_file_path);
         return FALSE;
     }
@@ -58,9 +58,9 @@ void text_loader_unload(struct resource_loader* self, resource* resource) {
         return;
     }
 
-    u32 path_length = string_length(resource->full_path);
+    u32 path_length = string_length(resource->complete_path);
     if (path_length) {
-        memory_free(resource->full_path, sizeof(char) * path_length + 1, MEMORY_TAG_STRING);
+        memory_free(resource->complete_path, sizeof(char) * path_length + 1, MEMORY_TAG_STRING);
     }
 
     if (resource->data) {
@@ -77,7 +77,7 @@ resource_loader text_resource_loader_create() {
     loader.custom_type = 0;
     loader.load = text_loader_load;
     loader.unload = text_loader_unload;
-    loader.type_path = "";
+    loader.resource_folder_path = "";
 
     return loader;
 }

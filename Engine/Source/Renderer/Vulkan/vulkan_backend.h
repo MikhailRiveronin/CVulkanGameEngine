@@ -1,8 +1,8 @@
 #pragma once
 
-#include "vulkan_types.inl"
+#include "vulkan_types.h"
 #include "renderer/renderer_backend.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 #include "resources/resource_types.h"
 
 b8 vulkan_backend_create(renderer_backend* backend, char const* app_name);

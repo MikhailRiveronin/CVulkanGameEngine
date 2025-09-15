@@ -1,7 +1,7 @@
 #pragma once
 
 #include <game_types.h>
-#include <math/math_types.h>
+#include <third_party/cglm/cglm.h>
 
 typedef struct game_state {
     f64 delta_time;

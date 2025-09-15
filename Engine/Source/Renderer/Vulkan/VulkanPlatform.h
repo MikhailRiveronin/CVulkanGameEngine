@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_types.inl"
+#include "vulkan_types.h"
 #include "containers/darray.h"
 
 struct vulkan_context;

@@ -11,12 +11,12 @@
  * does not take ownership of pointers or associated memory allocations,
  * and should be managed externally.
  */
-typedef struct hash_table {
+typedef struct hashtable {
     u64 element_size;
     u32 element_count;
     b8 is_pointer_type;
     void* memory;
-} hash_table;
+} hashtable;
 
 /**
  * @brief Creates a hash_table.
@@ -27,14 +27,14 @@ typedef struct hash_table {
  * @param is_pointer_type Indicates if this hash_table will hold pointer types.
  * @param table A pointer to a hash_table in which to hold relevant data.
  */
-LIB_API void hash_table_create(u64 element_size, u32 element_count, void* memory, b8 is_pointer_type, hash_table* table);
+LIB_API void hashtable_create(u64 element_size, u32 element_count, void* memory, b8 is_pointer_type, hashtable* table);
 
 /**
  * @brief Destroys the provided hash_table. Does not release memory for pointer types.
  * 
  * @param table A pointer to the table to be destroyed.
  */
-LIB_API void hash_table_destroy(hash_table* table);
+LIB_API void hashtable_destroy(hashtable* table);
 
 /**
  * @brief Stores a copy of the data in value in the provided hash_table. 
@@ -45,7 +45,7 @@ LIB_API void hash_table_destroy(hash_table* table);
  * @param value The value to be set. Required.
  * @return TRUE, or FALSE if a null pointer is passed.
  */
-LIB_API b8 hash_table_set(hash_table* table, char const* name, void* value);
+LIB_API b8 hashtable_set(hashtable* table, char const* name, void* value);
 
 /**
  * @brief Stores a pointer as provided in value in the hash_table.
@@ -56,7 +56,7 @@ LIB_API b8 hash_table_set(hash_table* table, char const* name, void* value);
  * @param value A pointer value to be set. Can pass 0 to 'unset' an entry.
  * @return TRUE, or FALSE if a null pointer is passed or if the entry is 0.
  */
-LIB_API b8 hash_table_set_ptr(hash_table* table, char const* name, void** value);
+LIB_API b8 hashtable_set_ptr(hashtable* table, char const* name, void** value);
 
 /**
  * @brief Obtains a copy of data present in the hash_table.
@@ -67,7 +67,7 @@ LIB_API b8 hash_table_set_ptr(hash_table* table, char const* name, void** value)
  * @param value A pointer to store the retrieved value. Required.
  * @return TRUE, or FALSE if a null pointer is passed.
  */
-LIB_API b8 hash_table_get(hash_table* table, char const* name, void* value);
+LIB_API b8 hashtable_get(hashtable* table, char const* name, void* value);
 
 /**
  * @brief Obtains a pointer to data present in the hash_table.
@@ -78,7 +78,7 @@ LIB_API b8 hash_table_get(hash_table* table, char const* name, void* value);
  * @param value A pointer to store the retrieved value. Required.
  * @return True if retrieved successfully; false if a null pointer is passed or is the retrieved value is 0.
  */
-LIB_API b8 hash_table_get_ptr(hash_table* table, char const* name, void** value);
+LIB_API b8 hashtable_get_ptr(hashtable* table, char const* name, void** value);
 
 /**
  * @brief Fills all entries in the hash_table with the given value.
@@ -89,4 +89,4 @@ LIB_API b8 hash_table_get_ptr(hash_table* table, char const* name, void** value)
  * @param value The value to be filled with. Required.
  * @return True if successful; otherwise false.
  */
-LIB_API b8 hash_table_fill(hash_table* table, void* value);
+LIB_API b8 hashtable_fill(hashtable* table, void* value);

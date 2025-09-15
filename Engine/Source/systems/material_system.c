@@ -1,19 +1,19 @@
 #include "material_system.h"
 
+#include "containers/hash_table.h"
 #include "core/logger.h"
 #include "core/string_utils.h"
-#include "containers/hash_table.h"
-#include "math/kmath.h"
 #include "renderer/renderer_frontend.h"
-#include "systems/texture_system.h"
 #include "systems/resource_system.h"
+#include "systems/texture_system.h"
+#include "third_party/cglm/cglm.h"
 
 typedef struct material_system_state {
     material_system_config config;
 
     material default_material;
     material* registered_materials;
-    hash_table material_reference_table;
+    hashtable material_reference_table;
 } material_system_state;
 
 typedef struct material_reference {
@@ -31,14 +31,14 @@ static void destroy_material(material* m);
 b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_system_config config)
 {
     if (config.max_material_count == 0) {
-        LOG_FATAL("material_system_startup: config.max_material_count must be > 0");
+        LOG_FATAL("material_system_startup: Failed to startup material system because config.max_material_count == 0");
         return FALSE;
     }
 
-    u64 struct_requirement = sizeof(material_system_state);
-    u64 array_requirement = sizeof(material) * config.max_material_count;
+    u64 state_struct_size_in_bytes = sizeof(*system_state);
+    u64 array_size_in_bytes = config.max_material_count * sizeof(material);
     u64 hashtable_requirement = sizeof(material_reference) * config.max_material_count;
-    *state_size_in_bytes = struct_requirement + array_requirement + hashtable_requirement;
+    *state_size_in_bytes = state_struct_size_in_bytes + array_size_in_bytes + hashtable_requirement;
 
     if (!memory) {
         return TRUE;
@@ -47,12 +47,12 @@ b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_syst
     system_state = memory;
     system_state->config = config;
 
-    void* array_block = (char*)system_state + struct_requirement;
+    void* array_block = (char*)system_state + state_struct_size_in_bytes;
     system_state->registered_materials = array_block;
 
-    void* hash_table_block = (char*)array_block + array_requirement;
+    void* hash_table_block = (char*)array_block + array_size_in_bytes;
 
-    hash_table_create(
+    hashtable_create(
         sizeof(material_reference),
         config.max_material_count,
         hash_table_block, FALSE,
@@ -62,7 +62,7 @@ b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_syst
     invalid_ref.auto_release = FALSE;
     invalid_ref.handle = INVALID_ID;  // Primary reason for needing default values.
     invalid_ref.reference_count = 0;
-    hash_table_fill(&system_state->material_reference_table, &invalid_ref);
+    hashtable_fill(&system_state->material_reference_table, &invalid_ref);
 
     for (u32 i = 0; i < system_state->config.max_material_count; ++i) {
         system_state->registered_materials[i].id = INVALID_ID;
@@ -93,29 +93,27 @@ void material_system_shutdown()
     system_state = 0;
 }
 
-material* material_system_acquire_material(char const* name)
+material* material_system_acquire(char const* name)
 {
-    // Load material configuration from resource;
     resource material_resource;
     if (!resource_system_load(name, RESOURCE_TYPE_MATERIAL, &material_resource)) {
-        LOG_ERROR("Failed to load material resource, returning nullptr.");
+        LOG_ERROR("material_system_acquire: Failed to load material resource, returning nullptr");
         return 0;
     }
 
-    // Now acquire from loaded config.
-    material* m;
+    material* material;
     if (material_resource.data) {
-        m = material_system_acquire_from_config(*(material_config*)material_resource.data);
+        material = material_system_acquire_from_config(*(material_config*)material_resource.data);
     }
 
-    // Clean up
     resource_system_unload(&material_resource);
 
-    if (!m) {
-        LOG_ERROR("Failed to load material resource, returning nullptr.");
+    if (!material) {
+        LOG_ERROR("material_system_acquire: Failed to load material resource, returning nullptr");
+        return 0;
     }
 
-    return m;
+    return material;
 }
 
 material* material_system_acquire_from_config(material_config config)
@@ -126,7 +124,7 @@ material* material_system_acquire_from_config(material_config config)
     }
 
     material_reference ref;
-    if (system_state && hash_table_get(&system_state->material_reference_table, config.name, &ref)) {
+    if (system_state && hashtable_get(&system_state->material_reference_table, config.name, &ref)) {
         // This can only be changed the first time a material is loaded.
         if (ref.reference_count == 0) {
             ref.auto_release = config.auto_release;
@@ -172,7 +170,7 @@ material* material_system_acquire_from_config(material_config config)
         }
 
         // Update the entry.
-        hash_table_set(&system_state->material_reference_table, config.name, &ref);
+        hashtable_set(&system_state->material_reference_table, config.name, &ref);
         return &system_state->registered_materials[ref.handle];
     }
 
@@ -188,7 +186,7 @@ void material_system_release(char const* name)
         return;
     }
     material_reference ref;
-    if (system_state && hash_table_get(&system_state->material_reference_table, name, &ref)) {
+    if (system_state && hashtable_get(&system_state->material_reference_table, name, &ref)) {
         if (ref.reference_count == 0) {
             LOG_WARNING("Tried to release non-existent material: '%s'", name);
             return;
@@ -209,7 +207,7 @@ void material_system_release(char const* name)
         }
 
         // Update the entry.
-        hash_table_set(&system_state->material_reference_table, name, &ref);
+        hashtable_set(&system_state->material_reference_table, name, &ref);
     } else {
         LOG_ERROR("material_system_release failed to release material '%s'.", name);
     }
@@ -286,13 +284,15 @@ b8 create_default_material()
     memory_zero(&system_state->default_material, sizeof(material));
     system_state->default_material.id = INVALID_ID;
     system_state->default_material.generation = INVALID_ID;
+
     string_ncopy(system_state->default_material.name, DEFAULT_MATERIAL_NAME, MATERIAL_NAME_MAX_LENGTH);
-    system_state->default_material.diffuse_colour = vec4_one();  // white
+    glm_vec4_one(system_state->default_material.diffuse_colour);
+
     system_state->default_material.diffuse_map.use = TEXTURE_USE_MAP_DIFFUSE;
     system_state->default_material.diffuse_map.texture = texture_system_get_default_texture();
 
     if (!renderer_frontend_create_material(&system_state->default_material)) {
-        LOG_FATAL("Failed to acquire renderer resources for default texture. Application cannot continue.");
+        LOG_FATAL("create_default_material: Failed to acquire renderer resources for default texture");
         return FALSE;
     }
 

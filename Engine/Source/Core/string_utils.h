@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "math/math_types.h"
+#include "third_party/cglm/cglm.h"
 
 u64 string_length(char const* str);
 char* string_duplicate(char const* str);
