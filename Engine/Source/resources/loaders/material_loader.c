@@ -8,30 +8,29 @@
 #include "systems/resource_system.h"
 #include "third_party/cglm/cglm.h"
 
-b8 material_loader_load(resource_loader* loader, char const* name, resource* resource);
-void material_loader_unload(resource_loader* loader, resource* resource);
+b8 load(resource_loader* loader, char const* name, resource* resource);
+void unload(resource_loader* loader, resource* resource);
 
 resource_loader material_loader_create()
 {
     resource_loader loader;
     loader.type = RESOURCE_TYPE_MATERIAL;
-    loader.load = material_loader_load;
-    loader.unload = material_loader_unload;
-    loader.resource_folder_path = "materials";
+    loader.load = load;
+    loader.unload = unload;
+    loader.type_str = "materials";
 
     return loader;
 }
 
-b8 material_loader_load(struct resource_loader* loader, char const* name, resource* resource)
+b8 load(struct resource_loader* loader, char const* name, resource* resource)
 {
     if (!loader || !name || !resource) {
         return FALSE;
     }
 
-    char* format_str = "%s/%s/%s%s";
-    char const* extension = ".kmt";
+    char* format_str = "%s/%s/%s";
     char complete_path[512];
-    string_format(complete_path, format_str, resource_system_asset_folder_path(), loader->resource_folder_path, name, extension);
+    string_format(complete_path, format_str, resource_system_asset_folder_path(), loader->type_str, name);
 
     resource->complete_path = string_duplicate(complete_path);
 
@@ -69,7 +68,6 @@ b8 material_loader_load(struct resource_loader* loader, char const* name, resour
             continue;
         }
 
-        // Assume a max of 64 characters for the variable name.
         char raw_var_name[64];
         memory_zero(raw_var_name, sizeof(char) * 64);
         string_mid(raw_var_name, trimmed, 0, equal_index);
@@ -78,10 +76,9 @@ b8 material_loader_load(struct resource_loader* loader, char const* name, resour
         // Assume a max of 511-65 (446) for the max length of the value to account for the variable name and the '='.
         char raw_value[446];
         memory_zero(raw_value, sizeof(char) * 446);
-        string_mid(raw_value, trimmed, equal_index + 1, -1);  // Read the rest of the line
+        string_mid(raw_value, trimmed, equal_index + 1, -1);
         char* trimmed_value = string_trim(raw_value);
 
-        // Process the variable.
         if (string_equali(trimmed_var_name, "version")) {
             // TODO: version
         } else if (string_equali(trimmed_var_name, "name")) {
@@ -101,7 +98,6 @@ b8 material_loader_load(struct resource_loader* loader, char const* name, resour
             }
         }
 
-        // Clear the line buffer.
         memory_zero(buffer, sizeof(char) * 512);
         line_number++;
     }
@@ -115,7 +111,7 @@ b8 material_loader_load(struct resource_loader* loader, char const* name, resour
     return TRUE;
 }
 
-void material_loader_unload(struct resource_loader* loader, resource* resource)
+void unload(struct resource_loader* loader, resource* resource)
 {
     if (!loader || !resource) {
         LOG_WARNING("material_loader_unload: Called with nullptr for loader or resource");

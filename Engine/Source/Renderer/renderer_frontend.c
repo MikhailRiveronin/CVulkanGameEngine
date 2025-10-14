@@ -169,12 +169,12 @@ void renderer_frontend_destroy_material(material* material)
     system_state->backend.destroy_material(material);
 }
 
-b8 renderer_create_geometry(geometry* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices)
+b8 renderer_create_geometry(geometry_resource* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices)
 {
     return system_state->backend.create_geometry(geometry, vertex_size, vertex_count, vertices, index_size, index_count, indices);
 }
 
-void renderer_destroy_geometry(geometry* geometry)
+void renderer_destroy_geometry(geometry_resource* geometry)
 {
     system_state->backend.destroy_geometry(geometry);
 }

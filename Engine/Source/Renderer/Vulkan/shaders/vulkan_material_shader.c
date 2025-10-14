@@ -6,7 +6,6 @@
 #include "renderer/vulkan/vulkan_pipeline.h"
 #include "renderer/vulkan/vulkan_buffer.h"
 #include "third_party/cglm/cglm.h"
-#include "math/kmath.h"
 
 VkDeviceSize calculateUniformBufferAlignment(vulkan_context* context, VkDeviceSize size);
 

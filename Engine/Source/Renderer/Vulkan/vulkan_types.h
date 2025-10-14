@@ -135,19 +135,17 @@ typedef struct vulkan_descriptor_state {
 
 #define VULKAN_MATERIAL_SHADER_DESCRIPTOR_COUNT 2
 
-// Max number of simultaneously uploaded geometries
-// TODO: make configurable
-#define VULKAN_MAX_GEOMETRY_COUNT 4096
-
 /**
  * @brief Internal buffer data for geometry.
  */
 typedef struct vulkan_geometry_data {
     u32 id;
     u32 generation;
+
     u32 vertex_count;
     u32 vertex_element_size;
     u32 vertex_buffer_offset;
+
     u32 index_count;
     u32 index_element_size;
     u32 index_buffer_offset;
@@ -167,7 +165,7 @@ typedef struct vulkan_material_shader_global_data {
 
 #define MATERIAL_SHADER_STAGE_COUNT 2
 #define VULKAN_MATERIAL_SHADER_SAMPLER_COUNT 2
-#define VULKAN_MAX_MATERIAL_COUNT 1024
+
 #define PREDEFINED_MATERIAL_SHADER_NAME "predefined.material_shader"
 
 typedef struct vulkan_shader_stage {
@@ -183,6 +181,9 @@ typedef struct vulkan_pipeline {
     VkPipeline handle;
     VkPipelineLayout layout;
 } vulkan_pipeline;
+
+#define VULKAN_MAX_MATERIAL_COUNT 1024
+#define VULKAN_MAX_GEOMETRY_COUNT 4096
 
 typedef struct vulkan_material_shader {
     vulkan_shader_stage stages[MATERIAL_SHADER_STAGE_COUNT];

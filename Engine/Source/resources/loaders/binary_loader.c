@@ -6,7 +6,6 @@
 #include "core/string_utils.h"
 #include "resources/resource_types.h"
 #include "systems/resource_system.h"
-#include "math/kmath.h"
 
 #include "platform/filesystem.h"
 
@@ -65,7 +64,7 @@ resource_loader binary_loader_create() {
     loader.custom_type = 0;
     loader.load = binary_loader_load;
     loader.unload = binary_loader_unload;
-    loader.resource_folder_path = "";
+    loader.type_str = "";
 
     return loader;
 }

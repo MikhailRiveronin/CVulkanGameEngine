@@ -66,24 +66,24 @@ typedef struct material_config {
 
 typedef struct material {
     u32 id;
-    u32 generation;
     u32 internal_id;
-    material_type type;
     char name[MATERIAL_NAME_MAX_LENGTH];
+    u32 generation;
+    material_type type;
     vec4 diffuse_colour;
     texture_map diffuse_map;
 } material;
 
-#define GEOMETRY_NAME_MAX_LENGTH 256
+#define GEOMETRY_MAX_NAME_LENGTH 256
 
 /**
  * @brief Represents actual geometry in the world.
  * Typically (but not always, depending on use) paired with a material.
  */
-typedef struct geometry {
+typedef struct geometry_resource {
     u32 id;
     u32 internal_id;
+    char name[GEOMETRY_MAX_NAME_LENGTH];
     u32 generation;
-    char name[GEOMETRY_NAME_MAX_LENGTH];
     material* material;
-} geometry;
+} geometry_resource;

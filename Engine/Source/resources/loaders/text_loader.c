@@ -16,7 +16,7 @@ b8 text_loader_load(struct resource_loader* self, char const* name, resource* ou
 
     char* format_str = "%s/%s/%s%s";
     char full_file_path[512];
-    string_format(full_file_path, format_str, resource_system_asset_folder_path(), self->resource_folder_path, name, "");
+    string_format(full_file_path, format_str, resource_system_asset_folder_path(), self->type_str, name, "");
 
     // TODO: Should be using an allocator here.
     out_resource->complete_path = string_duplicate(full_file_path);
@@ -77,7 +77,7 @@ resource_loader text_resource_loader_create() {
     loader.custom_type = 0;
     loader.load = text_loader_load;
     loader.unload = text_loader_unload;
-    loader.resource_folder_path = "";
+    loader.type_str = "";
 
     return loader;
 }

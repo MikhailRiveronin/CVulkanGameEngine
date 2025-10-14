@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "clock.h"
+#include "config.h"
 #include "events.h"
 #include "game_types.h"
 #include "input.h"
@@ -76,8 +77,8 @@ typedef struct application_state {
     } geometry_system;
 
     // TODO: temp
-    geometry* test_geometry;
-    geometry* test_ui_geometry;
+    geometry_resource* test_geometry;
+    geometry_resource* test_ui_geometry;
     // TODO: end temp
 } application_state;
 
@@ -187,7 +188,7 @@ b8 application_init(game* game)
     }
 
     resource_system_config resource_sys_config;
-    resource_sys_config.asset_folder_path = "D:/Projects/CVulkanGameEngine/assets";
+    resource_sys_config.asset_folder_path = ASSETS_DIR;
     resource_sys_config.max_loader_count = 32;
     resource_system_startup(&app_state->resource_system.required_memory, 0, resource_sys_config);
     app_state->resource_system.memory = linear_allocator_allocate(&app_state->systems_allocator, app_state->resource_system.required_memory);

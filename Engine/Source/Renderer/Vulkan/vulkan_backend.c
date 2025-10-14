@@ -667,7 +667,7 @@ void vulkan_backend_destroy_material(material* material)
     }
 }
 
-b8 vulkan_backend_create_geometry(geometry* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices)
+b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices)
 {
     if (vertex_count == 0 || !vertices) {
         LOG_ERROR("vulkan_renderer_create_geometry requires vertex data, and none was supplied. vertex_count=%d, vertices=%p", vertex_count, vertices);
@@ -747,7 +747,7 @@ b8 vulkan_backend_create_geometry(geometry* geometry, u32 vertex_size, u32 verte
     return TRUE;
 }
 
-void vulkan_backend_destroy_geometry(geometry* geometry)
+void vulkan_backend_destroy_geometry(geometry_resource* geometry)
 {
     if (geometry && geometry->internal_id != INVALID_ID) {
         vkDeviceWaitIdle(context.device.handle);

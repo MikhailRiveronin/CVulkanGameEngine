@@ -8,15 +8,15 @@
 
 typedef struct geometry_reference {
     u64 reference_count;
-    geometry geometry;
+    geometry_resource geometry;
     b8 auto_release;
 } geometry_reference;
 
 typedef struct geometry_system_state {
     geometry_system_config config;
 
-    geometry default_geometry;
-    geometry default_2d_geometry;
+    geometry_resource default_geometry;
+    geometry_resource default_2d_geometry;
 
     // Array of registered meshes.
     geometry_reference* registered_geometries;
@@ -25,8 +25,8 @@ typedef struct geometry_system_state {
 static geometry_system_state* system_state;
 
 b8 create_default_geometries(geometry_system_state* state);
-b8 create_geometry(geometry_system_state* state, geometry_config config, geometry* g);
-void destroy_geometry(geometry_system_state* state, geometry* g);
+b8 create_geometry(geometry_system_state* state, geometry_config config, geometry_resource* g);
+void destroy_geometry(geometry_system_state* state, geometry_resource* g);
 
 b8 geometry_system_startup(u64* state_size_in_bytes, void* memory, geometry_system_config config)
 {
@@ -72,7 +72,7 @@ void geometry_system_shutdown(void* state)
     // NOTE: nothing to do here.
 }
 
-geometry* geometry_system_acquire_by_id(u32 id)
+geometry_resource* geometry_system_acquire_by_id(u32 id)
 {
     if (id != INVALID_ID && system_state->registered_geometries[id].geometry.id != INVALID_ID) {
         system_state->registered_geometries[id].reference_count++;
@@ -84,9 +84,9 @@ geometry* geometry_system_acquire_by_id(u32 id)
     return 0;
 }
 
-geometry* geometry_system_acquire_from_config(geometry_config config, b8 auto_release)
+geometry_resource* geometry_system_acquire_from_config(geometry_config config, b8 auto_release)
 {
-    geometry* g = 0;
+    geometry_resource* g = 0;
     for (u32 i = 0; i < system_state->config.max_geometry_count; ++i) {
         if (system_state->registered_geometries[i].geometry.id == INVALID_ID) {
             // Found empty slot.
@@ -111,7 +111,7 @@ geometry* geometry_system_acquire_from_config(geometry_config config, b8 auto_re
     return g;
 }
 
-void geometry_system_release(geometry* geometry)
+void geometry_system_release(geometry_resource* geometry)
 {
     if (geometry && geometry->id != INVALID_ID) {
         geometry_reference* ref = &system_state->registered_geometries[geometry->id];
@@ -138,7 +138,7 @@ void geometry_system_release(geometry* geometry)
     LOG_WARNING("geometry_system_acquire_by_id cannot release invalid geometry id. Nothing was done.");
 }
 
-geometry* geometry_system_get_default()
+geometry_resource* geometry_system_get_default()
 {
     if (system_state) {
         return &system_state->default_geometry;
@@ -148,7 +148,7 @@ geometry* geometry_system_get_default()
     return 0;
 }
 
-geometry* geometry_system_get_default_2d() {
+geometry_resource* geometry_system_get_default_2d() {
     if (system_state) {
         return &system_state->default_2d_geometry;
     }
@@ -157,7 +157,7 @@ geometry* geometry_system_get_default_2d() {
     return 0;
 }
 
-b8 create_geometry(geometry_system_state* state, geometry_config config, geometry* g)
+b8 create_geometry(geometry_system_state* state, geometry_config config, geometry_resource* g)
 {
     // Send the geometry off to the renderer to be uploaded to the GPU.
     if (!renderer_create_geometry(g, config.vertex_size, config.vertex_count, config.vertices, config.index_size, config.index_count, config.indices)) {
@@ -182,7 +182,7 @@ b8 create_geometry(geometry_system_state* state, geometry_config config, geometr
     return TRUE;
 }
 
-void destroy_geometry(geometry_system_state* state, geometry* g)
+void destroy_geometry(geometry_system_state* state, geometry_resource* g)
 {
     renderer_destroy_geometry(g);
     g->internal_id = INVALID_ID;
@@ -368,9 +368,9 @@ geometry_config geometry_system_generate_plane_config(f32 width, f32 height, u32
     }
 
     if (name && string_length(name) > 0) {
-        string_ncopy(config.name, name, GEOMETRY_NAME_MAX_LENGTH);
+        string_ncopy(config.name, name, GEOMETRY_MAX_NAME_LENGTH);
     } else {
-        string_ncopy(config.name, DEFAULT_GEOMETRY_NAME, GEOMETRY_NAME_MAX_LENGTH);
+        string_ncopy(config.name, DEFAULT_GEOMETRY_NAME, GEOMETRY_MAX_NAME_LENGTH);
     }
 
     if (material_name && string_length(material_name) > 0) {

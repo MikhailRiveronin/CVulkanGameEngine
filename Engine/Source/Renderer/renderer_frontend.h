@@ -21,11 +21,11 @@ b8 renderer_frontend_create_material(material* material);
 void renderer_frontend_destroy_material(material* material);
 
 b8 renderer_create_geometry(
-    geometry* geometry,
+    geometry_resource* geometry,
     u32 vertex_size,
     u32 vertex_count,
     void const* vertices,
     u32 index_size,
     u32 index_count,
     u32 const* indices);
-void renderer_destroy_geometry(geometry* geometry);
+void renderer_destroy_geometry(geometry_resource* geometry);

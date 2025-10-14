@@ -10,7 +10,7 @@ typedef struct resource_system_config {
 typedef struct resource_loader {
     u32 id;
     resource_type type;
-    char const* resource_folder_path;
+    char const* type_str;
 
     b8 (* load)(struct resource_loader* self, char const* name, resource* resource);
     void (* unload)(struct resource_loader* self, resource* resource);

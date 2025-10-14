@@ -19,7 +19,7 @@ typedef struct geometry_config {
     u32 index_count;
     void* indices;
 
-    char name[GEOMETRY_NAME_MAX_LENGTH];
+    char name[GEOMETRY_MAX_NAME_LENGTH];
     char material_name[MATERIAL_NAME_MAX_LENGTH];
 } geometry_config;
 
@@ -34,7 +34,7 @@ void geometry_system_shutdown(void* state);
  * @param id The geometry identifier to acquire by.
  * @return A pointer to the acquired geometry or nullptr if failed.
  */
-geometry* geometry_system_acquire_by_id(u32 id);
+geometry_resource* geometry_system_acquire_by_id(u32 id);
 
 /**
  * @brief Registers and acquires a new geometry using the given config.
@@ -43,28 +43,28 @@ geometry* geometry_system_acquire_by_id(u32 id);
  * @param auto_release Indicates if the acquired geometry should be unloaded when its reference count reaches 0.
  * @return A pointer to the acquired geometry or nullptr if failed. 
  */
-geometry* geometry_system_acquire_from_config(geometry_config config, b8 auto_release);
+geometry_resource* geometry_system_acquire_from_config(geometry_config config, b8 auto_release);
 
 /**
  * @brief Releases a reference to the provided geometry.
  * 
  * @param geometry The geometry to be released.
  */
-void geometry_system_release(geometry* geometry);
+void geometry_system_release(geometry_resource* geometry);
 
 /**
  * @brief Obtains a pointer to the default geometry.
  * 
  * @return A pointer to the default geometry. 
  */
-geometry* geometry_system_get_default();
+geometry_resource* geometry_system_get_default();
 
 /**
  * @brief Obtains a pointer to the default geometry.
  * 
  * @return A pointer to the default geometry. 
  */
-geometry* geometry_system_get_default_2d();
+geometry_resource* geometry_system_get_default_2d();
 
 /**
  * @brief Generates configuration for plane geometries given the provided parameters.

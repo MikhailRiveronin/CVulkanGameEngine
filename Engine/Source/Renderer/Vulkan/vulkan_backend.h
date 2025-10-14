@@ -23,8 +23,8 @@ void vulkan_backend_destroy_texture(texture* texture);
 b8 vulkan_backend_create_material(material* material);
 void vulkan_backend_destroy_material(material* material);
 
-b8 vulkan_backend_create_geometry(geometry* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices);
-void vulkan_backend_destroy_geometry(geometry* geometry);
+b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices);
+void vulkan_backend_destroy_geometry(geometry_resource* geometry);
 
 b8 vulkan_renderer_begin_renderpass(renderer_backend* backend, u8 renderpass_id);
 b8 vulkan_renderer_end_renderpass(renderer_backend* backend, u8 renderpass_id);

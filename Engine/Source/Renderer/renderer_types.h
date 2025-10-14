@@ -26,7 +26,7 @@ typedef struct material_uniform_data {
 
 typedef struct geometry_render_data {
     mat4 world;
-    geometry* geometry;
+    geometry_resource* geometry;
 } geometry_render_data;
 
 struct platform_state;

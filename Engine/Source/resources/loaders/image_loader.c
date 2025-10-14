@@ -6,21 +6,21 @@
 #include "resources/resource_types.h"
 #include "third_party/stb_image.h"
 
-b8 image_loader_load(resource_loader* loader, char const* filename, resource* resource);
-void image_loader_unload(resource_loader* self, resource* resource);
+static b8 load(resource_loader* loader, char const* filename, resource* resource);
+static void unload(resource_loader* self, resource* resource);
 
 resource_loader image_loader_create()
 {
     resource_loader loader;
     loader.type = RESOURCE_TYPE_IMAGE;
-    loader.resource_folder_path = "textures";
-    loader.load = image_loader_load;
-    loader.unload = image_loader_unload;
+    loader.type_str = "textures";
+    loader.load = load;
+    loader.unload = unload;
 
     return loader;
 }
 
-b8 image_loader_load(resource_loader* loader, char const* name, resource* resource)
+b8 load(resource_loader* loader, char const* name, resource* resource)
 {
     if (!loader || !name || !resource) {
         return FALSE;
@@ -29,7 +29,7 @@ b8 image_loader_load(resource_loader* loader, char const* name, resource* resour
     char* format_str = "%s/%s/%s%s";
     char const* extension = ".png";
     char complete_path[512];
-    string_format(complete_path, format_str, resource_system_asset_folder_path(), loader->resource_folder_path, name, extension);
+    string_format(complete_path, format_str, resource_system_asset_folder_path(), loader->type_str, name, extension);
 
     const i32 required_channel_count = 4;
     stbi_set_flip_vertically_on_load(TRUE);
@@ -69,7 +69,7 @@ b8 image_loader_load(resource_loader* loader, char const* name, resource* resour
     return TRUE;
 }
 
-void image_loader_unload(resource_loader* loader, resource* resource)
+void unload(resource_loader* loader, resource* resource)
 {
     if (!loader || !resource) {
         LOG_WARNING("image_loader_unload: Nothing to unload");
