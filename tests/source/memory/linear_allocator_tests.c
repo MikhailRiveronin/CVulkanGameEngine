@@ -8,7 +8,7 @@ u8 linear_allocator_should_create_and_destroy()
     linear_allocator alloc;
     linear_allocator_create(sizeof(u64), 0, &alloc);
 
-    expect_should_not_be(0, alloc.memory);
+    EXPECT_NOT_EQUAL(0, alloc.memory);
     expect_should_be(sizeof(u64), alloc.total_size);
     expect_should_be(0, alloc.allocated);
 
@@ -29,7 +29,7 @@ u8 linear_allocator_single_allocation_all_space() {
     void* block = linear_allocator_allocate(&alloc, sizeof(u64));
 
     // Validate it
-    expect_should_not_be(0, block);
+    EXPECT_NOT_EQUAL(0, block);
     expect_should_be(sizeof(u64), alloc.allocated);
 
     linear_allocator_destroy(&alloc);
@@ -47,7 +47,7 @@ u8 linear_allocator_multi_allocation_all_space() {
     for (u64 i = 0; i < max_allocs; ++i) {
         block = linear_allocator_allocate(&alloc, sizeof(u64));
         // Validate it
-        expect_should_not_be(0, block);
+        EXPECT_NOT_EQUAL(0, block);
         expect_should_be(sizeof(u64) * (i + 1), alloc.allocated);
     }
 
@@ -66,7 +66,7 @@ u8 linear_allocator_multi_allocation_over_allocate() {
     for (u64 i = 0; i < max_allocs; ++i) {
         block = linear_allocator_allocate(&alloc, sizeof(u64));
         // Validate it
-        expect_should_not_be(0, block);
+        EXPECT_NOT_EQUAL(0, block);
         expect_should_be(sizeof(u64) * (i + 1), alloc.allocated);
     }
 
@@ -93,7 +93,7 @@ u8 linear_allocator_multi_allocation_all_space_then_free() {
     for (u64 i = 0; i < max_allocs; ++i) {
         block = linear_allocator_allocate(&alloc, sizeof(u64));
         // Validate it
-        expect_should_not_be(0, block);
+        EXPECT_NOT_EQUAL(0, block);
         expect_should_be(sizeof(u64) * (i + 1), alloc.allocated);
     }
 

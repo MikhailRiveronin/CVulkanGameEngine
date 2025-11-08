@@ -25,6 +25,7 @@ b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend
             backend->frameCount = 0;
             return TRUE;
     }
+
     return FALSE;
 }
 

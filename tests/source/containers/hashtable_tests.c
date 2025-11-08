@@ -1,4 +1,4 @@
-#include "hash_table_tests.h"
+#include "hashtable_tests.h"
 
 #include "expect.h"
 #include "test_manager.h"
@@ -15,7 +15,7 @@ u8 hash_table_should_create_and_destroy()
 
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(u64), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -37,7 +37,7 @@ u8 hash_table_should_set_and_get_successfully()
 
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(u64), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -71,7 +71,7 @@ u8 hash_table_should_set_and_get_ptr_successfully()
 
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(ht_test_struct*), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -106,7 +106,7 @@ u8 hash_table_should_set_and_get_nonexistant()
 
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(u64), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -134,7 +134,7 @@ u8 hash_table_should_set_and_get_ptr_nonexistant()
 
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(ht_test_struct*), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -169,7 +169,7 @@ u8 hash_table_should_set_and_unset_ptr()
 
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(ht_test_struct*), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -216,7 +216,7 @@ u8 hash_table_try_call_non_ptr_on_ptr_table()
 
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(ht_test_struct*), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -253,7 +253,7 @@ u8 hash_table_try_call_ptr_on_non_ptr_table()
 
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(ht_test_struct), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -291,7 +291,7 @@ u8 hash_table_should_set_get_and_update_ptr_successfully()
 
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
-    expect_should_not_be(0, table.memory);
+    EXPECT_NOT_EQUAL(0, table.memory);
     expect_should_be(sizeof(ht_test_struct*), table.element_size);
     expect_should_be(3, table.element_count);
 
@@ -328,7 +328,7 @@ u8 hash_table_should_set_get_and_update_ptr_successfully()
     return TRUE;
 }
 
-void hash_table_register_tests()
+void hashtable_register_tests()
 {
     test_manager_register_test(hash_table_should_create_and_destroy, "hash_table should create and destroy");
     test_manager_register_test(hash_table_should_set_and_get_successfully, "hash_table should set and get");
