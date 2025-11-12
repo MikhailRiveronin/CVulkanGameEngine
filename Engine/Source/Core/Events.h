@@ -92,7 +92,7 @@ void event_system_shutdown(void* memory);
  * @param code The event code to listen for.
  * @param listener A pointer to a listener instance. Can be 0/NULL.
  * @param on_event The on_event function pointer to be invoked when the event code is fired.
- * @returns TRUE if the event is successfully registered; otherwise false.
+ * @return TRUE if the event is successfully registered; otherwise false.
  */
 LIB_API b8 event_register(u16 code, void* listener, pfn_on_event on_event);
 
@@ -102,7 +102,7 @@ LIB_API b8 event_register(u16 code, void* listener, pfn_on_event on_event);
  * @param code The event code to stop listening for.
  * @param listener A pointer to a listener instance. Can be 0/NULL.
  * @param on_event The on_event function pointer to be unregistered.
- * @returns TRUE if the event is successfully unregistered; otherwise false.
+ * @return TRUE if the event is successfully unregistered; otherwise false.
  */
 LIB_API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_event);
 
@@ -112,6 +112,6 @@ LIB_API b8 event_unregister(u16 code, void const* listener, pfn_on_event on_even
  * @param code The event code to fire.
  * @param sender A pointer to the sender. Can be 0/NULL.
  * @param context The event data.
- * @returns TRUE if handled, otherwise FALSE.
+ * @return TRUE if handled, otherwise FALSE.
  */
 LIB_API b8 event_notify(u16 code, void const* sender, event_context context);

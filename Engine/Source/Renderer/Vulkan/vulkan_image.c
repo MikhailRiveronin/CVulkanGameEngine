@@ -1,18 +1,9 @@
 #include "vulkan_image.h"
+
 #include "vulkan_device.h"
 #include "core/logger.h"
 
-void vulkan_image_create(
-    vulkan_context* context,
-    VkImageType imageType,
-    u32 width, u32 height,
-    VkFormat format,
-    VkImageTiling tiling,
-    VkImageUsageFlags usage,
-    VkMemoryPropertyFlags memoryProperties,
-    b32 createView,
-    VkImageAspectFlags aspectFlags,
-    vulkan_image* image)
+void vulkan_image_create(vulkan_context* context, VkImageType imageType, u32 width, u32 height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, b32 createView, VkImageAspectFlags aspectFlags, vulkan_image* image)
 {
     image->width = width;
     image->height = height;
@@ -40,7 +31,7 @@ void vulkan_image_create(
     VkMemoryRequirements memoryRequirements;
     vkGetImageMemoryRequirements(context->device.handle, image->handle, &memoryRequirements);
 
-    i32 memoryType = context->findMemoryType(memoryRequirements.memoryTypeBits, memoryProperties);
+    i32 memoryType = context->find_memory_type_index(memoryRequirements.memoryTypeBits, memoryProperties);
     if (memoryType == -1) {
         LOG_ERROR("Required memory type not found. Image not valid");
     }
@@ -147,11 +138,7 @@ void vulkan_image_transition_layout(
     vkCmdPipelineBarrier(command_buffer->handle, src_stage_mask, dst_stage_mask, 0, 0, 0, 0, 0, 1, &barrier);
 }
 
-void vulkan_image_copy_from_buffer(
-    vulkan_context* context,
-    vulkan_command_buffer* command_buffer,
-    vulkan_image* image,
-    VkBuffer buffer)
+void vulkan_image_copy_from_buffer(vulkan_context* context, vulkan_command_buffer* command_buffer, vulkan_image* image, VkBuffer buffer)
 {
     VkBufferImageCopy copy = {};
     copy.bufferOffset = 0;
@@ -167,6 +154,5 @@ void vulkan_image_copy_from_buffer(
     copy.imageExtent.width = image->width;
     copy.imageExtent.height = image->height;
     copy.imageExtent.depth = 1;
-
     vkCmdCopyBufferToImage(command_buffer->handle, buffer, image->handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
 }

@@ -1,6 +1,6 @@
 #include "renderer_backend.h"
 #include "vulkan/vulkan_backend.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 
 b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend)
 {
@@ -20,8 +20,8 @@ b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend
             backend->destroy_material = vulkan_backend_destroy_material;
             backend->create_geometry = vulkan_backend_create_geometry;
             backend->destroy_geometry = vulkan_backend_destroy_geometry;
-            backend->begin_renderpass = vulkan_renderer_begin_renderpass;
-            backend->end_renderpass = vulkan_renderer_end_renderpass;
+            backend->begin_renderpass = vulkan_backend_begin_renderpass;
+            backend->end_renderpass = vulkan_backend_end_renderpass;
             backend->frameCount = 0;
             return TRUE;
     }
@@ -31,12 +31,12 @@ b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend
 
 void renderer_backend_destroy(renderer_backend* backend)
 {
-    backend->init = NULL;
-    backend->destroy = NULL;
-    backend->begin_frame = NULL;
+    backend->init = 0;
+    backend->destroy = 0;
+    backend->begin_frame = 0;
     backend->update_global_state = 0;
-    backend->end_frame = NULL;
-    backend->resize = NULL;
+    backend->end_frame = 0;
+    backend->resize = 0;
     backend->draw_geometry = 0;
     backend->create_texture = 0;
     backend->destroy_texture = 0;

@@ -114,27 +114,27 @@ b8 platformProcMessages(platform_state* plat_state)
     return TRUE;
 }
 
-void* platformAllocate(u64 size, b8 aligned)
+void* platform_allocate(u64 size, b8 aligned)
 {
     return malloc(size);
 }
 
-void platformFree(void* ptr, b8 aligned)
+void platform_free(void* ptr, b8 aligned)
 {
     free(ptr);
 }
 
-void* platformSetMemory(void* dest, i32 value, u64 size)
+void* platform_set_memory(void* dest, i32 value, u64 size)
 {
     return memset(dest, value, size);
 }
 
 void* platform_zero_memory(void* dest, u64 size)
 {
-    return platformSetMemory(dest, 0, size);
+    return platform_set_memory(dest, 0, size);
 }
 
-void* platformCopyMemory(void* dest, void const* src, u64 size)
+void* platform_copy_memory(void* dest, void const* src, u64 size)
 {
     return memcpy(dest, src, size);
 }

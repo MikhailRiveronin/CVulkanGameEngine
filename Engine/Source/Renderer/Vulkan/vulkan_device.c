@@ -1,7 +1,7 @@
 #include "vulkan_device.h"
 #include "containers/darray.h"
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 
 typedef struct PhysicalDeviceRequirements {

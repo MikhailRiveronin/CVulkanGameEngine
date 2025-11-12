@@ -1,30 +1,30 @@
-#include "VulkanSwapchain.h"
+#include "vulkan_swapchain.h"
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "vulkan_device.h"
 
-static b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain);
-static void destroy(vulkan_context* context, VulkanSwapchain* swapchain);
+static b8 create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain);
+static void destroy(vulkan_context* context, vulkan_swapchain* swapchain);
 
-b8 vulkanSwapchainCreate(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain)
+b8 vulkanSwapchainCreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain)
 {
     return create(context, width, height, swapchain);
 }
 
-b8 vulkan_swapchain_recreate(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain)
+b8 vulkan_swapchain_recreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain)
 {
     destroy(context, swapchain);
     return create(context, width, height, swapchain);
 }
 
-void vulkanSwapchainDestroy(vulkan_context* context, VulkanSwapchain* swapchain)
+void vulkanSwapchainDestroy(vulkan_context* context, vulkan_swapchain* swapchain)
 {
     destroy(context, swapchain);
 }
 
 b8 vulkan_swapchain_acquire_next_image(
     vulkan_context* context,
-    VulkanSwapchain* swapchain,
+    vulkan_swapchain* swapchain,
     u64 timeout,
     VkSemaphore semaphore,
     VkFence fence,
@@ -46,7 +46,7 @@ b8 vulkan_swapchain_acquire_next_image(
 
 void vulkan_swapchain_present(
     vulkan_context* context,
-    VulkanSwapchain* swapchain,
+    vulkan_swapchain* swapchain,
     VkQueue graphicsQueue,
     VkQueue presentQueue,
     VkSemaphore renderCompleteSemaphore,
@@ -73,7 +73,7 @@ void vulkan_swapchain_present(
     context->current_frame = (context->current_frame + 1) % context->swapchain.images.size;
 }
 
-b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapchain)
+b8 create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain)
 {
     VkExtent2D swapchainExtent = { width, height };
 
@@ -212,7 +212,7 @@ b8 create(vulkan_context* context, u32 width, u32 height, VulkanSwapchain* swapc
     return TRUE;
 }
 
-void destroy(vulkan_context* context, VulkanSwapchain* swapchain)
+void destroy(vulkan_context* context, vulkan_swapchain* swapchain)
 {
     vkDeviceWaitIdle(context->device.handle);
     vulkan_image_destroy(context, &swapchain->depth_buffer);

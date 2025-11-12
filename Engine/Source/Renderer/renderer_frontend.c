@@ -2,10 +2,10 @@
 
 #include "renderer_backend.h"
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 #include "core/events.h"
-#include "math/kmath.h"
+#include "math/math_types.h"
 #include "systems/texture_system.h"
 #include "systems/material_system.h"
 
@@ -45,14 +45,18 @@ b8 renderer_system_startup(u64* memory_size, void* memory, char const* app_name)
 
     system_state->near = 0.1f;
     system_state->far = 1000.f;
-    system_state->proj = mat4_perspective(deg_to_rad(45.f), 1280.f / 720.f, system_state->near, system_state->far);
+    glm_perspective(glm_rad(45.f), 1280.f / 720.f, system_state->near, system_state->far, system_state->proj);
 
-    system_state->view = mat4_translation((vec3){30, 0, 0.0f});
-    system_state->view = mat4_inverse(system_state->view);
+    vec3 translator;
+    translator[0] = 30;
+    translator[1] = 0;
+    translator[2] = 0;
+    glm_translate(system_state->view, translator);
+    glm_mat4_inv(system_state->view, system_state->view);
 
-    // UI projection/view
-    system_state->ui_projection = mat4_orthographic(0, 1280.0f, 720.0f, 0, -100.f, 100.0f);  // Intentionally flipped on y axis.
-    system_state->ui_view = mat4_inverse(mat4_identity());
+    // // UI projection/view
+    // system_state->ui_projection = mat4_orthographic(0, 1280.0f, 720.0f, 0, -100.f, 100.0f);  // Intentionally flipped on y axis.
+    // system_state->ui_view = mat4_inverse(mat4_identity());
 
     return TRUE;
 }
@@ -74,11 +78,12 @@ b8 renderer_frontend_draw_frame(render_packet* packet)
             return FALSE;
         }
 
-        system_state->backend.update_global_state(system_state->view, system_state->proj, vec3_zero(), vec4_one(), 0);
+        system_state->backend.update_global_state(system_state->view, system_state->proj, GLM_VEC3_ZERO, GLM_VEC4_ONE, 0);
 
         u32 count = packet->geometry_count;
-        for (u32 i = 0; i < count; ++i) {
-            system_state->backend.draw_geometry(packet->geometries[i]);
+        for (u32 i = 0; i < count; ++i)
+        {
+            system_state->backend.draw_geometry(packet->render_data[i]);
         }
 
         if (!system_state->backend.end_renderpass(&system_state->backend, BUILTIN_RENDERPASS_WORLD)) {
@@ -99,7 +104,7 @@ b8 renderer_frontend_draw_frame(render_packet* packet)
         // Draw ui geometries.
         count = packet->ui_geometry_count;
         for (u32 i = 0; i < count; ++i) {
-            system_state->backend.draw_geometry(packet->ui_geometries[i]);
+            system_state->backend.draw_geometry(packet->ui_render_data[i]);
         }
 
         if (!system_state->backend.end_renderpass(&system_state->backend, BUILTIN_RENDERPASS_UI)) {
@@ -119,15 +124,14 @@ b8 renderer_frontend_draw_frame(render_packet* packet)
 
 void renderer_frontend_resize(i16 width, i16 height)
 {
-    if (system_state) {
-        system_state->proj = mat4_perspective(
-            deg_to_rad(45.f),
-            width / height,
-            system_state->near,
-            system_state->far);
-        system_state->ui_projection = mat4_orthographic(0, (f32)width, (f32)height, 0, -100.f, 100.0f); // Intentionally flipped on y axis.
+    if (system_state)
+    {
+        glm_perspective(glm_rad(45.f), width / height, system_state->near, system_state->far, system_state->proj);
+        glm_ortho(0, (f32)width, (f32)height, 0, -100.f, 100.0f, system_state->ui_projection);
         system_state->backend.resize(&system_state->backend, width, height);
-    } else {
+    }
+    else
+    {
         LOG_ERROR("renderer_frontend_resize: system_state->backend is NULL");
     }
 }
@@ -144,37 +148,37 @@ b8 rendererEndFrame(float deltaTime)
     return result;
 }
 
-void renderer_frontend_create_texture(u8 const* pixels, texture* texture)
+void renderer_frontend_create_texture(u8 const* pixels, texture_resource* texture)
 {
     system_state->backend.create_texture(pixels, texture);
 }
 
-void renderer_frontend_destroy_texture(texture* texture)
+void renderer_frontend_destroy_texture(texture_resource* texture)
 {
     system_state->backend.destroy_texture(texture);
 }
 
 void renderer_frontend_set_view(mat4 view)
 {
-    system_state->view = view;
+    glm_mat4_copy(view, system_state->view);
 }
 
-b8 renderer_frontend_create_material(material* material)
+b8 renderer_frontend_create_material(material_resource* material)
 {
     return system_state->backend.create_material(material);
 }
 
-void renderer_frontend_destroy_material(material* material)
+void renderer_frontend_destroy_material(material_resource* material)
 {
     system_state->backend.destroy_material(material);
 }
 
-b8 renderer_create_geometry(geometry_resource* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices)
+b8 renderer_frontend_create_geometry(geometry_resource* geometry, u32 vertex_size_in_bytes, u32 vertex_count, void const* vertices, u32 index_size_in_bytes, u32 index_count, u32 const* indices)
 {
-    return system_state->backend.create_geometry(geometry, vertex_size, vertex_count, vertices, index_size, index_count, indices);
+    return system_state->backend.create_geometry(geometry, vertex_size_in_bytes, vertex_count, vertices, index_size_in_bytes, index_count, indices);
 }
 
-void renderer_destroy_geometry(geometry_resource* geometry)
+void renderer_frontend_destroy_geometry(geometry_resource* geometry)
 {
     system_state->backend.destroy_geometry(geometry);
 }

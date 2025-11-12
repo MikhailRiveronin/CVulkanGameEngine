@@ -13,8 +13,8 @@ typedef struct material_system_config {
 b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_system_config config);
 void material_system_shutdown();
 
-material* material_system_acquire(char const* name);
-material* material_system_acquire_from_config(material_config config);
+material_resource* material_system_acquire(char const* name);
+material_resource* material_system_acquire_from_config(material_config config);
 void material_system_release(char const* name);
 
-material* material_system_get_default_material();
+material_resource* material_system_get_default_material();

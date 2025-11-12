@@ -1,6 +1,6 @@
 #include "string_utils.h"
 
-#include "memory_utils.h"
+#include "memory_system.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -14,8 +14,8 @@ u64 string_length(char const* str)
 char* string_duplicate(char const* str)
 {
     u64 length = string_length(str);
-    char* copy = memory_allocate(length + 1, MEMORY_TAG_STRING);
-    memory_copy(copy, str, length + 1);
+    char* copy = memory_system_allocate(length + 1, MEMORY_TAG_STRING);
+    memory_system_copy(copy, str, length + 1);
     return copy;
 }
 
@@ -114,8 +114,8 @@ b8 string_to_vec4(char* str, vec4* out_vector) {
         return FALSE;
     }
 
-    memory_zero(out_vector, sizeof(vec4));
-    i32 result = sscanf(str, "%f %f %f %f", &out_vector->x, &out_vector->y, &out_vector->z, &out_vector->w);
+    memory_system_zero(out_vector, sizeof(vec4));
+    i32 result = sscanf(str, "%f %f %f %f", &out_vector[0], &out_vector[1], &out_vector[2], &out_vector[3]);
     return result != -1;
 }
 
@@ -124,8 +124,8 @@ b8 string_to_vec3(char* str, vec3* out_vector) {
         return FALSE;
     }
 
-    memory_zero(out_vector, sizeof(vec3));
-    i32 result = sscanf(str, "%f %f %f", &out_vector->x, &out_vector->y, &out_vector->z);
+    memory_system_zero(out_vector, sizeof(vec3));
+    i32 result = sscanf(str, "%f %f %f", &out_vector[0], &out_vector[1], &out_vector[2]);
     return result != -1;
 }
 
@@ -134,8 +134,8 @@ b8 string_to_vec2(char* str, vec2* out_vector) {
         return FALSE;
     }
 
-    memory_zero(out_vector, sizeof(vec2));
-    i32 result = sscanf(str, "%f %f", &out_vector->x, &out_vector->y);
+    memory_system_zero(out_vector, sizeof(vec2));
+    i32 result = sscanf(str, "%f %f", &out_vector[0], &out_vector[1]);
     return result != -1;
 }
 

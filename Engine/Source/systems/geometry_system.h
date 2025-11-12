@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/renderer_types.inl"
+#include "renderer/renderer_types.h"
 
 typedef struct geometry_system_config {
     // Max number of geometries that can be loaded at once.
@@ -10,23 +10,23 @@ typedef struct geometry_system_config {
     u32 max_geometry_count;
 } geometry_system_config;
 
-typedef struct geometry_config {
-    u32 vertex_size;
+typedef struct geometry_system_configuration {
+    u32 vertex_size_in_bytes;
     u32 vertex_count;
     void* vertices;
 
-    u32 index_size;
+    u32 index_size_in_bytes;
     u32 index_count;
     void* indices;
 
     char name[GEOMETRY_MAX_NAME_LENGTH];
     char material_name[MATERIAL_NAME_MAX_LENGTH];
-} geometry_config;
+} geometry_system_configuration;
 
 #define DEFAULT_GEOMETRY_NAME "default"
 
 b8 geometry_system_startup(u64* memory_requirement, void* state, geometry_system_config config);
-void geometry_system_shutdown(void* state);
+void geometry_system_shutdown();
 
 /**
  * @brief Acquires an existing geometry by id.
@@ -43,7 +43,7 @@ geometry_resource* geometry_system_acquire_by_id(u32 id);
  * @param auto_release Indicates if the acquired geometry should be unloaded when its reference count reaches 0.
  * @return A pointer to the acquired geometry or nullptr if failed. 
  */
-geometry_resource* geometry_system_acquire_from_config(geometry_config config, b8 auto_release);
+geometry_resource* geometry_system_acquire_from_config(geometry_system_configuration config, b8 auto_release);
 
 /**
  * @brief Releases a reference to the provided geometry.
@@ -81,4 +81,4 @@ geometry_resource* geometry_system_get_default_2d();
  * @param material_name The name of the material to be used.
  * @return A geometry configuration which can then be fed into geometry_system_acquire_from_config().
  */
-geometry_config geometry_system_generate_plane_config(f32 width, f32 height, u32 x_segment_count, u32 y_segment_count, f32 tile_x, f32 tile_y, char const* name, char const* material_name);
+geometry_system_configuration geometry_system_generate_plane_config(f32 width, f32 height, u32 x_segment_count, u32 y_segment_count, f32 tile_x, f32 tile_y, char const* name, char const* material_name);

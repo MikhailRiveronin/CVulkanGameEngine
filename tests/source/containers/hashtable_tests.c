@@ -16,14 +16,14 @@ u8 hash_table_should_create_and_destroy()
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(u64), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(u64), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -38,20 +38,20 @@ u8 hash_table_should_set_and_get_successfully()
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(u64), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(u64), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     u64 testval1 = 23;
     hashtable_set(&table, "test1", &testval1);
     u64 get_testval_1 = 0;
     hashtable_get(&table, "test1", &get_testval_1);
-    expect_should_be(testval1, get_testval_1);
+    EXPECT_EQUAL(testval1, get_testval_1);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -72,8 +72,8 @@ u8 hash_table_should_set_and_get_ptr_successfully()
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(ht_test_struct*), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(ht_test_struct*), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     ht_test_struct t;
     ht_test_struct* testval1 = &t;
@@ -85,14 +85,14 @@ u8 hash_table_should_set_and_get_ptr_successfully()
     ht_test_struct* get_testval_1 = 0;
     hashtable_get_ptr(&table, "test1", (void**)&get_testval_1);
 
-    expect_should_be(testval1->b_value, get_testval_1->b_value);
-    expect_should_be(testval1->u_value, get_testval_1->u_value);
+    EXPECT_EQUAL(testval1->b_value, get_testval_1->b_value);
+    EXPECT_EQUAL(testval1->u_value, get_testval_1->u_value);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -107,20 +107,20 @@ u8 hash_table_should_set_and_get_nonexistant()
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(u64), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(u64), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     u64 testval1 = 23;
     hashtable_set(&table, "test1", &testval1);
     u64 get_testval_1 = 0;
     hashtable_get(&table, "test2", &get_testval_1);
-    expect_should_be(0, get_testval_1);
+    EXPECT_EQUAL(0, get_testval_1);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -135,8 +135,8 @@ u8 hash_table_should_set_and_get_ptr_nonexistant()
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(ht_test_struct*), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(ht_test_struct*), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     ht_test_struct t;
     ht_test_struct* testval1 = &t;
@@ -149,13 +149,13 @@ u8 hash_table_should_set_and_get_ptr_nonexistant()
     ht_test_struct* get_testval_1 = 0;
     result = hashtable_get_ptr(&table, "test2", (void**)&get_testval_1);
     expect_to_be_false(result);
-    expect_should_be(0, get_testval_1);
+    EXPECT_EQUAL(0, get_testval_1);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -170,8 +170,8 @@ u8 hash_table_should_set_and_unset_ptr()
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(ht_test_struct*), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(ht_test_struct*), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     ht_test_struct t;
     ht_test_struct* testval1 = &t;
@@ -185,8 +185,8 @@ u8 hash_table_should_set_and_unset_ptr()
     // Check that it exists and is correct.
     ht_test_struct* get_testval_1 = 0;
     hashtable_get_ptr(&table, "test1", (void**)&get_testval_1);
-    expect_should_be(testval1->b_value, get_testval_1->b_value);
-    expect_should_be(testval1->u_value, get_testval_1->u_value);
+    EXPECT_EQUAL(testval1->b_value, get_testval_1->b_value);
+    EXPECT_EQUAL(testval1->u_value, get_testval_1->u_value);
 
     // Unset it
     result = hashtable_set_ptr(&table, "test1", 0);
@@ -196,13 +196,13 @@ u8 hash_table_should_set_and_unset_ptr()
     ht_test_struct* get_testval_2 = 0;
     result = hashtable_get_ptr(&table, "test1", (void**)&get_testval_2);
     expect_to_be_false(result);
-    expect_should_be(0, get_testval_2);
+    EXPECT_EQUAL(0, get_testval_2);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -217,8 +217,8 @@ u8 hash_table_try_call_non_ptr_on_ptr_table()
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(ht_test_struct*), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(ht_test_struct*), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     LOG_DEBUG("The following 2 error messages are intentional.");
 
@@ -237,9 +237,9 @@ u8 hash_table_try_call_non_ptr_on_ptr_table()
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -254,8 +254,8 @@ u8 hash_table_try_call_ptr_on_non_ptr_table()
     hashtable_create(element_size, element_count, memory, FALSE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(ht_test_struct), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(ht_test_struct), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     LOG_DEBUG("The following 2 error messages are intentional.");
 
@@ -275,9 +275,9 @@ u8 hash_table_try_call_ptr_on_non_ptr_table()
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }
@@ -292,8 +292,8 @@ u8 hash_table_should_set_get_and_update_ptr_successfully()
     hashtable_create(element_size, element_count, memory, TRUE, &table);
 
     EXPECT_NOT_EQUAL(0, table.memory);
-    expect_should_be(sizeof(ht_test_struct*), table.element_size);
-    expect_should_be(3, table.element_count);
+    EXPECT_EQUAL(sizeof(ht_test_struct*), table.element_size);
+    EXPECT_EQUAL(3, table.element_count);
 
     ht_test_struct t;
     ht_test_struct* testval1 = &t;
@@ -304,8 +304,8 @@ u8 hash_table_should_set_get_and_update_ptr_successfully()
 
     ht_test_struct* get_testval_1 = 0;
     hashtable_get_ptr(&table, "test1", (void**)&get_testval_1);
-    expect_should_be(testval1->b_value, get_testval_1->b_value);
-    expect_should_be(testval1->u_value, get_testval_1->u_value);
+    EXPECT_EQUAL(testval1->b_value, get_testval_1->b_value);
+    EXPECT_EQUAL(testval1->u_value, get_testval_1->u_value);
 
     // Update pointed-to values
     get_testval_1->b_value = FALSE;
@@ -316,14 +316,14 @@ u8 hash_table_should_set_get_and_update_ptr_successfully()
     ht_test_struct* get_testval_2 = 0;
     hashtable_get_ptr(&table, "test1", (void**)&get_testval_2);
     expect_to_be_false(get_testval_2->b_value);
-    expect_should_be(99, get_testval_2->u_value);
+    EXPECT_EQUAL(99, get_testval_2->u_value);
     expect_float_to_be(6.69f, get_testval_2->f_value);
 
     hashtable_destroy(&table);
 
-    expect_should_be(0, table.memory);
-    expect_should_be(0, table.element_size);
-    expect_should_be(0, table.element_count);
+    EXPECT_EQUAL(0, table.memory);
+    EXPECT_EQUAL(0, table.element_size);
+    EXPECT_EQUAL(0, table.element_count);
 
     return TRUE;
 }

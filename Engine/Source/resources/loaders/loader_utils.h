@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "resources/resource_types.h"
 
 struct resource_loader;

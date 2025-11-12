@@ -1,9 +1,9 @@
 #include <entry.h>
 
 #include "game.h"
-#include <core/memory_utils.h>
+#include <systems/memory_system.h>
 
-b8 createGameState(game* game)
+b8 createGameState(game_instance* game)
 {
     game->state = memory_allocate(sizeof(game_state), MEMORY_TAG_GAME);
 

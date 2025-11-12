@@ -1,7 +1,7 @@
 #include "image_loader.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 #include "resources/resource_types.h"
 #include "third_party/stb_image.h"

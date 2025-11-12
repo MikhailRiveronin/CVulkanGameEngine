@@ -1,7 +1,7 @@
 #include "input.h"
 #include "events.h"
 #include "logger.h"
-#include "memory_utils.h"
+#include "memory_system.h"
 
 typedef struct KeyboardState {
     b8 keys[KEY_ENUM_COUNT];
@@ -42,8 +42,8 @@ void input_update(f64 deltaTime)
         return;
     }
 
-    memory_copy(&system_state->prevKeyboard, &system_state->keyboard, sizeof(system_state->keyboard));
-    memory_copy(&system_state->prevMouse, &system_state->mouse, sizeof(system_state->mouse));
+    memory_system_copy(&system_state->prevKeyboard, &system_state->keyboard, sizeof(system_state->keyboard));
+    memory_system_copy(&system_state->prevMouse, &system_state->mouse, sizeof(system_state->mouse));
 }
 
 b8 input_is_key_down(Key key)

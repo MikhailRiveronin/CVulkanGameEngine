@@ -16,7 +16,7 @@ typedef enum access_mode {
 /**
  * Checks if a file with the given path exists
  * @param path The path of the file to be checked
- * @returns TRUE if exists; otherwise FALSE
+ * @return TRUE if exists; otherwise FALSE
  */
 LIB_API b8 filesystem_exists(char const* path);
 
@@ -25,7 +25,7 @@ LIB_API b8 filesystem_exists(char const* path);
  * @param path The path of the file to be opened
  * @param mode Mode flags for the file when opened (read/write). See file_modes enum in filesystem.h
  * @param file A pointer to a file_handle structure which holds the handle information
- * @returns TRUE if opened successfully; otherwise FALSE
+ * @return TRUE if opened successfully; otherwise FALSE
  */
 LIB_API b8 filesystem_open(char const* path, access_mode mode, file_handle* file);
 
@@ -50,7 +50,7 @@ LIB_API b8 filesystem_size(file_handle* file, u64* size_in_bytes);
  * @param max_length The maximum length to be read from the line
  * @param buffer A pointer to a character array populated by this method. Must already be allocated
  * @param length A pointer to hold the line length read from the file
- * @returns TRUE if successful; otherwise FALSE
+ * @return TRUE if successful; otherwise FALSE
  */
 LIB_API b8 filesystem_read_line(file_handle* file, u64 max_length, char** buffer, u64* length);
 
@@ -58,7 +58,7 @@ LIB_API b8 filesystem_read_line(file_handle* file, u64 max_length, char** buffer
  * Writes text to the provided file, appending a '\n' afterward
  * @param file A pointer to a file_handle structure
  * @param text The text to be written
- * @returns TRUE if successful; otherwise FALSE
+ * @return TRUE if successful; otherwise FALSE
  */
 LIB_API b8 filesystem_write_line(file_handle* file, char const* line);
 
@@ -68,7 +68,7 @@ LIB_API b8 filesystem_write_line(file_handle* file, char const* line);
  * @param size_in_bytes The number of bytes to read
  * @param buffer A pointer to a block of memory to be populated by this method
  * @param bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file
- * @returns TRUE if successful; otherwise FALSE
+ * @return TRUE if successful; otherwise FALSE
  */
 LIB_API b8 filesystem_read(file_handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read);
 
@@ -77,7 +77,7 @@ LIB_API b8 filesystem_read(file_handle* file, u64 size_in_bytes, void* buffer, u
  * @param file A pointer to a file_handle structure.
  * @param buffer A byte array which will be populated by this method
  * @param bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
- * @returns TRUE if successful; otherwise FALSE
+ * @return TRUE if successful; otherwise FALSE
  */
 LIB_API b8 filesystem_read_all(file_handle* file, void* buffer, u64* bytes_read);
 
@@ -87,6 +87,6 @@ LIB_API b8 filesystem_read_all(file_handle* file, void* buffer, u64* bytes_read)
  * @param size_in_bytes The size of the data in bytes
  * @param data The data to be written.
  * @param bytes_written A pointer to a number which will be populated with the number of bytes actually written to the file.
- * @returns TRUE if successful; otherwise FALSE.
+ * @return TRUE if successful; otherwise FALSE.
  */
 LIB_API b8 filesystem_write(file_handle* file, u64 size_in_bytes, void const* data, u64* bytes_written);

@@ -7,11 +7,11 @@
 
 #include <stdlib.h>
 
-extern b8 createGameState(game* game);
+extern b8 createGameState(game_instance* game);
 
 int main(void)
 {
-    game game = {};
+    game_instance game = {};
     if (!createGameState(&game)) {
         LOG_FATAL("Failed to create game state");
         return EXIT_FAILURE;

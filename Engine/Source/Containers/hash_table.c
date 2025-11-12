@@ -1,7 +1,7 @@
 #include "hash_table.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 
 static u64 hash_name(char const* name, u32 element_count);
 

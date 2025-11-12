@@ -1,5 +1,5 @@
 #include <core/logger.h>
-// #include <math/kmath.h>
+#include <math/math_types.h>
 
 /**
  * @brief Expects expected to be equal to actual.
@@ -23,7 +23,7 @@
  * @brief Expects expected to be actual given a tolerance of K_FLOAT_EPSILON.
  */
 #define expect_float_to_be(expected, actual)                                                        \
-    if (kabs(expected - actual) > 0.001f) {                                                         \
+    if (fabs(expected - actual) > 0.001f) {                                                         \
         LOG_ERROR("--> Expected %f, but got: %f. File: %s:%d.", expected, actual, __FILE__, __LINE__); \
         return FALSE;                                                                               \
     }

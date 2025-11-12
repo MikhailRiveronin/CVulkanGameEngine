@@ -1,7 +1,7 @@
 #include "linear_allocator.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 
 void linear_allocator_create(u64 total_size, void* memory, linear_allocator* out_allocator)
 {

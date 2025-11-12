@@ -1,7 +1,7 @@
 #include "filesystem.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,10 +18,10 @@ b8 filesystem_exists(char const* path)
 #endif
 }
 
-b8 filesystem_open(char const* path, access_mode mode, file_handle* file)
+b8 filesystem_open(char const* path, access_mode mode, file_handle* handle)
 {
-    file->stream = 0;
-    file->is_valid = FALSE;
+    handle->stream = 0;
+    handle->is_valid = FALSE;
     char const* mode_str;
 
     b8 r = mode & ACCESS_MODE_READ;
@@ -40,13 +40,13 @@ b8 filesystem_open(char const* path, access_mode mode, file_handle* file)
     }
 
     FILE* file = fopen(path, mode_str);
-    if (!file) {
+    if (!handle) {
         LOG_ERROR("filesystem_open: Failed to open file '%s'", path);
         return FALSE;
     }
 
-    file->stream = file;
-    file->is_valid = TRUE;
+    handle->stream = handle;
+    handle->is_valid = TRUE;
     return TRUE;
 }
 

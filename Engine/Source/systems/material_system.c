@@ -11,8 +11,8 @@
 typedef struct material_system_state {
     material_system_config config;
 
-    material default_material;
-    material* registered_materials;
+    material_resource default_material;
+    material_resource* registered_materials;
     hashtable material_reference_table;
 } material_system_state;
 
@@ -25,8 +25,8 @@ typedef struct material_reference {
 static material_system_state* system_state;
 
 static b8 create_default_material();
-static b8 load_material(material_config config, material* m);
-static void destroy_material(material* m);
+static b8 load_material(material_config config, material_resource* m);
+static void destroy_material(material_resource* m);
 
 b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_system_config config)
 {
@@ -36,7 +36,7 @@ b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_syst
     }
 
     u64 state_struct_size_in_bytes = sizeof(*system_state);
-    u64 array_size_in_bytes = config.max_material_count * sizeof(material);
+    u64 array_size_in_bytes = config.max_material_count * sizeof(material_resource);
     u64 hashtable_requirement = sizeof(material_reference) * config.max_material_count;
     *state_size_in_bytes = state_struct_size_in_bytes + array_size_in_bytes + hashtable_requirement;
 
@@ -67,7 +67,7 @@ b8 material_system_startup(u64* state_size_in_bytes, void* memory, material_syst
     for (u32 i = 0; i < system_state->config.max_material_count; ++i) {
         system_state->registered_materials[i].id = INVALID_ID;
         system_state->registered_materials[i].generation = INVALID_ID;
-        system_state->registered_materials[i].internal_id = INVALID_ID;
+        system_state->registered_materials[i].backend_id = INVALID_ID;
     }
 
     if (!create_default_material(system_state)) {
@@ -93,22 +93,25 @@ void material_system_shutdown()
     system_state = 0;
 }
 
-material* material_system_acquire(char const* name)
+material_resource* material_system_acquire(char const* name)
 {
-    resource material_resource;
-    if (!resource_system_load(name, RESOURCE_TYPE_MATERIAL, &material_resource)) {
+    resource mat_resource;
+    if (!resource_system_load(name, RESOURCE_TYPE_MATERIAL, &mat_resource))
+    {
         LOG_ERROR("material_system_acquire: Failed to load material resource, returning nullptr");
         return 0;
     }
 
-    material* material;
-    if (material_resource.data) {
-        material = material_system_acquire_from_config(*(material_config*)material_resource.data);
+    material_resource* material;
+    if (mat_resource.data)
+    {
+        material = material_system_acquire_from_config(*(material_config*)mat_resource.data);
     }
 
-    resource_system_unload(&material_resource);
+    resource_system_unload(&mat_resource);
 
-    if (!material) {
+    if (!material)
+    {
         LOG_ERROR("material_system_acquire: Failed to load material resource, returning nullptr");
         return 0;
     }
@@ -116,7 +119,7 @@ material* material_system_acquire(char const* name)
     return material;
 }
 
-material* material_system_acquire_from_config(material_config config)
+material_resource* material_system_acquire_from_config(material_config config)
 {
     // Return default material.
     if (string_equali(config.name, DEFAULT_MATERIAL_NAME)) {
@@ -134,7 +137,7 @@ material* material_system_acquire_from_config(material_config config)
         if (ref.handle == INVALID_ID) {
             // This means no material exists here. Find a free index first.
             u32 count = system_state->config.max_material_count;
-            material* m = 0;
+            material_resource* m = 0;
             for (u32 i = 0; i < count; ++i) {
                 if (system_state->registered_materials[i].id == INVALID_ID) {
                     // A free slot has been found. Use its index as the handle.
@@ -193,7 +196,7 @@ void material_system_release(char const* name)
         }
         ref.reference_count--;
         if (ref.reference_count == 0 && ref.auto_release) {
-            material* m = &system_state->registered_materials[ref.handle];
+            material_resource* m = &system_state->registered_materials[ref.handle];
 
             // Destroy/reset material.
             destroy_material(m);
@@ -213,7 +216,7 @@ void material_system_release(char const* name)
     }
 }
 
-material* material_system_get_default_material()
+material_resource* material_system_get_default_material()
 {
     if (system_state) {
         return &system_state->default_material;
@@ -223,9 +226,9 @@ material* material_system_get_default_material()
     return 0;
 }
 
-b8 load_material(material_config config, material* m)
+b8 load_material(material_config config, material_resource* m)
 {
-    memory_zero(m, sizeof(material));
+    memory_zero(m, sizeof(material_resource));
 
     // name
     string_ncopy(m->name, config.name, MATERIAL_NAME_MAX_LENGTH);
@@ -233,7 +236,7 @@ b8 load_material(material_config config, material* m)
     m->type = config.type;
 
     // Diffuse colour
-    m->diffuse_colour = config.diffuse_colour;
+    glm_vec4_copy(config.diffuse_colour, m->diffuse_colour);
 
     // Diffuse map
     if (string_length(config.diffuse_map_name) > 0) {
@@ -260,7 +263,7 @@ b8 load_material(material_config config, material* m)
     return TRUE;
 }
 
-void destroy_material(material* m)
+void destroy_material(material_resource* m)
 {
     LOG_TRACE("Destroying material '%s'...", m->name);
 
@@ -273,15 +276,15 @@ void destroy_material(material* m)
     renderer_frontend_destroy_material(m);
 
     // Zero it out, invalidate IDs.
-    memory_zero(m, sizeof(material));
+    memory_zero(m, sizeof(material_resource));
     m->id = INVALID_ID;
     m->generation = INVALID_ID;
-    m->internal_id = INVALID_ID;
+    m->backend_id = INVALID_ID;
 }
 
 b8 create_default_material()
 {
-    memory_zero(&system_state->default_material, sizeof(material));
+    memory_zero(&system_state->default_material, sizeof(material_resource));
     system_state->default_material.id = INVALID_ID;
     system_state->default_material.generation = INVALID_ID;
 

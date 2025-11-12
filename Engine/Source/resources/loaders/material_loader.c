@@ -1,15 +1,15 @@
 #include "material_loader.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 #include "platform/filesystem.h"
 #include "resources/resource_types.h"
 #include "systems/resource_system.h"
 #include "third_party/cglm/cglm.h"
 
-b8 load(resource_loader* loader, char const* name, resource* resource);
-void unload(resource_loader* loader, resource* resource);
+static b8 load(resource_loader* loader, char const* name, resource* resource);
+static void unload(resource_loader* loader, resource* resource);
 
 resource_loader material_loader_create()
 {

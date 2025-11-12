@@ -1,9 +1,9 @@
 #include "freelist_tests.h"
 
-#include "Engine/Source/containers/freelist.h"
-#include "Engine/Source/core/memory_utils.h"
-#include "tests/source/expect.h"
-#include "tests/source/test_manager.h"
+#include <containers/freelist.h>
+#include <systems/memory_system.h>
+#include "expect.h"
+#include "test_manager.h"
 
 static u8 freelist_test_create_and_destroy();
 
@@ -31,5 +31,5 @@ u8 freelist_test_create_and_destroy()
     EXPECT_EQUAL(list.internal, 0);
 
     memory_free(memory, required_memory, MEMORY_TAG_APPLICATION);
-    return 0;
+    return TRUE;
 }

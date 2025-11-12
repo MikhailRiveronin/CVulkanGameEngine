@@ -30,7 +30,7 @@ typedef struct geometry_render_data {
 } geometry_render_data;
 
 struct platform_state;
-struct texture;
+struct texture_resource;
 
 typedef struct renderer_backend {
     struct platform_state* plat_state;
@@ -48,25 +48,32 @@ typedef struct renderer_backend {
     void (* update_global_ui_state)(mat4 proj, mat4 view, i32 mode);
     void (* draw_geometry)(geometry_render_data render_data);
 
-    void (* create_texture)(u8 const* pixels, texture* texture);
-    void (* destroy_texture)(texture* texture);
+    void (* create_texture)(u8 const* pixels, texture_resource* texture);
+    void (* destroy_texture)(texture_resource* texture);
 
     b8 (*begin_renderpass)(struct renderer_backend* backend, u8 renderpass_id);
     b8 (*end_renderpass)(struct renderer_backend* backend, u8 renderpass_id);
 
-    b8 (* create_material)(material* material);
-    void (* destroy_material)(material* material);
+    b8 (* create_material)(material_resource* material);
+    void (* destroy_material)(material_resource* material);
 
-    b8 (* create_geometry)(geometry_resource* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices);
-    void (* destroy_geometry)(geometry* geometry);
+    b8 (* create_geometry)(
+        geometry_resource* geometry,
+        u32 vertex_size_in_bytes,
+        u32 vertex_count,
+        void const* vertices,
+        u32 index_size_in_bytes,
+        u32 index_count,
+        u32 const* indices);
+    void (* destroy_geometry)(geometry_resource* geometry);
 } renderer_backend;
 
 typedef struct render_packet {
     f64 delta_time;
 
     u32 geometry_count;
-    geometry_render_data* geometries;
+    geometry_render_data* render_data;
 
     u32 ui_geometry_count;
-    geometry_render_data* ui_geometries;
+    geometry_render_data* ui_render_data;
 } render_packet;

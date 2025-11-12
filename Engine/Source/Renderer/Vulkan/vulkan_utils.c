@@ -1,7 +1,7 @@
 #include "vulkan_utils.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "systems/resource_system.h"
 
 char const* vulkan_result_string(VkResult result, b8 get_extended)
@@ -153,7 +153,6 @@ b8 create_shader_module(
         return FALSE;
     }
 
-    stages[stage_index].module.create_info = {};
     stages[stage_index].module.create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     stages[stage_index].module.create_info.pNext = 0;
     stages[stage_index].module.create_info.flags = 0;
@@ -163,7 +162,6 @@ b8 create_shader_module(
 
     resource_system_unload(&binary_resource);
 
-    stages[stage_index].create_info = {};
     stages[stage_index].create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stages[stage_index].create_info.pNext = 0;
     stages[stage_index].create_info.flags = 0;

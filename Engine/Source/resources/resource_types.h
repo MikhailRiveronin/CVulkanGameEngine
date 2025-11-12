@@ -28,7 +28,7 @@ typedef struct image_resource_data {
 
 #define TEXTURE_NAME_MAX_LENGTH 512
 
-typedef struct texture {
+typedef struct texture_resource {
     u32 id;
     u32 width;
     u32 height;
@@ -36,8 +36,8 @@ typedef struct texture {
     b8 has_transparency;
     u32 generation;
     char name[TEXTURE_NAME_MAX_LENGTH];
-    void* internal_data;
-} texture;
+    void* internal;
+} texture_resource;
 
 typedef enum texture_use {
     TEXTURE_USE_UNKNOWN = 0x00,
@@ -45,7 +45,7 @@ typedef enum texture_use {
 } texture_use;
 
 typedef struct texture_map {
-    texture* texture;
+    texture_resource* texture;
     texture_use use;
 } texture_map;
 
@@ -64,15 +64,16 @@ typedef struct material_config {
     char diffuse_map_name[TEXTURE_NAME_MAX_LENGTH];
 } material_config;
 
-typedef struct material {
+typedef struct material_resource
+{
     u32 id;
-    u32 internal_id;
+    u32 backend_id;
     char name[MATERIAL_NAME_MAX_LENGTH];
     u32 generation;
     material_type type;
     vec4 diffuse_colour;
     texture_map diffuse_map;
-} material;
+} material_resource;
 
 #define GEOMETRY_MAX_NAME_LENGTH 256
 
@@ -85,5 +86,5 @@ typedef struct geometry_resource {
     u32 internal_id;
     char name[GEOMETRY_MAX_NAME_LENGTH];
     u32 generation;
-    material* material;
+    material_resource* material;
 } geometry_resource;

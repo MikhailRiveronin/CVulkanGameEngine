@@ -1,15 +1,16 @@
 #include "text_loader.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 #include "resources/resource_types.h"
 #include "systems/resource_system.h"
-#include "math/kmath.h"
+#include "math/math_types.h"
 
 #include "platform/filesystem.h"
 
-b8 text_loader_load(struct resource_loader* self, char const* name, resource* out_resource) {
+b8 text_loader_load(struct resource_loader* self, char const* name, resource* out_resource)
+{
     if (!self || !name || !out_resource) {
         return FALSE;
     }
@@ -21,8 +22,8 @@ b8 text_loader_load(struct resource_loader* self, char const* name, resource* ou
     // TODO: Should be using an allocator here.
     out_resource->complete_path = string_duplicate(full_file_path);
 
-    filehandle f;
-    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, FALSE, &f)) {
+    file_handle f;
+    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, &f)) {
         LOG_ERROR("text_loader_load - unable to open file for text reading: '%s'.", full_file_path);
         return FALSE;
     }
@@ -37,11 +38,11 @@ b8 text_loader_load(struct resource_loader* self, char const* name, resource* ou
     // TODO: Should be using an allocator here.
     char* resource_data = memory_allocate(sizeof(char) * file_size, MEMORY_TAG_ARRAY);
     u64 read_size = 0;
-    if (!filesystem_read_all_text(&f, resource_data, &read_size)) {
-        LOG_ERROR("Unable to text read file: %s.", full_file_path);
-        filesystem_close(&f);
-        return FALSE;
-    }
+    // if (!filesystem_read_all_text(&f, resource_data, &read_size)) {
+    //     LOG_ERROR("Unable to text read file: %s.", full_file_path);
+    //     filesystem_close(&f);
+    //     return FALSE;
+    // }
 
     filesystem_close(&f);
 
@@ -71,10 +72,10 @@ void text_loader_unload(struct resource_loader* self, resource* resource) {
     }
 }
 
-resource_loader text_resource_loader_create() {
+resource_loader text_resource_loader_create()
+{
     resource_loader loader;
     loader.type = RESOURCE_TYPE_TEXT;
-    loader.custom_type = 0;
     loader.load = text_loader_load;
     loader.unload = text_loader_unload;
     loader.type_str = "";

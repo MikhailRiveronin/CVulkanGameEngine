@@ -18,12 +18,12 @@ void platform_system_shutdown(platform_state* plat_state);
 
 b8 platformProcMessages(platform_state* plat_state);
 
-void* platformAllocate(u64 size, b8 aligned);
-void platformFree(void* ptr, b8 aligned);
+void* platform_allocate(u64 size, b8 aligned);
+void platform_free(void* ptr, b8 aligned);
 
-void* platformSetMemory(void* dest, i32 value, u64 size);
+void* platform_set_memory(void* dest, i32 value, u64 size);
 void* platform_zero_memory(void* dest, u64 size);
-void* platformCopyMemory(void* dest, void const* src, u64 size);
+void* platform_copy_memory(void* dest, void const* src, u64 size);
 
 void platformWriteConsoleOutput(char const* message, u8 color);
 void platformWriteConsoleError(char const* message, u8 color);

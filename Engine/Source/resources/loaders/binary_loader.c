@@ -2,7 +2,7 @@
 #include "loader_utils.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 #include "resources/resource_types.h"
 #include "systems/resource_system.h"
@@ -18,8 +18,8 @@ b8 binary_loader_load(struct resource_loader* self, char const* name, resource* 
     char full_file_path[512];
     string_format(full_file_path, format_str, "D:/Projects/CVulkanGameEngine/build/assets", name);
 
-    filehandle f;
-    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, TRUE, &f)) {
+    file_handle f;
+    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, &f)) {
         LOG_ERROR("binary_loader_load - unable to open file for binary reading: '%s'.", full_file_path);
         return FALSE;
     }
@@ -61,7 +61,6 @@ void binary_loader_unload(struct resource_loader* self, resource* resource) {
 resource_loader binary_loader_create() {
     resource_loader loader;
     loader.type = RESOURCE_TYPE_BINARY;
-    loader.custom_type = 0;
     loader.load = binary_loader_load;
     loader.unload = binary_loader_unload;
     loader.type_str = "";

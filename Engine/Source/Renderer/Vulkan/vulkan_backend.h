@@ -17,14 +17,14 @@ void vulkan_backend_on_resize(renderer_backend* backend, i16 width, i16 height);
 
 void vulkan_backend_draw_geometry(geometry_render_data render_data);
 
-void vulkan_backend_create_texture(u8 const* pixels, texture* texture);
-void vulkan_backend_destroy_texture(texture* texture);
+void vulkan_backend_create_texture(u8 const* pixels, texture_resource* texture);
+void vulkan_backend_destroy_texture(texture_resource* texture);
 
-b8 vulkan_backend_create_material(material* material);
-void vulkan_backend_destroy_material(material* material);
+b8 vulkan_backend_create_material(material_resource* material);
+void vulkan_backend_destroy_material(material_resource* material);
 
-b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size, u32 vertex_count, void const* vertices, u32 index_size, u32 index_count, u32 const* indices);
+b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size_in_bytes, u32 vertex_count, void const* vertices, u32 index_size_in_bytes, u32 index_count, u32 const* indices);
 void vulkan_backend_destroy_geometry(geometry_resource* geometry);
 
-b8 vulkan_renderer_begin_renderpass(renderer_backend* backend, u8 renderpass_id);
-b8 vulkan_renderer_end_renderpass(renderer_backend* backend, u8 renderpass_id);
+b8 vulkan_backend_begin_renderpass(renderer_backend* backend, u8 renderpass_id);
+b8 vulkan_backend_end_renderpass(renderer_backend* backend, u8 renderpass_id);

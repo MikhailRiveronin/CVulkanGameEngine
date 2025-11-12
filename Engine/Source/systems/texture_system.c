@@ -2,7 +2,7 @@
 
 #include "containers/hash_table.h"
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "core/string_utils.h"
 #include "renderer/renderer_frontend.h"
 #include "systems/resource_system.h"
@@ -15,9 +15,9 @@ typedef struct texture_reference {
 
 typedef struct texture_system_state {
     texture_system_config config;
-    texture* registered_textures;
+    texture_resource* registered_textures;
     hashtable texture_references;
-    texture default_texture;
+    texture_resource default_texture;
 } texture_system_state;
 
 static texture_system_state* system_state;
@@ -25,8 +25,8 @@ static texture_system_state* system_state;
 static b8 create_default_textures();
 static void destroy_default_textures();
 
-static b8 load_texture(char const* name, texture* t);
-static void destroy_texture(texture* t);
+static b8 load_texture(char const* name, texture_resource* t);
+static void destroy_texture(texture_resource* t);
 
 b8 texture_system_startup(u64* state_size_in_bytes, void* memory, texture_system_config config)
 {
@@ -77,7 +77,7 @@ void texture_system_shutdown()
     if (system_state) {
         u32 texture_count = system_state->config.max_texture_count;
         for (u32 i = 0; i < texture_count; ++i) {
-            texture* t = &system_state->registered_textures[i];
+            texture_resource* t = &system_state->registered_textures[i];
             if (t->generation != INVALID_ID) {
                 destroy_texture(t);
             }
@@ -88,7 +88,7 @@ void texture_system_shutdown()
     }
 }
 
-texture* texture_system_acquire_texture(char const* name, b8 auto_release)
+texture_resource* texture_system_acquire_texture(char const* name, b8 auto_release)
 {
     if (system_state && string_equali(name, DEFAULT_TEXTURE_NAME)) {
         LOG_WARNING(
@@ -107,7 +107,7 @@ texture* texture_system_acquire_texture(char const* name, b8 auto_release)
 
         if (ref.id == INVALID_ID) {
             u32 texture_count = system_state->config.max_texture_count;
-            texture* t = 0;
+            texture_resource* t = 0;
             for (u32 i = 0; i < texture_count; ++i) {
                 if (system_state->registered_textures[i].id == INVALID_ID) {
                     t = &system_state->registered_textures[i];
@@ -163,7 +163,7 @@ void texture_system_release_texture(char const* name)
 
         ref.reference_count--;
         if (ref.reference_count == 0 && ref.auto_release) {
-            texture* t = &system_state->registered_textures[ref.id];
+            texture_resource* t = &system_state->registered_textures[ref.id];
             destroy_texture(t);
 
             ref.id = INVALID_ID;
@@ -183,7 +183,7 @@ void texture_system_release_texture(char const* name)
     LOG_ERROR("texture_system_release_texture: Failed to release texture '%s'", name_copy);
 }
 
-texture* texture_system_get_default_texture()
+texture_resource* texture_system_get_default_texture()
 {
     if (system_state) {
         return &system_state->default_texture;
@@ -240,7 +240,7 @@ void destroy_default_textures()
     }
 }
 
-b8 load_texture(char const* name, texture* t)
+b8 load_texture(char const* name, texture_resource* t)
 {
     resource image_resource;
     if (!resource_system_load(name, RESOURCE_TYPE_IMAGE, &image_resource)) {
@@ -250,7 +250,7 @@ b8 load_texture(char const* name, texture* t)
 
     image_resource_data* resource_data = image_resource.data;
 
-    texture temp_texture;
+    texture_resource temp_texture;
     temp_texture.width = resource_data->width;
     temp_texture.height = resource_data->height;
     temp_texture.channel_count = resource_data->channel_count;
@@ -274,7 +274,7 @@ b8 load_texture(char const* name, texture* t)
 
     renderer_frontend_create_texture(resource_data->pixels, &temp_texture);
 
-    texture old = *t;
+    texture_resource old = *t;
     *t = temp_texture;
     renderer_frontend_destroy_texture(&old);
 
@@ -289,7 +289,7 @@ b8 load_texture(char const* name, texture* t)
     return TRUE;
 }
 
-void destroy_texture(texture* t)
+void destroy_texture(texture_resource* t)
 {
     renderer_frontend_destroy_texture(t);
 

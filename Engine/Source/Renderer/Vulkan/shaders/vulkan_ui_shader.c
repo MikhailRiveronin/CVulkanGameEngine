@@ -1,11 +1,10 @@
 #include "vulkan_ui_shader.h"
 
 #include "core/logger.h"
-#include "core/memory_utils.h"
+#include "systems/memory_system.h"
 #include "third_party/cglm/cglm.h"
-#include "math/kmath.h"
+#include "math/math_types.h"
 
-#include "renderer/vulkan/vulkan_shader_utils.h"
 #include "renderer/vulkan/vulkan_pipeline.h"
 #include "renderer/vulkan/vulkan_buffer.h"
 
@@ -217,8 +216,8 @@ void vulkan_ui_shader_destroy(vulkan_context* context, struct vulkan_ui_shader* 
 
     // Destroy shader modules.
     for (u32 i = 0; i < UI_SHADER_STAGE_COUNT; ++i) {
-        vkDestroyShaderModule(context->device.handle, shader->stages[i].module, context->allocator);
-        shader->stages[i].module = 0;
+        vkDestroyShaderModule(context->device.handle, shader->stages[i].module.handle, context->allocator);
+        shader->stages[i].module.handle = 0;
     }
 }
 
@@ -240,7 +239,7 @@ void vulkan_ui_shader_update_global_state(vulkan_context* context, struct vulkan
     u64 offset = 0;
 
     // Copy data to buffer
-    vulkan_buffer_load_data(context, &shader->global_uniform_buffer, offset, range, 0, &shader->global_ubo);
+    vulkan_buffer_upload_to_host_visible_memory(context, &shader->global_uniform_buffer, offset, range, 0, &shader->global_ubo);
 
     VkDescriptorBufferInfo bufferInfo;
     bufferInfo.buffer = shader->global_uniform_buffer.handle;
@@ -268,13 +267,13 @@ void vulkan_ui_shader_set_model(vulkan_context* context, struct vulkan_ui_shader
     }
 }
 
-void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_shader* shader, material* material) {
+void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_shader* shader, material_resource* material) {
     if (context && shader) {
         u32 current_image = context->current_image;
         VkCommandBuffer command_buffer = context->command_buffers.data[current_image].handle;
 
         // Obtain material data.
-        vulkan_ui_shader_instance_state* object_state = &shader->instance_states[material->internal_id];
+        vulkan_ui_shader_instance_state* object_state = &shader->instance_states[material->backend_id];
         VkDescriptorSet object_descriptor_set = object_state->descriptor_sets[current_image];
 
         // TODO: if needs update
@@ -285,14 +284,14 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
 
         // Descriptor 0 - Uniform buffer
         u32 range = sizeof(vulkan_ui_shader_instance_ubo);
-        u64 offset = sizeof(vulkan_ui_shader_instance_ubo) * material->internal_id;  // also the index into the array.
+        u64 offset = sizeof(vulkan_ui_shader_instance_ubo) * material->backend_id;  // also the index into the array.
         vulkan_ui_shader_instance_ubo instance_ubo;
 
         // Get diffuse colour from a material.
-        instance_ubo.diffuse_color = material->diffuse_colour;
+        glm_vec4_copy(material->diffuse_colour, instance_ubo.diffuse_color);
 
         // Load the data into the buffer.
-        vulkan_buffer_load_data(context, &shader->object_uniform_buffer, offset, range, 0, &instance_ubo);
+        vulkan_buffer_upload_to_host_visible_memory(context, &shader->object_uniform_buffer, offset, range, 0, &instance_ubo);
 
         // Only do this if the descriptor has not yet been updated.
         u32* global_ubo_generation = &object_state->descriptor_states[descriptor_index].generations[current_image];
@@ -322,7 +321,7 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
         VkDescriptorImageInfo image_infos[1];
         for (u32 sampler_index = 0; sampler_index < sampler_count; ++sampler_index) {
             texture_use use = shader->sampler_uses[sampler_index];
-            texture* t = 0;
+            texture_resource* t = 0;
             switch (use) {
                 case TEXTURE_USE_MAP_DIFFUSE:
                     t = material->diffuse_map.texture;
@@ -345,7 +344,7 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
 
             // Check if the descriptor needs updating first.
             if (t && (*descriptor_id != t->id || *descriptor_generation != t->generation || *descriptor_generation == INVALID_ID)) {
-                vulkan_texture_data* internal_data = (vulkan_texture_data*)t->internal_data;
+                vulkan_texture_resource* internal_data = (vulkan_texture_resource*)t->internal;
 
                 // Assign view and sampler.
                 image_infos[sampler_index].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -380,12 +379,12 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
     }
 }
 
-b8 vulkan_ui_shader_acquire_resources(vulkan_context* context, struct vulkan_ui_shader* shader, material* material) {
+b8 vulkan_ui_shader_acquire_resources(vulkan_context* context, struct vulkan_ui_shader* shader, material_resource* material) {
     // TODO: free list
-    material->internal_id = shader->object_uniform_buffer_index;
+    material->backend_id = shader->object_uniform_buffer_index;
     shader->object_uniform_buffer_index++;
 
-    vulkan_ui_shader_instance_state* object_state = &shader->instance_states[material->internal_id];
+    vulkan_ui_shader_instance_state* object_state = &shader->instance_states[material->backend_id];
     for (u32 i = 0; i < VULKAN_UI_SHADER_DESCRIPTOR_COUNT; ++i) {
         for (u32 j = 0; j < 3; ++j) {
             object_state->descriptor_states[i].generations[j] = INVALID_ID;
@@ -412,8 +411,8 @@ b8 vulkan_ui_shader_acquire_resources(vulkan_context* context, struct vulkan_ui_
     return TRUE;
 }
 
-void vulkan_ui_shader_release_resources(vulkan_context* context, struct vulkan_ui_shader* shader, material* material) {
-    vulkan_ui_shader_instance_state* instance_state = &shader->instance_states[material->internal_id];
+void vulkan_ui_shader_release_resources(vulkan_context* context, struct vulkan_ui_shader* shader, material_resource* material) {
+    vulkan_ui_shader_instance_state* instance_state = &shader->instance_states[material->backend_id];
 
     const u32 descriptor_set_count = 3;
 
@@ -433,7 +432,7 @@ void vulkan_ui_shader_release_resources(vulkan_context* context, struct vulkan_u
         }
     }
 
-    material->internal_id = INVALID_ID;
+    material->backend_id = INVALID_ID;
 
     // TODO: add the object_id to the free list
 }
