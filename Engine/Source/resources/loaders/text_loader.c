@@ -3,13 +3,13 @@
 #include "core/logger.h"
 #include "systems/memory_system.h"
 #include "core/string_utils.h"
-#include "resources/resource_types.h"
+#include "resources/resources.h"
 #include "systems/resource_system.h"
 #include "math/math_types.h"
 
 #include "platform/filesystem.h"
 
-b8 text_loader_load(struct resource_loader* self, char const* name, resource* out_resource)
+b8 text_loader_load(struct Resource_Loader* self, char const* name, Resource* out_resource)
 {
     if (!self || !name || !out_resource) {
         return FALSE;
@@ -17,12 +17,12 @@ b8 text_loader_load(struct resource_loader* self, char const* name, resource* ou
 
     char* format_str = "%s/%s/%s%s";
     char full_file_path[512];
-    string_format(full_file_path, format_str, resource_system_asset_folder_path(), self->type_str, name, "");
+    string_format(full_file_path, format_str, resource_system_asset_folder(), self->resource_type_subfolder, name, "");
 
     // TODO: Should be using an allocator here.
     out_resource->complete_path = string_duplicate(full_file_path);
 
-    file_handle f;
+    File_Handle f;
     if (!filesystem_open(full_file_path, ACCESS_MODE_READ, &f)) {
         LOG_ERROR("text_loader_load - unable to open file for text reading: '%s'.", full_file_path);
         return FALSE;
@@ -53,7 +53,7 @@ b8 text_loader_load(struct resource_loader* self, char const* name, resource* ou
     return TRUE;
 }
 
-void text_loader_unload(struct resource_loader* self, resource* resource) {
+void text_loader_unload(struct Resource_Loader* self, Resource* resource) {
     if (!self || !resource) {
         LOG_WARNING("text_loader_unload called with nullptr for self or resource.");
         return;
@@ -72,13 +72,13 @@ void text_loader_unload(struct resource_loader* self, resource* resource) {
     }
 }
 
-resource_loader text_resource_loader_create()
+Resource_Loader text_resource_loader_create()
 {
-    resource_loader loader;
+    Resource_Loader loader;
     loader.type = RESOURCE_TYPE_TEXT;
     loader.load = text_loader_load;
     loader.unload = text_loader_unload;
-    loader.type_str = "";
+    loader.resource_type_subfolder = "";
 
     return loader;
 }

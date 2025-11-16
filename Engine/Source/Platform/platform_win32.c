@@ -1,8 +1,8 @@
 #include "platform/platform.h"
 #include "core/logger.h"
 #include "core/input.h"
-#include "core/events.h"
-#include "renderer/vulkan/vulkan_types.h"
+#include "systems/event_system.h"
+#include "renderer/vulkan/vulkan_structures.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -10,8 +10,8 @@
 #include <stdlib.h>
 
 typedef struct platform_system_state {
-    HINSTANCE hInstance;
-    HWND hWnd;
+    HINSTANCE instance;
+    HWND wnd;
 } platform_system_state;
 static platform_system_state* system_state;
 
@@ -26,7 +26,7 @@ static u16 charAttributes[] = {
 static f64 count_rate;
 static LARGE_INTEGER start_time;
 
-LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK windowProc(HWND wnd, u32 message, WPARAM wParam, LPARAM lParam);
 static void setup_clock();
 
 b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_state, char const* appName, i32 x, i32 y, i32 width, i32 height)
@@ -38,7 +38,7 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_
 
     system_state = memory;
     plat_state->specific = system_state;
-    system_state->hInstance = GetModuleHandleA(NULL);
+    system_state->instance = GetModuleHandleA(0);
 
     WNDCLASSEXA wc;
     platform_zero_memory(&wc, sizeof(wc));
@@ -47,15 +47,15 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_
     wc.lpfnWndProc = windowProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
-    wc.hInstance = system_state->hInstance;
-    wc.hIcon = LoadIconA(NULL, IDI_APPLICATION);
-    wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = NULL;
-    wc.lpszMenuName = NULL;
+    wc.instance = system_state->instance;
+    wc.hIcon = LoadIconA(0, IDI_APPLICATION);
+    wc.hCursor = LoadCursorA(0, IDC_ARROW);
+    wc.hbrBackground = 0;
+    wc.lpszMenuName = 0;
     wc.lpszClassName = "WindowClass";
-    wc.hIconSm = NULL;
+    wc.hIconSm = 0;
     if (!RegisterClassExA(&wc)) {
-        MessageBoxExA(NULL, "Failed to register window class", "Error", MB_ICONERROR | MB_OK, 0);
+        MessageBoxExA(0, "Failed to register window class", "Error", MB_ICONERROR | MB_OK, 0);
         LOG_FATAL("Failed to register window class");
         return FALSE;
     }
@@ -71,18 +71,18 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_
     u32 exStyle = WS_EX_APPWINDOW;
     AdjustWindowRectEx(&rect, style, FALSE, exStyle);
 
-    system_state->hWnd = CreateWindowExA(
+    system_state->wnd = CreateWindowExA(
         exStyle, "WindowClass", appName, style,
         rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-        NULL, NULL, system_state->hInstance, NULL);
-    if (!system_state->hWnd)
+        0, 0, system_state->instance, 0);
+    if (!system_state->wnd)
     {
-        MessageBoxExA(NULL, "Failed to create window", "Error", MB_ICONERROR | MB_OK, 0);
+        MessageBoxExA(0, "Failed to create window", "Error", MB_ICONERROR | MB_OK, 0);
         LOG_FATAL("Failed to create window");
         return FALSE;
     }
 
-    ShowWindow(system_state->hWnd, SW_SHOWNORMAL);
+    ShowWindow(system_state->wnd, SW_SHOWNORMAL);
 
     setup_clock();
 
@@ -91,19 +91,19 @@ b8 platform_system_startup(u64* memory_size, void* memory, platform_state* plat_
 
 void platform_system_shutdown(platform_state* plat_state)
 {
-    if (system_state->hWnd) {
-        DestroyWindow(system_state->hWnd);
-        system_state->hWnd = NULL;
+    if (system_state->wnd) {
+        DestroyWindow(system_state->wnd);
+        system_state->wnd = 0;
     }
 }
 
 b8 platformProcMessages(platform_state* plat_state)
 {
     MSG message;
-    while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
+    while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE)) {
         if (message.message == WM_QUIT) {
             event_context context = {};
-            event_notify(EVENT_CODE_APPLICATION_QUIT, NULL, context);
+            event_notify(EVENT_CODE_APPLICATION_QUIT, 0, context);
             break;
         }
 
@@ -144,7 +144,7 @@ void platformWriteConsoleOutput(char const* message, u8 color)
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD numCharsWritten;
     SetConsoleTextAttribute(handle, charAttributes[color]);
-    WriteConsoleA(handle, message, strlen(message), &numCharsWritten, NULL);
+    WriteConsoleA(handle, message, strlen(message), &numCharsWritten, 0);
 
     OutputDebugStringA(message);
 }
@@ -154,7 +154,7 @@ void platformWriteConsoleError(char const* message, u8 color)
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
     DWORD numCharsWritten;
     SetConsoleTextAttribute(handle, charAttributes[color]);
-    WriteConsoleA(handle, message, strlen(message), (LPDWORD)&numCharsWritten, NULL);
+    WriteConsoleA(handle, message, strlen(message), (LPDWORD)&numCharsWritten, 0);
 
     OutputDebugStringA(message);
 }
@@ -163,7 +163,7 @@ void platformWriteError(char const *message)
 {
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
     DWORD numCharsWritten;
-    WriteConsoleA(handle, message, strlen(message), &numCharsWritten, NULL);
+    WriteConsoleA(handle, message, strlen(message), &numCharsWritten, 0);
 }
 
 f64 platform_get_absolute_time()
@@ -182,25 +182,25 @@ void platformSleep(u64 ms)
     Sleep(ms);
 }
 
-b8 platform_create_vulkan_surface(vulkan_context* context)
+b8 create_vulkan_surface(vulkan_context* context)
 {
     VkWin32SurfaceCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    createInfo.pNext = NULL;
+    createInfo.pNext = 0;
     createInfo.flags = 0;
-    createInfo.hinstance = system_state->hInstance;
-    createInfo.hwnd = system_state->hWnd;
+    createInfo.hinstance = system_state->instance;
+    createInfo.hwnd = system_state->wnd;
     VkResult result = vkCreateWin32SurfaceKHR(context->instance, &createInfo, context->allocator, &context->surface);
-    if (result != VK_SUCCESS) {
-        LOG_ERROR("Failed to create surface");
+    if (result != VK_SUCCESS)
+    {
+        LOG_ERROR("create_vulkan_surface: Failed to create surface");
         return FALSE;
     }
 
-    LOG_DEBUG("Surface created");
     return TRUE;
 }
 
-LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK windowProc(HWND wnd, u32 message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
         case WM_DESTROY:
@@ -208,14 +208,14 @@ LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam
             return 0;
         case WM_SIZE: {
             RECT rect;
-            GetClientRect(hWnd, &rect);
+            GetClientRect(wnd, &rect);
             i32 width = rect.right - rect.left;
             i32 height = rect.bottom - rect.top;
 
             event_context context;
             context.as.i16[0] = width;
             context.as.i16[1] = height;
-            event_notify(EVENT_CODE_RESIZE, NULL, context);
+            event_notify(EVENT_CODE_RESIZE, 0, context);
             return 0;
         }
         case WM_ERASEBKGND:
@@ -301,7 +301,7 @@ LRESULT CALLBACK windowProc(HWND hWnd, u32 message, WPARAM wParam, LPARAM lParam
         }
     }
 
-    return DefWindowProcA(hWnd, message, wParam, lParam);
+    return DefWindowProcA(wnd, message, wParam, lParam);
 }
 
 void setup_clock()

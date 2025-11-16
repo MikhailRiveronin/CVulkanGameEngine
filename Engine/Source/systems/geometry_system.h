@@ -2,30 +2,31 @@
 
 #include "renderer/renderer_types.h"
 
-typedef struct geometry_system_config {
+typedef struct Geometry_System_Config {
     // Max number of geometries that can be loaded at once.
     // NOTE: Should be significantly greater than the number of static meshes because
     // the there can and will be more than one of these per mesh.
     // Take other systems into account as well
     u32 max_geometry_count;
-} geometry_system_config;
+} Geometry_System_Config;
 
-typedef struct geometry_system_configuration {
-    u32 vertex_size_in_bytes;
+typedef struct Geometry_Config
+{
+    u32 vertex_size;
     u32 vertex_count;
     void* vertices;
 
-    u32 index_size_in_bytes;
+    u32 index_size;
     u32 index_count;
     void* indices;
 
     char name[GEOMETRY_MAX_NAME_LENGTH];
-    char material_name[MATERIAL_NAME_MAX_LENGTH];
-} geometry_system_configuration;
+    char material_name[MAX_MATERIAL_NAME_LENGTH];
+} Geometry_Config;
 
 #define DEFAULT_GEOMETRY_NAME "default"
 
-b8 geometry_system_startup(u64* memory_requirement, void* state, geometry_system_config config);
+b8 geometry_system_startup(u64* memory_requirement, void* state, Geometry_System_Config config);
 void geometry_system_shutdown();
 
 /**
@@ -34,7 +35,7 @@ void geometry_system_shutdown();
  * @param id The geometry identifier to acquire by.
  * @return A pointer to the acquired geometry or nullptr if failed.
  */
-geometry_resource* geometry_system_acquire_by_id(u32 id);
+Geometry* geometry_system_acquire_by_id(u32 id);
 
 /**
  * @brief Registers and acquires a new geometry using the given config.
@@ -43,28 +44,28 @@ geometry_resource* geometry_system_acquire_by_id(u32 id);
  * @param auto_release Indicates if the acquired geometry should be unloaded when its reference count reaches 0.
  * @return A pointer to the acquired geometry or nullptr if failed. 
  */
-geometry_resource* geometry_system_acquire_from_config(geometry_system_configuration config, b8 auto_release);
+Geometry* geometry_system_acquire_from_config(geometry_system_configuration config, b8 auto_release);
 
 /**
  * @brief Releases a reference to the provided geometry.
  * 
  * @param geometry The geometry to be released.
  */
-void geometry_system_release(geometry_resource* geometry);
+void geometry_system_release(Geometry* geometry);
 
 /**
  * @brief Obtains a pointer to the default geometry.
  * 
  * @return A pointer to the default geometry. 
  */
-geometry_resource* geometry_system_get_default();
+Geometry* geometry_system_get_default();
 
 /**
  * @brief Obtains a pointer to the default geometry.
  * 
  * @return A pointer to the default geometry. 
  */
-geometry_resource* geometry_system_get_default_2d();
+Geometry* geometry_system_get_default_2d();
 
 /**
  * @brief Generates configuration for plane geometries given the provided parameters.

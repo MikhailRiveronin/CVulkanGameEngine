@@ -1,5 +1,5 @@
 #include "input.h"
-#include "events.h"
+#include "event_system.h"
 #include "logger.h"
 #include "memory_system.h"
 
@@ -48,17 +48,21 @@ void input_update(f64 deltaTime)
 
 b8 input_is_key_down(Key key)
 {
-    if (!system_state) {
+    if (!system_state)
+    {
         return FALSE;
     }
+
     return system_state->keyboard.keys[key] == TRUE;
 }
 
 b8 input_is_key_up(Key key)
 {
-    if (!system_state) {
+    if (!system_state)
+    {
         return TRUE;
     }
+
     return system_state->keyboard.keys[key] == FALSE;
 }
 
@@ -110,18 +114,23 @@ void inputProcessKey(Key key, b8 pressed)
     }
 }
 
-b8 inputIsButtonDown(Button button)
+b8 input_is_button_down(Button button)
 {
-    if (!system_state) {
+    if (!system_state)
+    {
         return FALSE;
     }
+
     return system_state->mouse.buttons[button] == TRUE;
 }
 
-b8 inputIsButtonUp(Button button) {
-    if (!system_state) {
+b8 input_is_button_up(Button button)
+{
+    if (!system_state)
+    {
         return TRUE;
     }
+
     return system_state->mouse.buttons[button] == FALSE;
 }
 

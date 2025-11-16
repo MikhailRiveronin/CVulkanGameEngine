@@ -4,12 +4,12 @@
 #include "core/logger.h"
 #include "systems/memory_system.h"
 #include "core/string_utils.h"
-#include "resources/resource_types.h"
+#include "resources/resources.h"
 #include "systems/resource_system.h"
 
 #include "platform/filesystem.h"
 
-b8 binary_loader_load(struct resource_loader* self, char const* name, resource* out_resource) {
+b8 binary_loader_load(struct Resource_Loader* self, char const* name, Resource* out_resource) {
     if (!self || !name || !out_resource) {
         return FALSE;
     }
@@ -18,7 +18,7 @@ b8 binary_loader_load(struct resource_loader* self, char const* name, resource* 
     char full_file_path[512];
     string_format(full_file_path, format_str, "D:/Projects/CVulkanGameEngine/build/assets", name);
 
-    file_handle f;
+    File_Handle f;
     if (!filesystem_open(full_file_path, ACCESS_MODE_READ, &f)) {
         LOG_ERROR("binary_loader_load - unable to open file for binary reading: '%s'.", full_file_path);
         return FALSE;
@@ -52,18 +52,18 @@ b8 binary_loader_load(struct resource_loader* self, char const* name, resource* 
     return TRUE;
 }
 
-void binary_loader_unload(struct resource_loader* self, resource* resource) {
+void binary_loader_unload(struct Resource_Loader* self, Resource* resource) {
     if (!resource_unload(self, resource, MEMORY_TAG_ARRAY)) {
         LOG_WARNING("binary_loader_unload called with nullptr for self or resource.");
     }
 }
 
-resource_loader binary_loader_create() {
-    resource_loader loader;
+Resource_Loader binary_loader_create() {
+    Resource_Loader loader;
     loader.type = RESOURCE_TYPE_BINARY;
     loader.load = binary_loader_load;
     loader.unload = binary_loader_unload;
-    loader.type_str = "";
+    loader.resource_type_subfolder = "";
 
     return loader;
 }

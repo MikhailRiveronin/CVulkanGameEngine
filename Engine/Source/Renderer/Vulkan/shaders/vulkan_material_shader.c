@@ -275,7 +275,7 @@ void vulkan_material_shader_set_world_matrix(vulkan_context* context, vulkan_mat
     }
 }
 
-void vulkan_material_shader_apply_material(vulkan_context* context, vulkan_material_shader* shader, material_resource* material)
+void vulkan_material_shader_apply_material(vulkan_context* context, vulkan_material_shader* shader, Material* material)
 {
     if (context && shader)
     {
@@ -328,8 +328,8 @@ void vulkan_material_shader_apply_material(vulkan_context* context, vulkan_mater
         VkDescriptorImageInfo image_infos[1];
         for (u32 i = 0; i < max_sampler_count; ++i)
         {
-            texture_use use = shader->sampler_uses[i];
-            texture_resource* texture = 0;
+            Texture_Use use = shader->sampler_uses[i];
+            Texture* texture = 0;
             switch (use)
             {
                 case TEXTURE_USE_MAP_DIFFUSE:
@@ -385,7 +385,7 @@ void vulkan_material_shader_apply_material(vulkan_context* context, vulkan_mater
     }
 }
 
-b8 vulkan_material_shader_acquire_resources(vulkan_context* context, vulkan_material_shader* shader, material_resource* material)
+b8 vulkan_material_shader_acquire_resources(vulkan_context* context, vulkan_material_shader* shader, Material* material)
 {
     material->backend_id = shader->object_ubo_index++;
     vulkan_material_shader_object_state* instance_state = &shader->instance_states[material->backend_id];
@@ -420,7 +420,7 @@ b8 vulkan_material_shader_acquire_resources(vulkan_context* context, vulkan_mate
     return TRUE;
 }
 
-void vulkan_material_shader_release_resources(vulkan_context* context, vulkan_material_shader* shader, material_resource* material)
+void vulkan_material_shader_release_resources(vulkan_context* context, vulkan_material_shader* shader, Material* material)
 {
     vulkan_material_shader_object_state* instance_state = &shader->instance_states[material->backend_id];
 

@@ -6,8 +6,8 @@ b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend
 {
     switch (type) {
         case RENDERER_BACKEND_TYPE_VULKAN:
-            backend->init = vulkan_backend_create;
-            backend->destroy = vulkan_backend_destroy;
+            backend->startup = vulkan_backend_startup;
+            backend->shutdown = vulkan_backend_shutdown;
             backend->begin_frame = vulkan_backend_begin_frame;
             backend->update_global_state = vulkan_backend_update_global_state;
             backend->update_global_ui_state = vulkan_renderer_update_global_ui_state;
@@ -31,8 +31,8 @@ b8 renderer_backend_create(renderer_backend_type type, renderer_backend* backend
 
 void renderer_backend_destroy(renderer_backend* backend)
 {
-    backend->init = 0;
-    backend->destroy = 0;
+    backend->startup = 0;
+    backend->shutdown = 0;
     backend->begin_frame = 0;
     backend->update_global_state = 0;
     backend->end_frame = 0;

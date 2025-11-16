@@ -2,10 +2,10 @@
 
 #include "defines.h"
 
-typedef struct file_handle {
+typedef struct File_Handle {
     void* stream;
     b8 is_valid;
-} file_handle;
+} File_Handle;
 
 typedef enum access_mode {
     ACCESS_MODE_READ = 0x1,
@@ -27,13 +27,13 @@ LIB_API b8 filesystem_exists(char const* path);
  * @param file A pointer to a file_handle structure which holds the handle information
  * @return TRUE if opened successfully; otherwise FALSE
  */
-LIB_API b8 filesystem_open(char const* path, access_mode mode, file_handle* file);
+LIB_API b8 filesystem_open(char const* path, access_mode mode, File_Handle* file);
 
 /**
  * Closes the provided handle to a file
  * @param file A pointer to a file_handle structure which holds the handle to be closed
  */
-LIB_API void filesystem_close(file_handle* file);
+LIB_API void filesystem_close(File_Handle* file);
 
 /**
  * @brief Attempts to read the size of the file to which handle is attached
@@ -42,7 +42,7 @@ LIB_API void filesystem_close(file_handle* file);
  * @param size_in_bytes A pointer to hold the file size.
  * @return TRUE if attempted successfully; otherwise FALSE
  */
-LIB_API b8 filesystem_size(file_handle* file, u64* size_in_bytes);
+LIB_API b8 filesystem_size(File_Handle* file, u64* size_in_bytes);
 
 /**
  * Reads up to a newline or EOF
@@ -52,7 +52,7 @@ LIB_API b8 filesystem_size(file_handle* file, u64* size_in_bytes);
  * @param length A pointer to hold the line length read from the file
  * @return TRUE if successful; otherwise FALSE
  */
-LIB_API b8 filesystem_read_line(file_handle* file, u64 max_length, char** buffer, u64* length);
+LIB_API b8 filesystem_read_line(File_Handle* file, u64 max_length, char** buffer, u64* length);
 
 /**
  * Writes text to the provided file, appending a '\n' afterward
@@ -60,7 +60,7 @@ LIB_API b8 filesystem_read_line(file_handle* file, u64 max_length, char** buffer
  * @param text The text to be written
  * @return TRUE if successful; otherwise FALSE
  */
-LIB_API b8 filesystem_write_line(file_handle* file, char const* line);
+LIB_API b8 filesystem_write_line(File_Handle* file, char const* line);
 
 /**
  * Reads up to size_in_bytes bytes into buffer
@@ -70,7 +70,7 @@ LIB_API b8 filesystem_write_line(file_handle* file, char const* line);
  * @param bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file
  * @return TRUE if successful; otherwise FALSE
  */
-LIB_API b8 filesystem_read(file_handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read);
+LIB_API b8 filesystem_read(File_Handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read);
 
 /** 
  * Reads all bytes of data into buffer
@@ -79,7 +79,7 @@ LIB_API b8 filesystem_read(file_handle* file, u64 size_in_bytes, void* buffer, u
  * @param bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
  * @return TRUE if successful; otherwise FALSE
  */
-LIB_API b8 filesystem_read_all(file_handle* file, void* buffer, u64* bytes_read);
+LIB_API b8 filesystem_read_all(File_Handle* file, void* buffer, u64* bytes_read);
 
 /**
  * Writes provided data to the file
@@ -89,4 +89,4 @@ LIB_API b8 filesystem_read_all(file_handle* file, void* buffer, u64* bytes_read)
  * @param bytes_written A pointer to a number which will be populated with the number of bytes actually written to the file.
  * @return TRUE if successful; otherwise FALSE.
  */
-LIB_API b8 filesystem_write(file_handle* file, u64 size_in_bytes, void const* data, u64* bytes_written);
+LIB_API b8 filesystem_write(File_Handle* file, u64 size_in_bytes, void const* data, u64* bytes_written);

@@ -2,8 +2,8 @@
 
 #include "defines.h"
 #include "systems/memory_system.h"
-#include "resources/resource_types.h"
+#include "resources/resources.h"
 
-struct resource_loader;
+struct Resource_Loader;
 
-b8 resource_unload(struct resource_loader* self, resource* resource, memory_tag tag);
+b8 resource_unload(struct Resource_Loader* self, Resource* resource, memory_tag tag);

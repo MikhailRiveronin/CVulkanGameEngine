@@ -267,7 +267,7 @@ void vulkan_ui_shader_set_model(vulkan_context* context, struct vulkan_ui_shader
     }
 }
 
-void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_shader* shader, material_resource* material) {
+void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_shader* shader, Material* material) {
     if (context && shader) {
         u32 current_image = context->current_image;
         VkCommandBuffer command_buffer = context->command_buffers.data[current_image].handle;
@@ -320,8 +320,8 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
         const u32 sampler_count = 1;
         VkDescriptorImageInfo image_infos[1];
         for (u32 sampler_index = 0; sampler_index < sampler_count; ++sampler_index) {
-            texture_use use = shader->sampler_uses[sampler_index];
-            texture_resource* t = 0;
+            Texture_Use use = shader->sampler_uses[sampler_index];
+            Texture* t = 0;
             switch (use) {
                 case TEXTURE_USE_MAP_DIFFUSE:
                     t = material->diffuse_map.texture;
@@ -379,7 +379,7 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
     }
 }
 
-b8 vulkan_ui_shader_acquire_resources(vulkan_context* context, struct vulkan_ui_shader* shader, material_resource* material) {
+b8 vulkan_ui_shader_acquire_resources(vulkan_context* context, struct vulkan_ui_shader* shader, Material* material) {
     // TODO: free list
     material->backend_id = shader->object_uniform_buffer_index;
     shader->object_uniform_buffer_index++;
@@ -411,7 +411,7 @@ b8 vulkan_ui_shader_acquire_resources(vulkan_context* context, struct vulkan_ui_
     return TRUE;
 }
 
-void vulkan_ui_shader_release_resources(vulkan_context* context, struct vulkan_ui_shader* shader, material_resource* material) {
+void vulkan_ui_shader_release_resources(vulkan_context* context, struct vulkan_ui_shader* shader, Material* material) {
     vulkan_ui_shader_instance_state* instance_state = &shader->instance_states[material->backend_id];
 
     const u32 descriptor_set_count = 3;

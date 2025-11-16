@@ -1,8 +1,8 @@
 #pragma once
 
-#include "vulkan_types.h"
+#include "vulkan_structures.h"
 
-b8 vulkanSwapchainCreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain);
+b8 vulkan_swapchain_create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain);
 b8 vulkan_swapchain_recreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain);
 void vulkanSwapchainDestroy(vulkan_context* context, vulkan_swapchain* swapchain);
 

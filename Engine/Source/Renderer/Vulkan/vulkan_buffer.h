@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defines.h"
-#include "vulkan_types.h"
+#include "vulkan_structures.h"
 
 b8 vulkan_buffer_create(vulkan_context* context, u64 size, VkBufferUsageFlagBits usage, u32 memory_property, b8 bind_on_create, vulkan_buffer* buffer);
 void vulkan_buffer_destroy(vulkan_context* context, vulkan_buffer* buffer);

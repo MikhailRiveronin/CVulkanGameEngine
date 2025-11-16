@@ -38,7 +38,7 @@ static b8 find_supported_format(
     u32 candidate_count,
     VkFormat* format);
 
-b8 vulkanDeviceCreate(vulkan_context* context)
+b8 vulkan_device_create(vulkan_context* context)
 {
     if (!selectPhysicalDevice(context)) {
         return FALSE;

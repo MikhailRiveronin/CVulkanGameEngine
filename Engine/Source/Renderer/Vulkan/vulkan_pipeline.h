@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_types.h"
+#include "vulkan_structures.h"
 
 b8 vulkan_pipeline_create(
     vulkan_context* context,

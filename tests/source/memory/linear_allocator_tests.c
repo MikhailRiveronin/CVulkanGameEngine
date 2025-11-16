@@ -9,14 +9,14 @@ u8 linear_allocator_should_create_and_destroy()
     linear_allocator_create(sizeof(u64), 0, &alloc);
 
     EXPECT_NOT_EQUAL(0, alloc.memory);
-    EXPECT_EQUAL(sizeof(u64), alloc.total_size);
-    EXPECT_EQUAL(0, alloc.allocated);
+    EXPECT_EQUAL(sizeof(u64), alloc.tracked_memory);
+    EXPECT_EQUAL(0, alloc.allocated_memory);
 
     linear_allocator_destroy(&alloc);
 
     EXPECT_EQUAL(0, alloc.memory);
-    EXPECT_EQUAL(0, alloc.total_size);
-    EXPECT_EQUAL(0, alloc.allocated);
+    EXPECT_EQUAL(0, alloc.tracked_memory);
+    EXPECT_EQUAL(0, alloc.allocated_memory);
 
     return TRUE;
 }
@@ -30,7 +30,7 @@ u8 linear_allocator_single_allocation_all_space() {
 
     // Validate it
     EXPECT_NOT_EQUAL(0, block);
-    EXPECT_EQUAL(sizeof(u64), alloc.allocated);
+    EXPECT_EQUAL(sizeof(u64), alloc.allocated_memory);
 
     linear_allocator_destroy(&alloc);
 
@@ -48,7 +48,7 @@ u8 linear_allocator_multi_allocation_all_space() {
         block = linear_allocator_allocate(&alloc, sizeof(u64));
         // Validate it
         EXPECT_NOT_EQUAL(0, block);
-        EXPECT_EQUAL(sizeof(u64) * (i + 1), alloc.allocated);
+        EXPECT_EQUAL(sizeof(u64) * (i + 1), alloc.allocated_memory);
     }
 
     linear_allocator_destroy(&alloc);
@@ -67,7 +67,7 @@ u8 linear_allocator_multi_allocation_over_allocate() {
         block = linear_allocator_allocate(&alloc, sizeof(u64));
         // Validate it
         EXPECT_NOT_EQUAL(0, block);
-        EXPECT_EQUAL(sizeof(u64) * (i + 1), alloc.allocated);
+        EXPECT_EQUAL(sizeof(u64) * (i + 1), alloc.allocated_memory);
     }
 
     LOG_DEBUG("Note: The following error is intentionally caused by this test.");
@@ -76,7 +76,7 @@ u8 linear_allocator_multi_allocation_over_allocate() {
     block = linear_allocator_allocate(&alloc, sizeof(u64));
     // Validate it - allocated should be unchanged.
     EXPECT_EQUAL(0, block);
-    EXPECT_EQUAL(sizeof(u64) * (max_allocs), alloc.allocated);
+    EXPECT_EQUAL(sizeof(u64) * (max_allocs), alloc.allocated_memory);
 
     linear_allocator_destroy(&alloc);
 
@@ -94,12 +94,12 @@ u8 linear_allocator_multi_allocation_all_space_then_free() {
         block = linear_allocator_allocate(&alloc, sizeof(u64));
         // Validate it
         EXPECT_NOT_EQUAL(0, block);
-        EXPECT_EQUAL(sizeof(u64) * (i + 1), alloc.allocated);
+        EXPECT_EQUAL(sizeof(u64) * (i + 1), alloc.allocated_memory);
     }
 
     // Validate that pointer is reset.
     linear_allocator_free_all(&alloc);
-    EXPECT_EQUAL(0, alloc.allocated);
+    EXPECT_EQUAL(0, alloc.allocated_memory);
 
     linear_allocator_destroy(&alloc);
 

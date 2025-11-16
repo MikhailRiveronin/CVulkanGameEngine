@@ -18,7 +18,7 @@ b8 filesystem_exists(char const* path)
 #endif
 }
 
-b8 filesystem_open(char const* path, access_mode mode, file_handle* handle)
+b8 filesystem_open(char const* path, access_mode mode, File_Handle* handle)
 {
     handle->stream = 0;
     handle->is_valid = FALSE;
@@ -50,7 +50,7 @@ b8 filesystem_open(char const* path, access_mode mode, file_handle* handle)
     return TRUE;
 }
 
-void filesystem_close(file_handle* file)
+void filesystem_close(File_Handle* file)
 {
     if (file->stream) {
         fclose((FILE*)file->stream);
@@ -59,7 +59,7 @@ void filesystem_close(file_handle* file)
     }
 }
 
-b8 filesystem_size(file_handle* file, u64* size_in_bytes) {
+b8 filesystem_size(File_Handle* file, u64* size_in_bytes) {
     if (file->stream) {
         fseek((FILE*)file->stream, 0, SEEK_END);
         *size_in_bytes = ftell((FILE*)file->stream);
@@ -70,7 +70,7 @@ b8 filesystem_size(file_handle* file, u64* size_in_bytes) {
     return FALSE;
 }
 
-b8 filesystem_read_line(file_handle* file, u64 max_length, char** buffer, u64* length)
+b8 filesystem_read_line(File_Handle* file, u64 max_length, char** buffer, u64* length)
 {
     if (file->stream && buffer && length && max_length > 0) {
         if (fgets(*buffer, max_length, (FILE*)file->stream) != 0) {
@@ -82,7 +82,7 @@ b8 filesystem_read_line(file_handle* file, u64 max_length, char** buffer, u64* l
     return FALSE;
 }
 
-b8 filesystem_write_line(file_handle* file, char const* line)
+b8 filesystem_write_line(File_Handle* file, char const* line)
 {
     if (file->stream) {
         i32 result = fputs(line, (FILE*)file->stream);
@@ -97,7 +97,7 @@ b8 filesystem_write_line(file_handle* file, char const* line)
     return FALSE;
 }
 
-b8 filesystem_read(file_handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read)
+b8 filesystem_read(File_Handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read)
 {
     if (file->stream && buffer) {
         *bytes_read = fread(buffer, 1, size_in_bytes, (FILE*)file->stream);
@@ -111,7 +111,7 @@ b8 filesystem_read(file_handle* file, u64 size_in_bytes, void* buffer, u64* byte
     return FALSE;
 }
 
-b8 filesystem_read_all(file_handle* file, void* buffer, u64* bytes_read)
+b8 filesystem_read_all(File_Handle* file, void* buffer, u64* bytes_read)
 {
     if (file->stream && buffer && bytes_read) {
         u64 size_in_bytes = 0;
@@ -126,7 +126,7 @@ b8 filesystem_read_all(file_handle* file, void* buffer, u64* bytes_read)
     return FALSE;
 }
 
-b8 filesystem_write(file_handle* file, u64 size_in_bytes, void const* data, u64* bytes_written)
+b8 filesystem_write(File_Handle* file, u64 size_in_bytes, void const* data, u64* bytes_written)
 {
     if (file->stream) {
         *bytes_written = fwrite(data, 1, size_in_bytes, (FILE*)file->stream);

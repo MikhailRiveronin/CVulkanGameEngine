@@ -1,6 +1,6 @@
 #include "vulkan_backend.h"
 
-#include "VulkanPlatform.h"
+#include "vulkan_platform.h"
 #include "vulkan_device.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_renderpass.h"
@@ -25,156 +25,152 @@ static vulkan_context context;
 static u32 cached_framebuffer_width;
 static u32 cached_framebuffer_height;
 
+b8 create_vulkan_surface(vulkan_context* context);
 #ifdef _DEBUG
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    VkDebugUtilsMessengerCallbackDataEXT const* callbackData,
-    void* userData);
+static VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, VkDebugUtilsMessengerCallbackDataEXT const* callback_data, void* user_data);
 #endif
-
-static i32 find_memory_type_index(u32 memoryTypeBits, VkMemoryPropertyFlags properties);
+static i32 find_memory_index(u32 required_types, VkMemoryPropertyFlags required_properties);
 static void createCommandBuffers(renderer_backend* backend);
 static void regenerate_framebuffers();
 static b8 recreate_swapchain(renderer_backend* backend);
 
 static b8 create_buffers(vulkan_context* context);
 
-b8 vulkan_backend_create(renderer_backend* backend, char const* app_name)
+static b8 upload_data_to_device_local_memory(VkCommandPool pool, VkFence fence, VkQueue queue, vulkan_buffer* buffer, u64* offset, u64 size, void const* data);
+
+b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
 {
-    context.allocator = NULL;
-    context.find_memory_type_index = find_memory_type_index;
-    applicationGetFramebufferSize(&cached_framebuffer_width, &cached_framebuffer_height);
-    context.framebuffer_width = cached_framebuffer_width;
-    context.framebuffer_height = cached_framebuffer_height;
+    context.app_name = app_name;
+    context.framebuffer_width = width;
+    context.framebuffer_height = height;
+    context.allocator = 0;
+    context.find_memory_index = find_memory_index;
 
-    VkApplicationInfo appInfo = {};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pNext = NULL;
-    appInfo.pApplicationName = "Application";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_3;
+    VkApplicationInfo app_info = {};
+    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app_info.pNext = 0;
+    app_info.pApplicationName = app_name;
+    app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.pEngineName = "Engine";
+    app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.apiVersion = VK_API_VERSION_1_3;
 
-    DARRAY_DEFINE(char const*, requiredLayers, 0, MEMORY_TAG_STRING);
+    DARRAY_DEFINE(char const*, required_layers, 0, MEMORY_TAG_STRING);
 #ifdef _DEBUG
-    DARRAY_PUSH(requiredLayers, "VK_LAYER_KHRONOS_validation");
-
+    DARRAY_PUSH(required_layers, "VK_LAYER_KHRONOS_validation");
     LOG_DEBUG("Required layers:");
-    for (u32 i = 0; i < requiredLayers.size; ++i) {
-        LOG_DEBUG("    %s", DARRAY_AT(requiredLayers, i));
+    for (u32 i = 0; i < required_layers.size; ++i)
+    {
+        LOG_DEBUG("    %s", DARRAY_AT(required_layers, i));
     }
 #endif
+    u32 layer_property_count;
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_property_count, 0));
+    DARRAY_DEFINE(VkLayerProperties, available_layers, layer_property_count, MEMORY_TAG_RENDERER);
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_property_count, available_layers.data));
+    for (u32 i = 0; i < required_layers.size; ++i)
     {
-        u32 propertyCount;
-        VK_CHECK(vkEnumerateInstanceLayerProperties(&propertyCount, NULL));
-        DARRAY_DEFINE(VkLayerProperties, availableLayers, propertyCount, MEMORY_TAG_RENDERER);
-        VK_CHECK(vkEnumerateInstanceLayerProperties(&propertyCount, availableLayers.data));
-        availableLayers.size = propertyCount;
-
-        for (u32 i = 0; i < requiredLayers.size; ++i) {
-            b8 found = FALSE;
-            for (u32 j = 0; j < availableLayers.size; ++j) {
-                if (string_equal(DARRAY_AT(requiredLayers, i), DARRAY_AT(availableLayers, j).layerName)) {
-                    found = TRUE;
-                    break;
-                }
-            }
-
-            if (!found) {
-                LOG_FATAL("Required validation layer '%s' not found", DARRAY_AT(requiredLayers, i));
-                return FALSE;
+        b8 found = FALSE;
+        for (u32 j = 0; j < available_layers.size; ++j)
+        {
+            if (string_equal(DARRAY_AT(required_layers, i), DARRAY_AT(available_layers, j).layerName))
+            {
+                found = TRUE;
+                break;
             }
         }
-        DARRAY_DESTROY(availableLayers);
+
+        if (!found)
+        {
+            LOG_ERROR("vulkan_backend_startup: %s not found", DARRAY_AT(required_layers, i));
+            return FALSE;
+        }
     }
 
-    DARRAY_CSTRING requiredExtensions;
-    DARRAY_INIT(requiredExtensions, MEMORY_TAG_STRING);
-    DARRAY_PUSH(requiredExtensions, VK_KHR_SURFACE_EXTENSION_NAME);
-    vulkan_platform_get_required_extensions(&requiredExtensions);
-#ifdef _DEBUG
-    DARRAY_PUSH(requiredExtensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    DARRAY_DESTROY(available_layers);
 
+    DARRAY_DEFINE(char const*, required_extensions, 0, MEMORY_TAG_STRING);
+    DARRAY_PUSH(required_extensions, VK_KHR_SURFACE_EXTENSION_NAME);
+#ifdef _WIN32
+    DARRAY_PUSH(required_extensions, VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#endif
+#ifdef _DEBUG
+    DARRAY_PUSH(required_extensions, VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
     LOG_DEBUG("Required extensions:");
-    for (u32 i = 0; i < requiredExtensions.size; ++i) {
-        LOG_DEBUG("    %s", DARRAY_AT(requiredExtensions, i));
-    }
-#endif
+    for (u32 i = 0; i < required_extensions.size; ++i)
     {
-        u32 propertyCount;
-        VK_CHECK(vkEnumerateInstanceExtensionProperties(NULL, &propertyCount, NULL));
-        DARRAY_DEFINE(VkExtensionProperties, availableExtensions, propertyCount, MEMORY_TAG_RENDERER);
-        VK_CHECK(vkEnumerateInstanceExtensionProperties(NULL, &propertyCount, availableExtensions.data));
-        availableExtensions.size = propertyCount;
+        LOG_DEBUG("    %s", DARRAY_AT(required_extensions, i));
+    }
 
-        for (u32 i = 0; i < requiredExtensions.size; ++i) {
-            b8 found = FALSE;
-            for (u32 j = 0; j < availableExtensions.size; ++j) {
-                if (string_equal(DARRAY_AT(requiredExtensions, i), DARRAY_AT(availableExtensions, j).extensionName)) {
-                    found = TRUE;
-                    break;
-                }
-            }
-
-            if (!found) {
-                LOG_FATAL("Required extension '%s' not found", DARRAY_AT(requiredExtensions, i));
-                return FALSE;
+    u32 extension_property_count;
+    VK_CHECK(vkEnumerateInstanceExtensionProperties(0, &extension_property_count, 0));
+    DARRAY_DEFINE(VkExtensionProperties, available_extensions, extension_property_count, MEMORY_TAG_RENDERER);
+    VK_CHECK(vkEnumerateInstanceExtensionProperties(0, &extension_property_count, available_extensions.data));
+    for (u32 i = 0; i < required_extensions.size; ++i)
+    {
+        b8 found = FALSE;
+        for (u32 j = 0; j < available_extensions.size; ++j)
+        {
+            if (string_equal(DARRAY_AT(required_extensions, i), DARRAY_AT(available_extensions, j).extensionName))
+            {
+                found = TRUE;
+                break;
             }
         }
-        DARRAY_DESTROY(availableExtensions);
+
+        if (!found)
+        {
+            LOG_ERROR("vulkan_backend_startup: %s not found", DARRAY_AT(required_extensions, i));
+            return FALSE;
+        }
     }
 
-    VkInstanceCreateInfo instanceCreateInfo = {};
-    instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instanceCreateInfo.pNext = NULL;
-    instanceCreateInfo.pApplicationInfo = &appInfo;
-    instanceCreateInfo.enabledLayerCount = requiredLayers.size;
-    instanceCreateInfo.ppEnabledLayerNames = requiredLayers.data;
-    instanceCreateInfo.enabledExtensionCount = requiredExtensions.size;
-    instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data;
-    VK_CHECK(vkCreateInstance(&instanceCreateInfo, context.allocator, &context.instance));
-    LOG_INFO("Vulkan instance created");
-    DARRAY_DESTROY(requiredLayers);
-    DARRAY_DESTROY(requiredExtensions);
+    DARRAY_DESTROY(available_extensions);
+
+    VkInstanceCreateInfo instance_create_info = {};
+    instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instance_create_info.pNext = 0;
+    instance_create_info.pApplicationInfo = &app_info;
+    instance_create_info.enabledLayerCount = required_layers.size;
+    instance_create_info.ppEnabledLayerNames = required_layers.data;
+    instance_create_info.enabledExtensionCount = required_extensions.size;
+    instance_create_info.ppEnabledExtensionNames = required_extensions.data;
+    VK_CHECK(vkCreateInstance(&instance_create_info, context.allocator, &context.instance));
+
+    DARRAY_DESTROY(required_layers);
+    DARRAY_DESTROY(required_extensions);
 
 #ifdef _DEBUG
-    VkDebugUtilsMessageSeverityFlagsEXT severity =
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-    // severity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
-    VkDebugUtilsMessageTypeFlagsEXT messageType =
-        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
-    // messageType |= VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-
-    VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo = {};
-    debugMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    debugMessengerCreateInfo.pNext = NULL;
-    debugMessengerCreateInfo.flags = 0;
-    debugMessengerCreateInfo.messageSeverity = severity;
-    debugMessengerCreateInfo.messageType = messageType;
-    debugMessengerCreateInfo.pfnUserCallback = debugUtilsMessengerCallback;
-    debugMessengerCreateInfo.pUserData = NULL;
-
-    PFN_vkCreateDebugUtilsMessengerEXT func =
-        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
-    ASSERT_MSG(func, "Failed to load vkCreateDebugUtilsMessengerEXT");
-    VK_CHECK(func(context.instance, &debugMessengerCreateInfo, context.allocator, &context.debugUtilsMessenger));
-    LOG_INFO("Debug messenger created");
+    PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
+    VkDebugUtilsMessageSeverityFlagsEXT severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+    VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    VkDebugUtilsMessengerCreateInfoEXT debug_messenger_create_info = {};
+    debug_messenger_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    debug_messenger_create_info.pNext = 0;
+    debug_messenger_create_info.flags = 0;
+    debug_messenger_create_info.messageSeverity = severity;
+    debug_messenger_create_info.messageType = messageType;
+    debug_messenger_create_info.pfnUserCallback = debug_utils_messenger_callback;
+    debug_messenger_create_info.pUserData = 0;
+    VK_CHECK(func(context.instance, &debug_messenger_create_info, context.allocator, &context.debug_utils_messenger));
 #endif
 
-    if (!platform_create_vulkan_surface(&context)) {
-        LOG_ERROR("Failed to create surface");
+    if (!create_vulkan_surface(&context))
+    {
+        LOG_ERROR("vulkan_backend_startup: Failed to create surface");
         return FALSE;
     }
 
-    if (!vulkanDeviceCreate(&context)) {
-        LOG_ERROR("Failed to create device");
+    if (!vulkan_device_create(&context))
+    {
+        LOG_ERROR("vulkan_backend_startup: Failed to create device");
         return FALSE;
     }
 
-    if (!vulkanSwapchainCreate(&context, context.framebuffer_width, context.framebuffer_height, &context.swapchain)) {
-        LOG_ERROR("Failed to create swapchain");
+    if (!vulkan_swapchain_create(&context, context.framebuffer_width, context.framebuffer_height, &context.swapchain))
+    {
+        LOG_ERROR("vulkan_backend_startup: Failed to create swapchain");
         return FALSE;
     }
 
@@ -212,7 +208,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* app_name)
     for (u32 i = 0; i < context.image_available_semaphors.capacity; ++i) {
         VkSemaphoreCreateInfo semaphoreCreateInfo = {};
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        semaphoreCreateInfo.pNext = NULL;
+        semaphoreCreateInfo.pNext = 0;
         semaphoreCreateInfo.flags = 0;
         VK_CHECK(vkCreateSemaphore(
             context.device.handle,
@@ -255,7 +251,7 @@ b8 vulkan_backend_create(renderer_backend* backend, char const* app_name)
     return TRUE;
 }
 
-void vulkan_backend_destroy(struct renderer_backend* backend)
+void vulkan_backend_shutdown(struct renderer_backend* backend)
 {
     vkDeviceWaitIdle(context.device.handle);
 
@@ -307,7 +303,7 @@ void vulkan_backend_destroy(struct renderer_backend* backend)
             context.instance,
             "vkDestroyDebugUtilsMessengerEXT");
     ASSERT_MSG(func, "Failed to load vkDestroyDebugUtilsMessengerEXT");
-    func(context.instance, context.debugUtilsMessenger, context.allocator);
+    func(context.instance, context.debug_utils_messenger, context.allocator);
 #endif
     vkDestroyInstance(context.instance, context.allocator);
 }
@@ -425,7 +421,7 @@ b8 vulkan_backend_end_frame(struct renderer_backend* backend, f64 deltaTime)
     if (context.images_in_flight[context.current_frame]) {
         VkResult result = vkWaitForFences(context.device.handle, 1, context.images_in_flight[context.current_image], VK_TRUE, UINT64_MAX);
         if (!vulkan_result_is_success(result)) {
-            LOG_FATAL("vkWaitForFences: %s", vulkan_result_string(result, TRUE));
+            LOG_ERROR("vkWaitForFences: %s", vulkan_result_string(result, TRUE));
         }
     }
 
@@ -436,7 +432,7 @@ b8 vulkan_backend_end_frame(struct renderer_backend* backend, f64 deltaTime)
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.pNext = NULL;
+    submitInfo.pNext = 0;
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &context.image_available_semaphors.data[context.current_frame];
 
@@ -479,7 +475,7 @@ void vulkan_backend_draw_geometry(geometry_render_data data)
     vulkan_geometry_buffer_data* buffer_data = &context.geometries[data.geometry->internal_id];
     vulkan_command_buffer* command_buffer = &context.command_buffers.data[context.current_frame];
 
-    material_resource* m = 0;
+    Material* m = 0;
     if (data.geometry->material)
     {
         m = data.geometry->material;
@@ -522,7 +518,7 @@ void vulkan_backend_draw_geometry(geometry_render_data data)
     }
 }
 
-void vulkan_backend_create_texture(u8 const* pixels, texture_resource* texture)
+void vulkan_backend_create_texture(u8 const* pixels, Texture* texture)
 {
     texture->internal = memory_allocate(sizeof(vulkan_texture_resource), MEMORY_TAG_TEXTURE);
     vulkan_texture_resource* data = texture->internal;
@@ -603,7 +599,7 @@ void vulkan_backend_create_texture(u8 const* pixels, texture_resource* texture)
     texture->generation++;
 }
 
-void vulkan_backend_destroy_texture(texture_resource* texture)
+void vulkan_backend_destroy_texture(Texture* texture)
 {
     vkDeviceWaitIdle(context.device.handle);
 
@@ -621,7 +617,7 @@ void vulkan_backend_destroy_texture(texture_resource* texture)
     memory_zero(texture, sizeof(*texture));
 }
 
-b8 vulkan_backend_create_material(material_resource* material)
+b8 vulkan_backend_create_material(Material* material)
 {
     if (material) {
         switch (material->type) {
@@ -651,7 +647,7 @@ b8 vulkan_backend_create_material(material_resource* material)
 
 }
 
-void vulkan_backend_destroy_material(material_resource* material)
+void vulkan_backend_destroy_material(Material* material)
 {
     if (material) {
         if (material->backend_id != INVALID_ID) {
@@ -674,7 +670,7 @@ void vulkan_backend_destroy_material(material_resource* material)
     }
 }
 
-b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size_in_bytes, u32 vertex_count, void const* vertices, u32 index_size_in_bytes, u32 index_count, u32 const* indices)
+b8 vulkan_backend_create_geometry(Geometry* geometry, u32 vertex_size_in_bytes, u32 vertex_count, void const* vertices, u32 index_size_in_bytes, u32 index_count, u32 const* indices)
 {
     if (vertex_count == 0 || !vertices)
     {
@@ -713,7 +709,7 @@ b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size_i
 
     if (!internal_data)
     {
-        LOG_FATAL("vulkan_backend_create_geometry: Failed to find a free index for a new geometry upload");
+        LOG_ERROR("vulkan_backend_create_geometry: Failed to find a free index for a new geometry upload");
         return FALSE;
     }
 
@@ -763,7 +759,7 @@ b8 vulkan_backend_create_geometry(geometry_resource* geometry, u32 vertex_size_i
     return TRUE;
 }
 
-void vulkan_backend_destroy_geometry(geometry_resource* geometry)
+void vulkan_backend_destroy_geometry(Geometry* geometry)
 {
     if (geometry && geometry->internal_id != INVALID_ID)
     {
@@ -850,39 +846,40 @@ b8 vulkan_backend_end_renderpass(renderer_backend* backend, u8 renderpass_id)
 }
 
 #ifdef _DEBUG
-VkBool32 debugUtilsMessengerCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    VkDebugUtilsMessengerCallbackDataEXT const* callbackData,
-    void* userData)
+VkBool32 debug_utils_messenger_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, VkDebugUtilsMessengerCallbackDataEXT const* callback_data, void* user_data)
 {
-    switch (messageSeverity) {
+    switch (messageSeverity)
+    {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            LOG_ERROR("%s", callbackData->pMessage);
+            LOG_ERROR("%s", callback_data->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            LOG_WARNING("%s", callbackData->pMessage);
+            LOG_WARNING("%s", callback_data->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            LOG_INFO("%s", callbackData->pMessage);
+            LOG_INFO("%s", callback_data->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            LOG_TRACE("%s", callbackData->pMessage);
+            LOG_TRACE("%s", callback_data->pMessage);
             break;
     }
+
     return VK_FALSE;
 }
 #endif
 
-i32 find_memory_type_index(u32 memoryTypeBits, VkMemoryPropertyFlags properties)
+i32 find_memory_index(u32 required_types, VkMemoryPropertyFlags required_properties)
 {
-    VkPhysicalDeviceMemoryProperties memoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(context.device.physical_device, &memoryProperties);
-    for (u32 i = 0; i < memoryProperties.memoryTypeCount; ++i) {
-        if ((memoryTypeBits & (1 << i)) && ((memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)) {
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(context.device.physical_device, &memory_properties);
+    for (u32 i = 0; i < memory_properties.memoryTypeCount; ++i)
+    {
+        if ((required_types & (1 << i)) && ((memory_properties.memoryTypes[i].propertyFlags & required_properties) == required_properties))
+        {
             return i;
         }
     }
+
     return -1;
 }
 
@@ -1026,4 +1023,9 @@ b8 create_buffers(vulkan_context* context)
     context->geometry_index_offset = 0;
 
     return TRUE;
+}
+
+b8 upload_data_to_device_local_memory(VkCommandPool pool, VkFence fence, VkQueue queue, vulkan_buffer* buffer, u64* offset, u64 size, void const* data)
+{
+    
 }

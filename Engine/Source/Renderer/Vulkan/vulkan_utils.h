@@ -1,6 +1,7 @@
 #pragma once
 
-#include "vulkan_types.h"
+#include "defines.h"
+#include "vulkan_structures.h"
 
 /**
  * Returns the string representation of result.

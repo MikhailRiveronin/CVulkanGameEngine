@@ -3,7 +3,7 @@
 #include "core/logger.h"
 #include "core/string_utils.h"
 
-b8 resource_unload(struct resource_loader* self, resource* resource, memory_tag tag)
+b8 resource_unload(struct Resource_Loader* self, Resource* resource, memory_tag tag)
 {
     if (!self || !resource) {
         LOG_WARNING("resource_unload called with nullptr for self or resource.");

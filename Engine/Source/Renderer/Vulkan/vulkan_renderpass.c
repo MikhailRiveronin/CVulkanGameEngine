@@ -1,25 +1,13 @@
 #include "vulkan_renderpass.h"
 #include "systems/memory_system.h"
 
-void vulkan_renderpass_create(
-    vulkan_context* context,
-    vulkan_renderpass* renderpass,
-    vec4 render_area,
-    vec4 clear_color,
-    f32 depth,
-    u32 stencil,
-    renderpass_clear_flag clear_flags,
-    b8 has_prev_pass,
-    b8 has_next_pass)
+void vulkan_renderpass_create(vulkan_context const* const context, vec4s render_area, vec4s clear_color, f32 clear_depth, u32 clear_stencil, u8 clear_flags, b8 has_prev_pass, b8 has_next_pass, vulkan_renderpass* const renderpass)
 {
+    renderpass->clear_values.color = clear_color;
+    renderpass->clear_values.depth = clear_depth;
+    renderpass->clear_values.stencil = clear_stencil;
+    renderpass->render_area = render_area;
     renderpass->clear_flags = clear_flags;
-    glm_vec4_copy(render_area, renderpass->render_area);
-    glm_vec4_copy(clear_color, renderpass->clear_colour);
-    renderpass->has_prev_pass = has_prev_pass;
-    renderpass->has_next_pass = has_next_pass;
-
-    renderpass->depth = depth;
-    renderpass->stencil = stencil;
 
     VkSubpassDescription subpass;
     subpass.flags = 0;
@@ -130,14 +118,14 @@ void vulkan_renderpass_begin(
     memory_zero(clear_values, sizeof(*clear_values));
     b8 do_clear_colour = renderpass->clear_flags & RENDERPASS_CLEAR_COLOUR_BUFFER_FLAG;
     if (do_clear_colour) {
-        memory_copy(clear_values[begin_info.clearValueCount].color.float32, renderpass->clear_colour, sizeof(f32) * 4);
+        memory_copy(clear_values[begin_info.clearValueCount].color.float32, renderpass->clear_color, sizeof(f32) * 4);
         begin_info.clearValueCount++;
     }
 
     b8 do_clear_depth = renderpass->clear_flags & RENDERPASS_CLEAR_DEPTH_BUFFER_FLAG;
     if (do_clear_depth) {
-        memory_copy(clear_values[begin_info.clearValueCount].color.float32, renderpass->clear_colour, sizeof(f32) * 4);
-        clear_values[begin_info.clearValueCount].depthStencil.depth = renderpass->depth;
+        memory_copy(clear_values[begin_info.clearValueCount].color.float32, renderpass->clear_color, sizeof(f32) * 4);
+        clear_values[begin_info.clearValueCount].depthStencil.depth = renderpass->clear_depth;
 
         b8 do_clear_stencil = (renderpass->clear_flags & RENDERPASS_CLEAR_STENCIL_BUFFER_FLAG) != 0;
         clear_values[begin_info.clearValueCount].depthStencil.stencil = do_clear_stencil ? renderpass->stencil : 0;

@@ -147,7 +147,7 @@ b8 create_shader_module(
     char filename[512];
     string_format(filename, "assets/shaders/%s.%s.spv", name, stage_str);
 
-    resource binary_resource;
+    Resource binary_resource;
     if (!resource_system_load(filename, RESOURCE_TYPE_BINARY, &binary_resource)) {
         LOG_ERROR("create_shader_module: Failed to load shader module '%s'", filename);
         return FALSE;

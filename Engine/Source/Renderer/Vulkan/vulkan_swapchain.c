@@ -6,7 +6,7 @@
 static b8 create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain);
 static void destroy(vulkan_context* context, vulkan_swapchain* swapchain);
 
-b8 vulkanSwapchainCreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain)
+b8 vulkan_swapchain_create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain)
 {
     return create(context, width, height, swapchain);
 }

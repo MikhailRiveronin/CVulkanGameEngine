@@ -55,7 +55,8 @@
 #define DARRAY_DEFINE(type, array, count, memoryTag) \
     DARRAY(type) array;                              \
     DARRAY_INIT(array, memoryTag);                   \
-    DARRAY_EXPAND(array, count)
+    DARRAY_EXPAND(array, count);                     \
+    (array).size = count;
 
 #define DARRAY_RESERVE(array, count, memoryTag) \
     DARRAY_INIT(array, memoryTag);              \

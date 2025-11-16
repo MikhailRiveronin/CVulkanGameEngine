@@ -5,14 +5,21 @@
 
 typedef struct game_instance
 {
-    b8 (* init)(struct game_instance* game);
-    b8 (* update)(struct game_instance* game, f64 deltaTime);
-    b8 (* render)(struct game_instance* game, f64 deltaTime);
-    void (* resize)(struct game_instance* game, u32 width, u32 height);
-    
-    // Game-specific state
-    void* state;
+    struct
+    {
+        i16 x;
+        i16 y;
+        i16 width;
+        i16 height;
+        char* name;
+    } application_config;
 
-    void* app_state;
-    application_config app_config;
+    b8 (* init)(struct game_instance* game);
+    b8 (* on_update)(struct game_instance* game, f64 deltaTime);
+    b8 (* on_render)(struct game_instance* game, f64 deltaTime);
+    void (* on_resize)(struct game_instance* game, u32 width, u32 height);
+
+    u64 required_memory;
+    void* internal;
+    void* application_block;
 } game_instance;

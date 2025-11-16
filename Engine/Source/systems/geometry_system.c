@@ -9,15 +9,15 @@
 
 typedef struct geometry_reference {
     u64 reference_count;
-    geometry_resource geometry;
+    Geometry geometry;
     b8 auto_release;
 } geometry_reference;
 
 typedef struct geometry_system_state {
-    geometry_system_config config;
+    Geometry_System_Config config;
 
-    geometry_resource default_geometry;
-    geometry_resource default_2d_geometry;
+    Geometry default_geometry;
+    Geometry default_2d_geometry;
 
     // Array of registered meshes.
     geometry_reference* geometry_references;
@@ -26,10 +26,10 @@ typedef struct geometry_system_state {
 static geometry_system_state* system_state;
 
 static b8 create_default_geometries(geometry_system_state* state);
-static b8 create_geometry(geometry_system_configuration config, geometry_resource* geometry);
-static void destroy_geometry(geometry_resource* geometry);
+static b8 create_geometry(geometry_system_configuration config, Geometry* geometry);
+static void destroy_geometry(Geometry* geometry);
 
-b8 geometry_system_startup(u64* required_memory_size_in_bytes, void* memory, geometry_system_config config)
+b8 geometry_system_startup(u64* required_memory_size_in_bytes, void* memory, Geometry_System_Config config)
 {
     if (config.max_geometry_count == 0) {
         LOG_FATAL("geometry_system_startup: config.max_geometry_count must be > 0");
@@ -64,7 +64,7 @@ void geometry_system_shutdown()
 {
 }
 
-geometry_resource* geometry_system_acquire_by_id(u32 id)
+Geometry* geometry_system_acquire_by_id(u32 id)
 {
     if (id != INVALID_ID && system_state->geometry_references[id].geometry.id != INVALID_ID) {
         system_state->geometry_references[id].reference_count++;
@@ -75,7 +75,7 @@ geometry_resource* geometry_system_acquire_by_id(u32 id)
     return 0;
 }
 
-geometry_resource* geometry_system_acquire_from_config(geometry_system_configuration config, b8 auto_release)
+Geometry* geometry_system_acquire_from_config(geometry_system_configuration config, b8 auto_release)
 {
     for (u32 i = 0; i < system_state->config.max_geometry_count; ++i) {
         if (system_state->geometry_references[i].geometry.id == INVALID_ID) {
@@ -83,7 +83,7 @@ geometry_resource* geometry_system_acquire_from_config(geometry_system_configura
             system_state->geometry_references[i].reference_count = 1;
             system_state->geometry_references[i].auto_release = auto_release;
 
-            geometry_resource* geometry = &system_state->geometry_references[i].geometry;
+            Geometry* geometry = &system_state->geometry_references[i].geometry;
             if (!create_geometry(config, geometry)) {
                 LOG_ERROR("geometry_system_acquire_from_config: Failed to create geometry. Returning NULL...");
                 return 0;
@@ -97,7 +97,7 @@ geometry_resource* geometry_system_acquire_from_config(geometry_system_configura
     return 0;
 }
 
-void geometry_system_release(geometry_resource* geometry)
+void geometry_system_release(Geometry* geometry)
 {
     if (geometry && geometry->id != INVALID_ID) {
         geometry_reference* ref = &system_state->geometry_references[geometry->id];
@@ -114,7 +114,7 @@ void geometry_system_release(geometry_resource* geometry)
     LOG_WARNING("geometry_system_release: Invalid geometry id");
 }
 
-geometry_resource* geometry_system_get_default()
+Geometry* geometry_system_get_default()
 {
     if (system_state) {
         return &system_state->default_geometry;
@@ -124,7 +124,7 @@ geometry_resource* geometry_system_get_default()
     return 0;
 }
 
-geometry_resource* geometry_system_get_default_2d()
+Geometry* geometry_system_get_default_2d()
 {
     if (system_state) {
         return &system_state->default_2d_geometry;
@@ -134,7 +134,7 @@ geometry_resource* geometry_system_get_default_2d()
     return 0;
 }
 
-b8 create_geometry(geometry_system_configuration config, geometry_resource* geometry)
+b8 create_geometry(geometry_system_configuration config, Geometry* geometry)
 {
     if (!renderer_frontend_create_geometry(geometry, config.vertex_size_in_bytes, config.vertex_count, config.vertices, config.index_size_in_bytes, config.index_count, config.indices)) {
         system_state->geometry_references[geometry->id].reference_count = 0;
@@ -155,7 +155,7 @@ b8 create_geometry(geometry_system_configuration config, geometry_resource* geom
     return TRUE;
 }
 
-void destroy_geometry(geometry_resource* geometry)
+void destroy_geometry(Geometry* geometry)
 {
     renderer_frontend_destroy_geometry(geometry);
     geometry->id = INVALID_ID;
@@ -176,27 +176,27 @@ b8 create_default_geometries(geometry_system_state* state)
     memory_zero(verts, _countof(verts) * sizeof(verts[0]));
     const f32 f = 10.0f;
 
-    verts[0].position[0] = -0.5 * f;
-    verts[0].position[1] = -0.5 * f;
-    verts[0].position[2] = 0.f;
+    verts[0].pos[0] = -0.5 * f;
+    verts[0].pos[1] = -0.5 * f;
+    verts[0].pos[2] = 0.f;
     verts[0].tex_coord[0] = 0.0f;
     verts[0].tex_coord[1] = 0.0f;
 
-    verts[1].position[0] = 0.5 * f;
-    verts[1].position[1] = 0.5 * f;
-    verts[1].position[2] = 0.f;
+    verts[1].pos[0] = 0.5 * f;
+    verts[1].pos[1] = 0.5 * f;
+    verts[1].pos[2] = 0.f;
     verts[1].tex_coord[0] = 1.0f;
     verts[1].tex_coord[1] = 1.0f;
 
-    verts[2].position[0] = -0.5 * f;
-    verts[2].position[1] = 0.5 * f;
-    verts[2].position[2] = 0.f;
+    verts[2].pos[0] = -0.5 * f;
+    verts[2].pos[1] = 0.5 * f;
+    verts[2].pos[2] = 0.f;
     verts[2].tex_coord[0] = 0.0f;
     verts[2].tex_coord[1] = 1.0f;
 
-    verts[3].position[0] = 0.5 * f;
-    verts[3].position[1] = -0.5 * f;
-    verts[3].position[2] = 0.f;
+    verts[3].pos[0] = 0.5 * f;
+    verts[3].pos[1] = -0.5 * f;
+    verts[3].pos[2] = 0.f;
     verts[3].tex_coord[0] = 1.0f;
     verts[3].tex_coord[1] = 0.0f;
 
@@ -211,23 +211,23 @@ b8 create_default_geometries(geometry_system_state* state)
 
     vertex_2d verts_2d[4];
     memory_zero(verts_2d, _countof(verts_2d) * sizeof(verts_2d[0]));
-    verts_2d[0].position[0] = -0.5 * f;
-    verts_2d[0].position[1] = -0.5 * f;
+    verts_2d[0].pos[0] = -0.5 * f;
+    verts_2d[0].pos[1] = -0.5 * f;
     verts_2d[0].tex_coord[0] = 0.0f;
     verts_2d[0].tex_coord[1] = 0.0f;
 
-    verts_2d[1].position[0] = 0.5 * f;
-    verts_2d[1].position[1] = 0.5 * f;
+    verts_2d[1].pos[0] = 0.5 * f;
+    verts_2d[1].pos[1] = 0.5 * f;
     verts_2d[1].tex_coord[0] = 1.0f;
     verts_2d[1].tex_coord[1] = 1.0f;
 
-    verts_2d[2].position[0] = -0.5 * f;
-    verts_2d[2].position[1] = 0.5 * f;
+    verts_2d[2].pos[0] = -0.5 * f;
+    verts_2d[2].pos[1] = 0.5 * f;
     verts_2d[2].tex_coord[0] = 0.0f;
     verts_2d[2].tex_coord[1] = 1.0f;
 
-    verts_2d[3].position[0] = 0.5 * f;
-    verts_2d[3].position[1] = -0.5 * f;
+    verts_2d[3].pos[0] = 0.5 * f;
+    verts_2d[3].pos[1] = -0.5 * f;
     verts_2d[3].tex_coord[0] = 1.0f;
     verts_2d[3].tex_coord[1] = 0.0f;
 
@@ -243,14 +243,14 @@ b8 create_default_geometries(geometry_system_state* state)
     return TRUE;
 }
 
-geometry_system_configuration geometry_system_generate_plane_config(f32 width, f32 height, u32 x_segment_count, u32 y_segment_count, f32 tile_x, f32 tile_y, char const* name, char const* material_name)
+Geometry_Config geometry_system_generate_plane_config(f32 width, f32 height, u32 x_segment_count, u32 y_segment_count, f32 tile_x, f32 tile_y, char const* name, char const* material_name)
 {
-    geometry_system_configuration config;
-    config.vertex_size_in_bytes = sizeof(vertex_3d);
+    Geometry_Config config;
+    config.vertex_size = sizeof(vertex_3d);
     config.vertex_count = x_segment_count * y_segment_count * 4;  // 4 verts per segment
     config.vertices = memory_allocate(sizeof(vertex_3d) * config.vertex_count, MEMORY_TAG_ARRAY);
     config.index_count = x_segment_count * y_segment_count * 6;  // 6 indices per segment
-    config.index_size_in_bytes = sizeof(u32);
+    config.index_size = sizeof(u32);
     config.indices = memory_allocate(sizeof(u32) * config.index_count, MEMORY_TAG_ARRAY);
 
     // TODO: This generates extra vertices, but we can always deduplicate them later.
@@ -276,23 +276,23 @@ geometry_system_configuration geometry_system_generate_plane_config(f32 width, f
             vertex_3d* v2 = &((vertex_3d*)config.vertices)[v_offset + 2];
             vertex_3d* v3 = &((vertex_3d*)config.vertices)[v_offset + 3];
 
-            v0->position[0] = min_x;
-            v0->position[1] = min_y;
+            v0->pos[0] = min_x;
+            v0->pos[1] = min_y;
             v0->tex_coord[0] = min_uvx;
             v0->tex_coord[1] = min_uvy;
 
-            v1->position[0] = max_x;
-            v1->position[1] = max_y;
+            v1->pos[0] = max_x;
+            v1->pos[1] = max_y;
             v1->tex_coord[0] = max_uvx;
             v1->tex_coord[1] = max_uvy;
 
-            v2->position[0] = min_x;
-            v2->position[1] = max_y;
+            v2->pos[0] = min_x;
+            v2->pos[1] = max_y;
             v2->tex_coord[0] = min_uvx;
             v2->tex_coord[1] = max_uvy;
 
-            v3->position[0] = max_x;
-            v3->position[1] = min_y;
+            v3->pos[0] = max_x;
+            v3->pos[1] = min_y;
             v3->tex_coord[0] = max_uvx;
             v3->tex_coord[1] = min_uvy;
 
@@ -314,9 +314,9 @@ geometry_system_configuration geometry_system_generate_plane_config(f32 width, f
     }
 
     if (material_name && string_length(material_name) > 0) {
-        string_ncopy(config.material_name, material_name, MATERIAL_NAME_MAX_LENGTH);
+        string_ncopy(config.material_name, material_name, MAX_MATERIAL_NAME_LENGTH);
     } else {
-        string_ncopy(config.material_name, DEFAULT_MATERIAL_NAME, MATERIAL_NAME_MAX_LENGTH);
+        string_ncopy(config.material_name, DEFAULT_MATERIAL_NAME, MAX_MATERIAL_NAME_LENGTH);
     }
 
     return config;

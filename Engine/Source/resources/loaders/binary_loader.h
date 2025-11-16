@@ -2,4 +2,4 @@
 
 #include "systems/resource_system.h"
 
-resource_loader binary_loader_create();
+Resource_Loader binary_loader_create();

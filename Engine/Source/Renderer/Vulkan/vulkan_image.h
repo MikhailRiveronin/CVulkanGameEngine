@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_types.h"
+#include "vulkan_structures.h"
 
 void vulkan_image_create(vulkan_context* context, VkImageType imageType, u32 width, u32 height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, b32 createView, VkImageAspectFlags aspectFlags, vulkan_image* image);
 

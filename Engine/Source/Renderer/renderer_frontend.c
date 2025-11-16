@@ -4,7 +4,7 @@
 #include "core/logger.h"
 #include "systems/memory_system.h"
 #include "core/string_utils.h"
-#include "core/events.h"
+#include "systems/event_system.h"
 #include "math/math_types.h"
 #include "systems/texture_system.h"
 #include "systems/material_system.h"
@@ -38,7 +38,7 @@ b8 renderer_system_startup(u64* memory_size, void* memory, char const* app_name)
 
     renderer_backend_create(RENDERER_BACKEND_TYPE_VULKAN, &system_state->backend);
 
-    if (!system_state->backend.init(&system_state->backend, app_name)) {
+    if (!system_state->backend.startup(&system_state->backend, app_name)) {
         LOG_FATAL("Failed to initialize renderer system_state->backend. Shutting down");
         return FALSE;
     }
@@ -64,7 +64,7 @@ b8 renderer_system_startup(u64* memory_size, void* memory, char const* app_name)
 void renderer_system_shutdown()
 {
     if (system_state) {
-        system_state->backend.destroy(&system_state->backend);
+        system_state->backend.shutdown(&system_state->backend);
         system_state = 0;
     }
 }
@@ -148,37 +148,37 @@ b8 rendererEndFrame(float deltaTime)
     return result;
 }
 
-void renderer_frontend_create_texture(u8 const* pixels, texture_resource* texture)
+void renderer_frontend_create_texture(u8 const* pixels, Texture* texture)
 {
     system_state->backend.create_texture(pixels, texture);
 }
 
-void renderer_frontend_destroy_texture(texture_resource* texture)
+void renderer_frontend_destroy_texture(Texture* texture)
 {
     system_state->backend.destroy_texture(texture);
 }
 
-void renderer_frontend_set_view(mat4 view)
+void renderer_frontend_set_view(mat4s view)
 {
     glm_mat4_copy(view, system_state->view);
 }
 
-b8 renderer_frontend_create_material(material_resource* material)
+b8 renderer_frontend_create_material(Material* material)
 {
     return system_state->backend.create_material(material);
 }
 
-void renderer_frontend_destroy_material(material_resource* material)
+void renderer_frontend_destroy_material(Material* material)
 {
     system_state->backend.destroy_material(material);
 }
 
-b8 renderer_frontend_create_geometry(geometry_resource* geometry, u32 vertex_size_in_bytes, u32 vertex_count, void const* vertices, u32 index_size_in_bytes, u32 index_count, u32 const* indices)
+b8 renderer_frontend_create_geometry(Geometry* geometry, u32 vertex_size_in_bytes, u32 vertex_count, void const* vertices, u32 index_size_in_bytes, u32 index_count, u32 const* indices)
 {
     return system_state->backend.create_geometry(geometry, vertex_size_in_bytes, vertex_count, vertices, index_size_in_bytes, index_count, indices);
 }
 
-void renderer_frontend_destroy_geometry(geometry_resource* geometry)
+void renderer_frontend_destroy_geometry(Geometry* geometry)
 {
     system_state->backend.destroy_geometry(geometry);
 }

@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "third_party/cglm/cglm.h"
-#include "resources/resource_types.h"
+#include "resources/resources.h"
 
 typedef enum renderer_backend_type {
     RENDERER_BACKEND_TYPE_VULKAN,
@@ -26,18 +26,18 @@ typedef struct material_uniform_data {
 
 typedef struct geometry_render_data {
     mat4 world;
-    geometry_resource* geometry;
+    Geometry* geometry;
 } geometry_render_data;
 
 struct platform_state;
-struct texture_resource;
+struct Texture;
 
 typedef struct renderer_backend {
     struct platform_state* plat_state;
     u64 frameCount;
 
-    b8 (* init)(struct renderer_backend* backend, char const* appName);
-    void (* destroy)(struct renderer_backend* backend);
+    b8 (* startup)(struct renderer_backend* backend, char const* appName);
+    void (* shutdown)(struct renderer_backend* backend);
 
     b8 (* begin_frame)(struct renderer_backend* backend, f64 delta_time);
     b8 (* end_frame)(struct renderer_backend* backend, f64 delta_time);
@@ -48,24 +48,24 @@ typedef struct renderer_backend {
     void (* update_global_ui_state)(mat4 proj, mat4 view, i32 mode);
     void (* draw_geometry)(geometry_render_data render_data);
 
-    void (* create_texture)(u8 const* pixels, texture_resource* texture);
-    void (* destroy_texture)(texture_resource* texture);
+    void (* create_texture)(u8 const* pixels, Texture* texture);
+    void (* destroy_texture)(Texture* texture);
 
     b8 (*begin_renderpass)(struct renderer_backend* backend, u8 renderpass_id);
     b8 (*end_renderpass)(struct renderer_backend* backend, u8 renderpass_id);
 
-    b8 (* create_material)(material_resource* material);
-    void (* destroy_material)(material_resource* material);
+    b8 (* create_material)(Material* material);
+    void (* destroy_material)(Material* material);
 
     b8 (* create_geometry)(
-        geometry_resource* geometry,
+        Geometry* geometry,
         u32 vertex_size_in_bytes,
         u32 vertex_count,
         void const* vertices,
         u32 index_size_in_bytes,
         u32 index_count,
         u32 const* indices);
-    void (* destroy_geometry)(geometry_resource* geometry);
+    void (* destroy_geometry)(Geometry* geometry);
 } renderer_backend;
 
 typedef struct render_packet {

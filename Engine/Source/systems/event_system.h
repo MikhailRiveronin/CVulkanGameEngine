@@ -59,7 +59,7 @@ typedef enum SystemEventCode {
      */
     EVENT_CODE_MOUSE_MOVED = 0x06,
 
-    // Mouse moved.
+    // Mouse wheel.
     /* Context usage:
      * u8 z_delta = data.data.u8[0];
      */

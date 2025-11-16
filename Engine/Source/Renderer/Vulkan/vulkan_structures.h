@@ -8,14 +8,7 @@
 
 #include <vulkan/vulkan.h>
 
-#define VK_CHECK(expr)                                                    \
-    do {                                                                  \
-        if (expr != VK_SUCCESS) {                                         \
-            LOG_ERROR("%s(%u): %s", __FILE__, __LINE__, "Vulkan failed"); \
-            ASSERT(FALSE);                                                \
-        }                                                                 \
-    }                                                                     \
-    while (0)
+
 
 
 
@@ -204,17 +197,16 @@ typedef enum vulkan_renderpass_state
 
 typedef struct vulkan_renderpass
 {
+    struct
+    {
+        vec4s color;
+        f32 depth;
+        u32 stencil;
+    } clear_values;
+
     VkRenderPass handle;
-    vec4 render_area;
-    vec4 clear_colour;
-
-    f32 depth;
-    u32 stencil;
-
+    vec4s render_area;
     u8 clear_flags;
-    b8 has_prev_pass;
-    b8 has_next_pass;
-
     vulkan_renderpass_state state;
 } vulkan_renderpass;
 
@@ -280,7 +272,7 @@ typedef struct vulkan_material_shader
 
     u32 object_ubo_index;
 
-    texture_use sampler_uses[VULKAN_MATERIAL_SHADER_SAMPLER_COUNT];
+    Texture_Use sampler_uses[VULKAN_MATERIAL_SHADER_SAMPLER_COUNT];
 
     vulkan_material_shader_object_state instance_states[VULKAN_MAX_MATERIAL_COUNT];
 
@@ -327,7 +319,7 @@ typedef struct vulkan_ui_shader
     // TODO: manage a free list of some kind here instead.
     u32 object_uniform_buffer_index;
 
-    texture_use sampler_uses[VULKAN_UI_SHADER_SAMPLER_COUNT];
+    Texture_Use sampler_uses[VULKAN_UI_SHADER_SAMPLER_COUNT];
 
     // TODO: make dynamic
     vulkan_ui_shader_instance_state instance_states[VULKAN_MAX_UI_COUNT];
@@ -354,10 +346,20 @@ typedef struct vulkan_command_buffer
 
 typedef struct vulkan_context
 {
+    char const* app_name;
+    u32 framebuffer_width;
+    u32 framebuffer_height;
+
+    VkAllocationCallbacks* allocator;
+    VkInstance instance;
+
+
+    i32 (*find_memory_index)(u32 required_types, VkMemoryPropertyFlags required_properties);
+
+
+
     f32 frame_delta_time;
 
-    i16 framebuffer_width;
-    i16 framebuffer_height;
     u64 framebuffer_generation;
     u64 framebuffer_last_generation;
 
@@ -381,10 +383,8 @@ typedef struct vulkan_context
     vulkan_renderpass main_renderpass;
     vulkan_renderpass ui_renderpass;
 
-    VkInstance instance;
-    VkAllocationCallbacks* allocator;
 #ifdef _DEBUG
-    VkDebugUtilsMessengerEXT debugUtilsMessenger;
+    VkDebugUtilsMessengerEXT debug_utils_messenger;
 #endif
     VkSurfaceKHR surface;
     vulkan_device device;
@@ -395,7 +395,7 @@ typedef struct vulkan_context
     // Framebuffers used for world rendering, one per frame
     VkFramebuffer world_framebuffers[3];
 
-    i32 (* find_memory_type_index)(u32 memoryTypeBits, VkMemoryPropertyFlags properties);
+
 
     vulkan_geometry_buffer_data geometries[VULKAN_MAX_GEOMETRY_COUNT];
 } vulkan_context;

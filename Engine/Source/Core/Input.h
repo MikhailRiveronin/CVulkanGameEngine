@@ -4,7 +4,8 @@
 
 #define DEFINE_KEY(name, code) KEY_##name = code
 
-typedef enum Key {
+typedef enum Key
+{
     DEFINE_KEY(BACKSPACE, 0x08),
     DEFINE_KEY(ENTER, 0x0D),
     DEFINE_KEY(TAB, 0x09),
@@ -154,8 +155,8 @@ LIB_API b8 input_was_key_up(Key key);
 
 void inputProcessKey(Key key, b8 pressed);
 
-LIB_API b8 inputIsButtonDown(Button button);
-LIB_API b8 inputIsButtonUp(Button button);
+LIB_API b8 input_is_button_down(Button button);
+LIB_API b8 input_is_button_up(Button button);
 LIB_API b8 inputWasButtonyDown(Button button);
 LIB_API b8 inputWasButtonyUp(Button button);
 void inputGetMousePosition(i16* x, i16* y);
