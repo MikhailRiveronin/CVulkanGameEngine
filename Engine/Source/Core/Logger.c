@@ -1,5 +1,5 @@
 #include "logger.h"
-#include "Platform/Platform.h"
+#include "platform/platform.h"
 
 // TODO: Temporary solution.
 #include <stdio.h>
@@ -14,30 +14,29 @@ static char const* level_strings[] = {
     "[DEBUG]:   ",
     "[TRACE]:   " };
 
-typedef struct logging_system_state {
+typedef struct logger_system_state {
     b8 initialized;
-} logging_system_state;
+} logger_system_state;
+static logger_system_state* system_state;
 
-static logging_system_state* state;
-
-b8 logger_init(u64* required_memory_size, void* memory)
+b8 logger_system_startup(u64* required_memory, void* memory)
 {
-    *required_memory_size = sizeof(*state);
+    *required_memory = sizeof(*system_state);
     if (!memory) {
         return TRUE;
     }
 
-    state = memory;
-    state->initialized = TRUE;
+    system_state = memory;
+    system_state->initialized = TRUE;
 
     // TODO: Create log file.
     return TRUE;
 }
 
-void logger_destroy(void* memory)
+void logger_system_shutdown(void* memory)
 {
+    system_state = 0;
     // TODO: Write to log file.
-    state = 0;
 }
 
 void logOutput(LogLevel level, char const* message, ...)

@@ -19,17 +19,19 @@ typedef enum LogLevel {
 } LogLevel;
 
 /**
- * @brief Initializes logging system. Call twice; once with state = 0 to get required memory size,
+ * @brief Initializes logging system.
+ * Call twice;
+ * once with state = 0 to get required memory size,
  * then a second time passing allocated memory to state.
  * 
- * @param required_memory_size A pointer to hold the required memory size of internal state.
+ * @param memory_size A pointer to hold the required memory size of internal state.
  * @param memory 0 if just requesting memory requirement, otherwise allocated block of memory.
  * @return b8 True on success; otherwise false.
  */
-b8 logger_init(u64* required_memory_size, void* memory);
-void logger_destroy(void* memory);
+b8 logger_system_startup(u64* required_memory, void* memory);
+void logger_system_shutdown(void* memory);
 
-API void logOutput(LogLevel level, char const* message, ...);
+LIB_API void logOutput(LogLevel level, char const* message, ...);
 
 #define LOG_FATAL(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__)
 #define LOG_ERROR(message, ...) logOutput(LOG_LEVEL_ERROR, message, ##__VA_ARGS__)

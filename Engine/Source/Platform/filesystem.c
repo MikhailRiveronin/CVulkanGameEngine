@@ -1,125 +1,142 @@
 #include "filesystem.h"
 
-#include "Core/logger.h"
-#include "Core/memory.h"
+#include "core/logger.h"
+#include "systems/memory_system.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
-b8 filesystem_exists(const char* path)
+b8 filesystem_exists(char const* path)
 {
+#ifdef _MSC_VER
+    struct _stat buffer;
+    return _stat(path, &buffer);
+#else
     struct stat buffer;
     return stat(path, &buffer) == 0;
+#endif
 }
 
-b8 filesystem_open(const char* path, file_modes mode, b8 binary, file_handle* out_handle)
+b8 filesystem_open(char const* path, access_mode mode, File_Handle* handle)
 {
-    out_handle->is_valid = FALSE;
-    out_handle->handle = 0;
-    const char* mode_str;
+    handle->stream = 0;
+    handle->is_valid = FALSE;
+    char const* mode_str;
 
-    if ((mode & FILE_MODE_READ) != 0 && (mode & FILE_MODE_WRITE) != 0) {
-        mode_str = binary ? "w+b" : "w+";
-    } else if ((mode & FILE_MODE_READ) != 0 && (mode & FILE_MODE_WRITE) == 0) {
-        mode_str = binary ? "rb" : "r";
-    } else if ((mode & FILE_MODE_READ) == 0 && (mode & FILE_MODE_WRITE) != 0) {
-        mode_str = binary ? "wb" : "w";
+    b8 r = mode & ACCESS_MODE_READ;
+    b8 w = mode & ACCESS_MODE_WRITE;
+    b8 b = mode & ACCESS_MODE_BINARY;
+
+    if (r && w) {
+        mode_str = b ? "w+b" : "w+";
+    } else if (r && !w) {
+        mode_str = b ? "rb" : "r";
+    } else if (!r && w) {
+        mode_str = b ? "wb" : "w";
     } else {
-        LOG_ERROR("Invalid mode passed while trying to open file: '%s'", path);
+        LOG_ERROR("filesystem_open: Invalid access mode required to open '%s'", path);
         return FALSE;
     }
 
-    // Attempt to open the file.
     FILE* file = fopen(path, mode_str);
-    if (!file) {
-        LOG_ERROR("Error opening file: '%s'", path);
+    if (!handle) {
+        LOG_ERROR("filesystem_open: Failed to open file '%s'", path);
         return FALSE;
     }
 
-    out_handle->handle = file;
-    out_handle->is_valid = TRUE;
-
+    handle->stream = handle;
+    handle->is_valid = TRUE;
     return TRUE;
 }
 
-void filesystem_close(file_handle* handle)
+void filesystem_close(File_Handle* file)
 {
-    if (handle->handle) {
-        fclose((FILE*)handle->handle);
-        handle->handle = 0;
-        handle->is_valid = FALSE;
+    if (file->stream) {
+        fclose((FILE*)file->stream);
+        file->stream = 0;
+        file->is_valid = FALSE;
     }
 }
 
-b8 filesystem_read_line(file_handle* handle, char** line_buf)
+b8 filesystem_size(File_Handle* file, u64* size_in_bytes) {
+    if (file->stream) {
+        fseek((FILE*)file->stream, 0, SEEK_END);
+        *size_in_bytes = ftell((FILE*)file->stream);
+        rewind((FILE*)file->stream);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+b8 filesystem_read_line(File_Handle* file, u64 max_length, char** buffer, u64* length)
 {
-    if (handle->handle) {
-        // Since we are reading a single line, it should be safe to assume this is enough characters.
-        char buffer[32000];
-        if (fgets(buffer, 32000, (FILE*)handle->handle) != 0) {
-            u64 length = strlen(buffer);
-            *line_buf = memory_allocate((sizeof(char) * length) + 1, MEMORY_TAG_STRING);
-            strcpy(*line_buf, buffer);
+    if (file->stream && buffer && length && max_length > 0) {
+        if (fgets(*buffer, max_length, (FILE*)file->stream) != 0) {
+            *length = strlen(*buffer);
             return TRUE;
         }
     }
+
     return FALSE;
 }
 
-b8 filesystem_write_line(file_handle* handle, const char* text)
+b8 filesystem_write_line(File_Handle* file, char const* line)
 {
-    if (handle->handle) {
-        i32 result = fputs(text, (FILE*)handle->handle);
+    if (file->stream) {
+        i32 result = fputs(line, (FILE*)file->stream);
         if (result != EOF) {
-            result = fputc('\n', (FILE*)handle->handle);
+            result = fputc('\n', (FILE*)file->stream);
         }
 
-        // Make sure to flush the stream so it is written to the file immediately.
-        // This prevents data loss in the event of a crash.
-        fflush((FILE*)handle->handle);
+        fflush((FILE*)file->stream);
         return result != EOF;
     }
+
     return FALSE;
 }
 
-b8 filesystem_read(file_handle* handle, u64 data_size, void* out_data, u64* out_bytes_read)
+b8 filesystem_read(File_Handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read)
 {
-    if (handle->handle && out_data) {
-        *out_bytes_read = fread(out_data, 1, data_size, (FILE*)handle->handle);
-        if (*out_bytes_read != data_size) {
+    if (file->stream && buffer) {
+        *bytes_read = fread(buffer, 1, size_in_bytes, (FILE*)file->stream);
+        if (*bytes_read != size_in_bytes) {
             return FALSE;
         }
+
         return TRUE;
     }
+
     return FALSE;
 }
 
-b8 filesystem_read_all_bytes(file_handle* handle, u8** out_bytes, u64* out_bytes_read) {
-    if (handle->handle) {
-        // File size
-        fseek((FILE*)handle->handle, 0, SEEK_END);
-        u64 size = ftell((FILE*)handle->handle);
-        rewind((FILE*)handle->handle);
-
-        *out_bytes = memory_allocate(sizeof(u8) * size, MEMORY_TAG_STRING);
-        *out_bytes_read = fread(*out_bytes, 1, size, (FILE*)handle->handle);
-        if (*out_bytes_read != size) {
+b8 filesystem_read_all(File_Handle* file, void* buffer, u64* bytes_read)
+{
+    if (file->stream && buffer && bytes_read) {
+        u64 size_in_bytes = 0;
+        if(!filesystem_size(file, &size_in_bytes)) {
             return FALSE;
         }
-        return TRUE;
+
+        *bytes_read = fread(buffer, 1, size_in_bytes, (FILE*)file->stream);
+        return *bytes_read == size_in_bytes;
     }
+
     return FALSE;
 }
 
-b8 filesystem_write(file_handle* handle, u64 data_size, const void* data, u64* out_bytes_written) {
-    if (handle->handle) {
-        *out_bytes_written = fwrite(data, 1, data_size, (FILE*)handle->handle);
-        if (*out_bytes_written != data_size) {
+b8 filesystem_write(File_Handle* file, u64 size_in_bytes, void const* data, u64* bytes_written)
+{
+    if (file->stream) {
+        *bytes_written = fwrite(data, 1, size_in_bytes, (FILE*)file->stream);
+        if (*bytes_written != size_in_bytes) {
             return FALSE;
         }
-        fflush((FILE*)handle->handle);
+
+        fflush((FILE*)file->stream);
         return TRUE;
     }
+
     return FALSE;
 }

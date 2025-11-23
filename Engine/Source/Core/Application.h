@@ -1,18 +1,9 @@
 #pragma once
 
 #include "defines.h"
+#include "game_types.h"
 
-struct Game;
-
-typedef struct ApplicationConfig {
-    i32 x;
-    i32 y;
-    i32 width;
-    i32 height;
-    char* name;
-} ApplicationConfig;
-
-API b8 application_init(struct Game* game);
-API b8 applicationRun(void);
+LIB_API b8 application_init(game_instance* instance);
+LIB_API b8 application_run(void);
 
 void applicationGetFramebufferSize(u32* width, u32* height);

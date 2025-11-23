@@ -1,23 +1,29 @@
 #pragma once
 
 #include "defines.h"
-#include "Containers/darray.h"
+#include "containers/darray.h"
 
-typedef struct PlatformState {
+typedef struct platform_state {
     void* specific;
-} PlatformState;
+} platform_state;
 
-b8 platformInit(PlatformState* platformState, char const* appName, i32 x, i32 y, i32 width, i32 height);
-void platformDestroy(PlatformState* platformState);
+b8 platform_system_startup(
+    u64* memory_size,
+    void* memory,
+    platform_state* plat_state,
+    char const* appName,
+    i32 x, i32 y,
+    i32 width, i32 height);
+void platform_system_shutdown(platform_state* plat_state);
 
-b8 platformProcMessages(PlatformState* platformState);
+b8 platformProcMessages(platform_state* plat_state);
 
-void* platformAllocate(u64 size, b8 aligned);
-void platformFree(void* ptr, b8 aligned);
+void* platform_allocate(u64 size, b8 aligned);
+void platform_free(void* ptr, b8 aligned);
 
-void* platformSetMemory(void* dest, i32 value, u64 size);
+void* platform_set_memory(void* dest, i32 value, u64 size);
 void* platform_zero_memory(void* dest, u64 size);
-void* platformCopyMemory(void* dest, void const* src, u64 size);
+void* platform_copy_memory(void* dest, void const* src, u64 size);
 
 void platformWriteConsoleOutput(char const* message, u8 color);
 void platformWriteConsoleError(char const* message, u8 color);

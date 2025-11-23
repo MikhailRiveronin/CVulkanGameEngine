@@ -1,9 +1,9 @@
 #include "test_manager.h"
 
-#include <Containers/darray.h>
-#include <Core/logger.h>
-#include <Core/String.h>
-#include <Core/clock.h>
+#include <containers/darray.h>
+#include <core/logger.h>
+#include <core/string_utils.h>
+#include <core/clock.h>
 
 typedef struct test_entry {
     PFN_test func;
@@ -54,7 +54,7 @@ void test_manager_run_tests()
         char status[20];
         string_format(status, failed ? "*** %d FAILED ***" : "SUCCESS", failed);
         clock_update(&total_time);
-        LOG_INFO("Executed %d of %d (skipped %d) %s (%.6f sec / %.6f sec total",
+        LOG_INFO("Executed %d of %d (skipped %d) %s (%.6f sec / %.6f sec total)",
             i + 1, count, skipped, status, test_time.elapsed, total_time.elapsed);
     }
 

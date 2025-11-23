@@ -1,33 +1,30 @@
 #pragma once
 
-#include "defines.h"
-#include "game_types.h"
-#include "Core/Application.h"
+#include "core/application.h"
 #include "core/logger.h"
+#include "game_types.h"
 
 #include <stdlib.h>
 
-extern b8 createGameState(Game* game);
+extern b8 create_game_instance(game_instance* game);
 
 int main(void)
 {
-    Game game = {};
-    if (!createGameState(&game)) {
-        LOG_FATAL("Failed to create game state");
+    game_instance instance = {};
+    if (!create_game_instance(&instance))
+    {
+        LOG_FATAL("main: Failed to create game instance");
         return EXIT_FAILURE;
     }
 
-    if (!game.onInit || !game.onUpdate || !game.onRender || !game.onResize) {
-        LOG_FATAL("Game function pointers must be assigned");
+    if (!application_initialize(&instance))
+    {
+        LOG_FATAL("main: Failed to initialize application");
         return EXIT_FAILURE;
     }
 
-    if (!application_init(&game)) {
-        LOG_FATAL("Failed to init application");
-        return EXIT_FAILURE;
-    }
-
-    if (!applicationRun()) {
+    if (!application_run())
+    {
         LOG_FATAL("Application destroyed incorrectly");
         return EXIT_FAILURE;
     }

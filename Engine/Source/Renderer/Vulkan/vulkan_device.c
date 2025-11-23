@@ -1,8 +1,8 @@
 #include "vulkan_device.h"
-#include "Containers/darray.h"
+#include "containers/darray.h"
 #include "core/logger.h"
-#include "Core/memory.h"
-#include "Core/String.h"
+#include "systems/memory_system.h"
+#include "core/string_utils.h"
 
 typedef struct PhysicalDeviceRequirements {
     DARRAY_CSTRING deviceExtensionNames;
@@ -30,9 +30,15 @@ static b8 physicalDeviceMeetsRequirements(
     PhysicalDeviceRequirements const* requirements,
     PhysicalDeviceQueueFamilyInfo* queueFamilyInfo,
     VulkanSwapchainSupportInfo* swapchainSupportInfo);
+static b8 find_supported_format(
+    VkPhysicalDevice physical_device,
+    VkImageTiling tiling,
+    VkFormatFeatureFlags format_features,
+    VkFormat const* candidates,
+    u32 candidate_count,
+    VkFormat* format);
 
-
-b8 vulkanDeviceCreate(vulkan_context* context)
+b8 vulkan_device_create(vulkan_context* context)
 {
     if (!selectPhysicalDevice(context)) {
         return FALSE;
@@ -64,7 +70,7 @@ b8 vulkanDeviceCreate(vulkan_context* context)
     }
 
     DARRAY_DEFINE(VkDeviceQueueCreateInfo, queueCreateInfos, indexCount, MEMORY_TAG_RENDERER);
-    f32 queuePriority = 1.0f;
+    f32 queuePriority = 1.f;
     for (u8 i = 0; i < indexCount; ++i) {
         VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -120,7 +126,7 @@ b8 vulkanDeviceCreate(vulkan_context* context)
         context->device.handle,
         &commandPoolcreateInfo,
         context->allocator,
-        &context->device.graphicsCommandPool));
+        &context->device.graphics_command_pool));
     LOG_INFO("Graphics command pool obtained");
 
     return TRUE;
@@ -128,7 +134,7 @@ b8 vulkanDeviceCreate(vulkan_context* context)
 
 void vulkanDeviceDestroy(vulkan_context* context)
 {
-    vkDestroyCommandPool(context->device.handle, context->device.graphicsCommandPool, context->allocator);
+    vkDestroyCommandPool(context->device.handle, context->device.graphics_command_pool, context->allocator);
 
     context->device.queues.graphics.index = -1;
     context->device.queues.compute.index = -1;
@@ -193,24 +199,20 @@ void vulkan_device_query_swapchain_support(
 
 b8 vulkan_device_detect_depth_format(vulkan_device* device)
 {
-    VkFormat candidates[3] = {
-        VK_FORMAT_D32_SFLOAT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
-        VK_FORMAT_D24_UNORM_S8_UINT };
+    VkFormat candidates[] = { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+    VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+    VkFormatFeatureFlags format_features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    u32 flags = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    for (u64 i = 0; i < _countof(candidates); ++i) {
-        VkFormatProperties properties;
-        vkGetPhysicalDeviceFormatProperties(device->physical_device, candidates[i], &properties);
-        if ((properties.linearTilingFeatures & flags) == flags) {
-            device->depthFormat = candidates[i];
-            return TRUE;
-        }
-        else if ((properties.optimalTilingFeatures & flags) == flags) {
-            device->depthFormat = candidates[i];
-            return TRUE;
-        }
+    VkFormat format;
+    if (find_supported_format(
+        device->physical_device, tiling,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        candidates, _countof(candidates), &format)) {
+        device->depthFormat = format;
+        return TRUE;
     }
+
+    LOG_FATAL("vulkan_device_detect_depth_format: Failed to find a format for depth buffer");
     return FALSE;
 }
 
@@ -405,7 +407,7 @@ b8 physicalDeviceMeetsRequirements(
                 for (u32 i = 0; i < requirements->deviceExtensionNames.size; ++i) {
                     b8 found = FALSE;
                     for (u32 j = 0; j < availableExtensions.size; ++j) {
-                        if (stringEqual(
+                        if (string_equal(
                                 DARRAY_AT(requirements->deviceExtensionNames, i),
                                 DARRAY_AT(availableExtensions, j).extensionName)) {
                             found = TRUE;
@@ -431,5 +433,31 @@ b8 physicalDeviceMeetsRequirements(
         }
         return TRUE;
     }
+    return FALSE;
+}
+
+b8 find_supported_format(
+    VkPhysicalDevice physical_device,
+    VkImageTiling tiling,
+    VkFormatFeatureFlags format_features,
+    VkFormat const* candidates,
+    u32 candidate_count,
+    VkFormat* format)
+{
+    for (u32 i = 0; i < candidate_count; ++i) {
+        VkFormatProperties properties;
+        vkGetPhysicalDeviceFormatProperties(physical_device, candidates[i], &properties);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & format_features == format_features)) {
+            *format = candidates[i];
+            return TRUE;
+        }
+
+        if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & format_features == format_features)) {
+            *format = candidates[i];
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }

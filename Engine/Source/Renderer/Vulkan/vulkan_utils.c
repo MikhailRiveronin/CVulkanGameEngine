@@ -1,5 +1,9 @@
 #include "vulkan_utils.h"
 
+#include "core/logger.h"
+#include "systems/memory_system.h"
+#include "systems/resource_system.h"
+
 char const* vulkan_result_string(VkResult result, b8 get_extended)
 {
     // From: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkResult.html
@@ -130,4 +134,41 @@ b8 vulkan_result_is_success(VkResult result)
         case VK_ERROR_UNKNOWN:
             return FALSE;
     }
+}
+
+b8 create_shader_module(
+    vulkan_context* context,
+    char const* name,
+    char const* stage_str,
+    VkShaderStageFlagBits stage_type,
+    u32 stage_index,
+    vulkan_shader_stage* stages)
+{
+    char filename[512];
+    string_format(filename, "assets/shaders/%s.%s.spv", name, stage_str);
+
+    Resource binary_resource;
+    if (!resource_system_load(filename, RESOURCE_TYPE_BINARY, &binary_resource)) {
+        LOG_ERROR("create_shader_module: Failed to load shader module '%s'", filename);
+        return FALSE;
+    }
+
+    stages[stage_index].module.create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    stages[stage_index].module.create_info.pNext = 0;
+    stages[stage_index].module.create_info.flags = 0;
+    stages[stage_index].module.create_info.codeSize = binary_resource.data_size;
+    stages[stage_index].module.create_info.pCode = (u32*)binary_resource.data;
+    VK_CHECK(vkCreateShaderModule(context->device.handle, &stages[stage_index].module.create_info, context->allocator, &stages[stage_index].module.handle));
+
+    resource_system_unload(&binary_resource);
+
+    stages[stage_index].create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stages[stage_index].create_info.pNext = 0;
+    stages[stage_index].create_info.flags = 0;
+    stages[stage_index].create_info.stage = stage_type;
+    stages[stage_index].create_info.module = stages[stage_index].module.handle;
+    stages[stage_index].create_info.pName = "main";
+    stages[stage_index].create_info.pSpecializationInfo = 0;
+
+    return TRUE;
 }

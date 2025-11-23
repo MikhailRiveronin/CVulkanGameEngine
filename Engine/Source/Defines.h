@@ -19,11 +19,12 @@ typedef u32 b32;
 #define TRUE 1
 #define FALSE 0
 
-// Library API.
+#define INVALID_ID 4294967295u
+
 #ifdef EXPORT
-#define API __declspec(dllexport)
+#define LIB_API __declspec(dllexport)
 #else
-#define API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 
 #define MAX(a, b) ((a) > (b)) ? (a) : (b)
@@ -37,3 +38,28 @@ typedef u32 b32;
 #define KINLINE static inline
 #define KNOINLINE
 #endif
+
+/** @brief Gets the number of bytes from amount of gibibytes (GiB) (1024 * 1024 * 1024) */
+#define GIBIBYTES(amount) amount * 1024 * 1024 * 1024
+/** @brief Gets the number of bytes from amount of mebibytes (MiB) (1024 * 1024) */
+#define MEBIBYTES(amount) amount * 1024 * 1024
+/** @brief Gets the number of bytes from amount of kibibytes (KiB) (1024) */
+#define KIBIBYTES(amount) amount * 1024
+
+/** @brief Gets the number of bytes from amount of gigabytes (GB) (1000 * 1000 * 1000) */
+#define GIGABYTES(amount) amount * 1000 * 1000 * 1000
+/** @brief Gets the number of bytes from amount of megabytes (MB) (1000 * 1000) */
+#define MEGABYTES(amount) amount * 1000 * 1000
+/** @brief Gets the number of bytes from amount of kilobytes (KB) (1000) */
+#define KILOBYTES(amount) amount * 1000
+
+#define VK_CHECK(expr)                                                    \
+    do                                                                    \
+    {                                                                     \
+        if (expr != VK_SUCCESS)                                           \
+        {                                                                 \
+            LOG_ERROR("%s(%u): %s", __FILE__, __LINE__, "Vulkan failed"); \
+            ASSERT(FALSE);                                                \
+        }                                                                 \
+    }                                                                     \
+    while (0)

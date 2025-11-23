@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan_types.inl"
+#include "vulkan_structures.h"
 
 void vulkanCommandBufferAllocate(
     vulkan_context* context,

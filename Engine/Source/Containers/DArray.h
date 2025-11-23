@@ -1,8 +1,8 @@
 #pragma once
 
 #include "defines.h"
-#include "Core/Asserts.h"
-#include "Core/memory.h"
+#include "core/asserts.h"
+#include "systems/memory_system.h"
 
 #define DARRAY_MIN_CAPACITY 1
 #define DARRAY_EXPAND_FACTOR 2
@@ -12,14 +12,14 @@
         u64 capacity;     \
         u64 size;         \
         type* data;       \
-        MemoryTag memory; \
+        memory_tag memory; \
     }
 
 #define DARRAY_INIT(array, memoryTag)                                                            \
     do {                                                                                         \
-        (array).data = memory_allocate(DARRAY_MIN_CAPACITY * sizeof(*(array).data), (memoryTag)); \
+        (array).data = memory_system_allocate(DARRAY_MIN_CAPACITY * sizeof(*(array).data), (memoryTag)); \
         if ((array).data) {                                                                      \
-            memory_zero((array).data, DARRAY_MIN_CAPACITY * sizeof(*(array).data));               \
+            memory_system_zero((array).data, DARRAY_MIN_CAPACITY * sizeof(*(array).data));               \
             (array).capacity = DARRAY_MIN_CAPACITY;                                              \
             (array).size = 0;                                                                    \
             (array).memory = (memoryTag);                                                        \
@@ -37,11 +37,11 @@
     do {                                                                                            \
         u64 newCapacity = MAX(count, DARRAY_MIN_CAPACITY);                                          \
         if (newCapacity != DARRAY_MIN_CAPACITY) {                                                   \
-            void* newData = memory_allocate(newCapacity * sizeof(*(array).data), (array).memory);    \
+            void* newData = memory_system_allocate(newCapacity * sizeof(*(array).data), (array).memory);    \
             if (newData) {                                                                          \
-                memory_zero(newData, newCapacity * sizeof(*(array).data));                           \
-                memory_copy(newData, (array).data, (array).size * sizeof(*(array).data));            \
-                memory_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
+                memory_system_zero(newData, newCapacity * sizeof(*(array).data));                           \
+                memory_system_copy(newData, (array).data, (array).size * sizeof(*(array).data));            \
+                memory_system_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
                 (array).data = newData;                                                             \
                 (array).capacity = newCapacity;                                                     \
             }                                                                                       \
@@ -55,7 +55,8 @@
 #define DARRAY_DEFINE(type, array, count, memoryTag) \
     DARRAY(type) array;                              \
     DARRAY_INIT(array, memoryTag);                   \
-    DARRAY_EXPAND(array, count)
+    DARRAY_EXPAND(array, count);                     \
+    (array).size = count;
 
 #define DARRAY_RESERVE(array, count, memoryTag) \
     DARRAY_INIT(array, memoryTag);              \
@@ -64,7 +65,7 @@
 #define DARRAY_DESTROY(array)                                                                   \
     do {                                                                                        \
         if ((array).data) {                                                                     \
-            memory_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
+            memory_system_free((array).data, (array).capacity * sizeof(*(array).data), (array).memory); \
             (array).data = NULL;                                                                \
         }                                                                                       \
         (array).capacity = 0;                                                                   \
@@ -101,7 +102,7 @@
                 DARRAY_EXPAND((array), (array).capacity * DARRAY_EXPAND_FACTOR);                                      \
             }                                                                                                         \
             if (pos != (array).size - 1) {                                                                            \
-                memory_copy((array).data + pos + 1, (array).data + pos, ((array).size - pos) * sizeof(*(array).data)); \
+                memory_system_copy((array).data + pos + 1, (array).data + pos, ((array).size - pos) * sizeof(*(array).data)); \
             }                                                                                                         \
             (array).data[(array).size++] = __VA_ARGS__;                                                               \
         }                                                                                                             \
@@ -116,7 +117,7 @@
         if ((array).size > 0 && pos >= 0 && pos < (array).size) {                                                         \
             (value) = (array).data[pos];                                                                                  \
             if (pos != (array).size - 1) {                                                                                \
-                memory_copy((array).data + pos, (array).data + pos + 1, ((array).size - pos - 1) * sizeof(*(array).data)); \
+                memory_system_copy((array).data + pos, (array).data + pos + 1, ((array).size - pos - 1) * sizeof(*(array).data)); \
             }                                                                                                             \
             (array).size--;                                                                                               \
         }                                                                                                                 \

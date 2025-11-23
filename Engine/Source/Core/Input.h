@@ -4,7 +4,8 @@
 
 #define DEFINE_KEY(name, code) KEY_##name = code
 
-typedef enum Key {
+typedef enum Key
+{
     DEFINE_KEY(BACKSPACE, 0x08),
     DEFINE_KEY(ENTER, 0x0D),
     DEFINE_KEY(TAB, 0x09),
@@ -142,22 +143,22 @@ typedef enum Button {
     BUTTON_ENUM_COUNT
 } Button;
 
-void inputInit();
-void inputDestroy();
+b8 input_system_startup(u64* memory_size, void* memory);
+void input_system_shutdown(void* memory);
 
-void inputUpdate(f64 deltaTime);
+void input_update(f64 deltaTime);
 
-API b8 input_is_key_down(Key key);
-API b8 input_is_key_up(Key key);
-API b8 input_was_key_down(Key key);
-API b8 input_was_key_up(Key key);
+LIB_API b8 input_is_key_down(Key key);
+LIB_API b8 input_is_key_up(Key key);
+LIB_API b8 input_was_key_down(Key key);
+LIB_API b8 input_was_key_up(Key key);
 
 void inputProcessKey(Key key, b8 pressed);
 
-API b8 inputIsButtonDown(Button button);
-API b8 inputIsButtonUp(Button button);
-API b8 inputWasButtonyDown(Button button);
-API b8 inputWasButtonyUp(Button button);
+LIB_API b8 input_is_button_down(Button button);
+LIB_API b8 input_is_button_up(Button button);
+LIB_API b8 inputWasButtonyDown(Button button);
+LIB_API b8 inputWasButtonyUp(Button button);
 void inputGetMousePosition(i16* x, i16* y);
 void inputGetPreviousMousePosition(i16* x, i16* y);
 

@@ -2,84 +2,91 @@
 
 #include "defines.h"
 
-// Holds a handle to a file.
-typedef struct file_handle {
-    // Opaque handle to internal file handle.
-    void* handle;
+typedef struct File_Handle {
+    void* stream;
     b8 is_valid;
-} file_handle;
+} File_Handle;
 
-typedef enum file_modes {
-    FILE_MODE_READ = 0x1,
-    FILE_MODE_WRITE = 0x2
-} file_modes;
+typedef enum access_mode {
+    ACCESS_MODE_READ = 0x1,
+    ACCESS_MODE_WRITE = 0x2,
+    ACCESS_MODE_BINARY = 0x4
+} access_mode;
 
 /**
- * Checks if a file with the given path exists.
- * @param path The path of the file to be checked.
- * @returns True if exists; otherwise false.
+ * Checks if a file with the given path exists
+ * @param path The path of the file to be checked
+ * @return TRUE if exists; otherwise FALSE
  */
-API b8 filesystem_exists(char const* path);
+LIB_API b8 filesystem_exists(char const* path);
+
+/**
+ * Attempt to open file located at path
+ * @param path The path of the file to be opened
+ * @param mode Mode flags for the file when opened (read/write). See file_modes enum in filesystem.h
+ * @param file A pointer to a file_handle structure which holds the handle information
+ * @return TRUE if opened successfully; otherwise FALSE
+ */
+LIB_API b8 filesystem_open(char const* path, access_mode mode, File_Handle* file);
+
+/**
+ * Closes the provided handle to a file
+ * @param file A pointer to a file_handle structure which holds the handle to be closed
+ */
+LIB_API void filesystem_close(File_Handle* file);
+
+/**
+ * @brief Attempts to read the size of the file to which handle is attached
+ * 
+ * @param file A pointer to a file_handle structure
+ * @param size_in_bytes A pointer to hold the file size.
+ * @return TRUE if attempted successfully; otherwise FALSE
+ */
+LIB_API b8 filesystem_size(File_Handle* file, u64* size_in_bytes);
+
+/**
+ * Reads up to a newline or EOF
+ * @param file A pointer to a file_handle structure
+ * @param max_length The maximum length to be read from the line
+ * @param buffer A pointer to a character array populated by this method. Must already be allocated
+ * @param length A pointer to hold the line length read from the file
+ * @return TRUE if successful; otherwise FALSE
+ */
+LIB_API b8 filesystem_read_line(File_Handle* file, u64 max_length, char** buffer, u64* length);
+
+/**
+ * Writes text to the provided file, appending a '\n' afterward
+ * @param file A pointer to a file_handle structure
+ * @param text The text to be written
+ * @return TRUE if successful; otherwise FALSE
+ */
+LIB_API b8 filesystem_write_line(File_Handle* file, char const* line);
+
+/**
+ * Reads up to size_in_bytes bytes into buffer
+ * @param file A pointer to a file_handle structure
+ * @param size_in_bytes The number of bytes to read
+ * @param buffer A pointer to a block of memory to be populated by this method
+ * @param bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file
+ * @return TRUE if successful; otherwise FALSE
+ */
+LIB_API b8 filesystem_read(File_Handle* file, u64 size_in_bytes, void* buffer, u64* bytes_read);
 
 /** 
- * Attempt to open file located at path.
- * @param path The path of the file to be opened.
- * @param mode Mode flags for the file when opened (read/write). See file_modes enum in filesystem.h.
- * @param binary Indicates if the file should be opened in binary mode.
- * @param out_handle A pointer to a file_handle structure which holds the handle information.
- * @returns True if opened successfully; otherwise false.
+ * Reads all bytes of data into buffer
+ * @param file A pointer to a file_handle structure.
+ * @param buffer A byte array which will be populated by this method
+ * @param bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
+ * @return TRUE if successful; otherwise FALSE
  */
-API b8 filesystem_open(char const* path, file_modes mode, b8 binary, file_handle* out_handle);
+LIB_API b8 filesystem_read_all(File_Handle* file, void* buffer, u64* bytes_read);
 
-/** 
- * Closes the provided handle to a file.
- * @param handle A pointer to a file_handle structure which holds the handle to be closed.
- */
-API void filesystem_close(file_handle* handle);
-
-/** 
- * Reads up to a newline or EOF. Allocates *line_buf, which must be freed by the caller.
- * @param handle A pointer to a file_handle structure.
- * @param line_buf A pointer to a character array which will be allocated and populated by this method.
- * @returns True if successful; otherwise false.
- */
-API b8 filesystem_read_line(file_handle* handle, char** line_buf);
-
-/** 
- * Writes text to the provided file, appending a '\n' afterward.
- * @param handle A pointer to a file_handle structure.
- * @param text The text to be written.
- * @returns True if successful; otherwise false.
- */
-API b8 filesystem_write_line(file_handle* handle, char const* text);
-
-/** 
- * Reads up to data_size bytes of data into out_bytes_read. 
- * Allocates *out_data, which must be freed by the caller.
- * @param handle A pointer to a file_handle structure.
- * @param data_size The number of bytes to read.
- * @param out_data A pointer to a block of memory to be populated by this method.
- * @param out_bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
- * @returns True if successful; otherwise false.
- */
-API b8 filesystem_read(file_handle* handle, u64 data_size, void* out_data, u64* out_bytes_read);
-
-/** 
- * Reads up to data_size bytes of data into out_bytes_read. 
- * Allocates *out_bytes, which must be freed by the caller.
- * @param handle A pointer to a file_handle structure.
- * @param out_bytes A pointer to a byte array which will be allocated and populated by this method.
- * @param out_bytes_read A pointer to a number which will be populated with the number of bytes actually read from the file.
- * @returns True if successful; otherwise false.
- */
-API b8 filesystem_read_all_bytes(file_handle* handle, u8** out_bytes, u64* out_bytes_read);
-
-/** 
- * Writes provided data to the file.
- * @param handle A pointer to a file_handle structure.
- * @param data_size The size of the data in bytes.
+/**
+ * Writes provided data to the file
+ * @param file A pointer to a file_handle structure
+ * @param size_in_bytes The size of the data in bytes
  * @param data The data to be written.
- * @param out_bytes_written A pointer to a number which will be populated with the number of bytes actually written to the file.
- * @returns True if successful; otherwise false.
+ * @param bytes_written A pointer to a number which will be populated with the number of bytes actually written to the file.
+ * @return TRUE if successful; otherwise FALSE.
  */
-API b8 filesystem_write(file_handle* handle, u64 data_size, void const* data, u64* out_bytes_written);
+LIB_API b8 filesystem_write(File_Handle* file, u64 size_in_bytes, void const* data, u64* bytes_written);

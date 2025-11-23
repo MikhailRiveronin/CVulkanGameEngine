@@ -1,10 +1,10 @@
 #include <core/logger.h>
-#include <math/kmath.h>
+#include <math/math_types.h>
 
 /**
  * @brief Expects expected to be equal to actual.
  */
-#define expect_should_be(expected, actual)                                                              \
+#define EXPECT_EQUAL(actual, expected)                                                              \
     if (actual != expected) {                                                                           \
         LOG_ERROR("--> Expected %lld, but got: %lld. File: %s:%d.", expected, actual, __FILE__, __LINE__); \
         return FALSE;                                                                                   \
@@ -13,7 +13,7 @@
 /**
  * @brief Expects expected to NOT be equal to actual.
  */
-#define expect_should_not_be(expected, actual)                                                                   \
+#define EXPECT_NOT_EQUAL(actual, expected)                                                                   \
     if (actual == expected) {                                                                                    \
         LOG_ERROR("--> Expected %d != %d, but they are equal. File: %s:%d.", expected, actual, __FILE__, __LINE__); \
         return FALSE;                                                                                            \
@@ -23,7 +23,7 @@
  * @brief Expects expected to be actual given a tolerance of K_FLOAT_EPSILON.
  */
 #define expect_float_to_be(expected, actual)                                                        \
-    if (kabs(expected - actual) > 0.001f) {                                                         \
+    if (fabs(expected - actual) > 0.001f) {                                                         \
         LOG_ERROR("--> Expected %f, but got: %f. File: %s:%d.", expected, actual, __FILE__, __LINE__); \
         return FALSE;                                                                               \
     }

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "vulkan_types.inl"
+#include "vulkan_structures.h"
 
 b8 vulkan_pipeline_create(
     vulkan_context* context,
     vulkan_renderpass* renderpass,
+    u32 stride,
     u32 attribute_count,
     VkVertexInputAttributeDescription* attributes,
     u32 set_layout_count,
@@ -13,9 +14,10 @@ b8 vulkan_pipeline_create(
     VkPipelineShaderStageCreateInfo* stages,
     VkViewport viewport,
     VkRect2D scissor,
-    b8 wireframe,
+    b8 is_wireframe,
+    b8 depth_test_enabled,
     vulkan_pipeline* pipeline);
-void vulkan_graphics_pipeline_destroy(vulkan_context* context, vulkan_pipeline* pipeline);
+void vulkan_pipeline_destroy(vulkan_context* context, vulkan_pipeline* pipeline);
 
 void vulkan_pipeline_bind(
     vulkan_command_buffer* command_buffer,
