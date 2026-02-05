@@ -1,149 +1,153 @@
-#include "hash_table.h"
+#include "string_map.h"
 
 #include "core/logger.h"
+#include "core/string_utils.h"
 #include "systems/memory_system.h"
 
-static u64 hash_name(char const* name, u32 element_count);
-
-b8 hashtable_create(u64 count, u64 element_size, void const* block, void const* default_value, String_Map* table)
+typedef struct String_Map_Entry
 {
-    if (!table || count == 0 || element_size == 0)
+    char key[32];
+    void* data;
+} String_Map_Entry;
+
+/**
+ * @brief DJB2 algorithm implementation.
+ */
+static inline u32 hash(unsigned char* str);
+static inline u32 round_up_to_next_pow2(u32 value);
+static inline Linked_List* get_bucket(String_Map const* map, u32 hash_key);
+static void* insert(void const* data, u32 data_size);
+static void erase(void* data, u32 data_size);
+static bool compare(void const* entry, void const* key, u32 data_size);
+
+String_Map* string_map_create(char const* value_type, u32 size, u32 data_size)
+{
+    String_Map* map = memory_system_allocate(sizeof(*map), MEMORY_TAG_CONTAINERS);
+    strncpy(map->value_type, value_type, sizeof(map->value_type) - 1);
+    map->size = round_up_to_next_pow2(size);
+    map->data_size = data_size;
+    map->buckets = memory_system_allocate(map->size * sizeof(*map->buckets), MEMORY_TAG_CONTAINERS);
+    for (u32 i = 0; i < map->size; ++i)
     {
-        LOG_FATAL("hashtable_create: Invalid input parameters");
-        return FALSE;
+        map->buckets[i] = 0;
     }
 
-    table->count = count;
-    table->element_size = element_size;
+    return map;
+}
 
-    if (block)
+void string_map_destroy(String_Map* map)
+{
+    for (u32 i = 0; i < map->size; ++i)
     {
-        table->block = block;
+        linked_list_destroy(map->buckets[i]);
+    }
+
+    memory_system_free(map->buckets, map->size * sizeof(*map->buckets), MEMORY_TAG_CONTAINERS);
+    memory_system_free(map, sizeof(*map), MEMORY_TAG_CONTAINERS);
+}
+
+void string_map_insert(String_Map* map, char const* key, void const* data)
+{
+    String_Map_Entry entry;
+    strncpy(entry.key, key, sizeof(entry.key) - 1);
+    entry.data = memory_system_allocate(map->data_size, MEMORY_TAG_CONTAINERS);
+    memory_system_copy(entry.data, data, map->data_size);
+
+    u32 hash_key = hash(key);
+    Linked_List* bucket = get_bucket(map, hash_key);
+    if (!bucket)
+    {
+        bucket = LINKED_LIST_CREATE(String_Map_Entry, insert, erase, compare);
+    }
+
+    if (!linked_list_contains(bucket, &entry))
+    {
+        linked_list_insert(bucket, &entry);
     }
     else
     {
-        table->block = memory_system_allocate(count * element_size, MEMORY_TAG_HASHTABLE);
-        if (!table->block)
-        {
-            LOG_FATAL("hashtable_create: Failed to allocate memory for hashtable");
-            return FALSE;
-        }
+        LOG_WARNING("string_map_insert: Trying to insert already existing data. Not happening");
     }
+}
 
-    if (default_value)
+void string_map_erase(String_Map* map, char const* key)
+{
+    u32 hash_key = hash(key);
+    Linked_List* bucket = get_bucket(map, hash_key);
+    if (bucket)
     {
-        for (u32 i = 0; i < table->count; ++i)
-        {
-            // memory_system_copy((char*)table->block + (i * table->element_size), default_value, table->element_size);
-        }
+        linked_list_erase(bucket, key);
     }
-
-    return TRUE;
-}
-
-void hashtable_destroy(String_Map* table)
-{
-    if (table) {
-        // TODO: If using allocator above, free memory here.
-        memory_zero(table, sizeof(*table));
+    else
+    {
+        LOG_WARNING("string_map_erase: Trying to delete non-existing data");
     }
 }
 
-b8 hashtable_set(String_Map* table, char const* name, void* value)
+bool string_map_contains(String_Map* map, char const* key)
 {
-    if (!table || !name || !value) {
-        LOG_WARNING("hashtable_set requires table, name and value to exist.");
-        return FALSE;
-    }
-    if (table->is_pointer_type) {
-        LOG_ERROR("hashtable_set should not be used with tables that have pointer types. Use hashtable_set_ptr instead.");
-        return FALSE;
-    }
-
-    u64 hash = hash_name(name, table->element_count);
-    memory_copy((u8*)table->memory + (table->element_size * hash), value, table->element_size);
-    return TRUE;
+    u32 hash_key = hash(key);
+    Linked_List* bucket = get_bucket(map, hash_key);
+    return bucket && linked_list_contains(bucket, &key);
 }
 
-b8 hashtable_set_ptr(String_Map* table, char const* name, void** value)
+void* string_map_find(String_Map* map, char const* key)
 {
-    if (!table || !name) {
-        LOG_WARNING("hashtable_set_ptr requires table and name  to exist.");
-        return FALSE;
-    }
-    if (!table->is_pointer_type) {
-        LOG_ERROR("hashtable_set_ptr should not be used with tables that do not have pointer types. Use hashtable_set instead.");
-        return FALSE;
+    u32 hash_key = hash(key);
+    Linked_List* bucket = get_bucket(map, hash_key);
+    if (bucket)
+    {
+        return linked_list_find(bucket, key);
     }
 
-    u64 hash = hash_name(name, table->element_count);
-    ((void**)table->memory)[hash] = value ? *value : 0;
-    return TRUE;
+    LOG_WARNING("string_map_find: Trying to find non-existing data");
+    return 0;
 }
 
-b8 hashtable_get(String_Map* table, char const* name, void* value)
+u32 hash(unsigned char* str)
 {
-    if (!table || !name || !value) {
-        LOG_WARNING("hashtable_get requires table, name and value to exist.");
-        return FALSE;
+    u32 hash = 5381;
+    int c;
+    while (c = *str++)
+    {
+        hash = ((hash << 5) + hash) + c;
     }
-    if (table->is_pointer_type) {
-        LOG_ERROR("hashtable_get should not be used with tables that have pointer types. Use hashtable_set_ptr instead.");
-        return FALSE;
-    }
-
-    u64 hash = hash_name(name, table->element_count);
-    memory_copy(value, (char*)table->memory + (table->element_size * hash), table->element_size);
-    return TRUE;
-}
-
-b8 hashtable_get_ptr(String_Map* table, char const* name, void** value)
-{
-    if (!table || !name) {
-        LOG_WARNING("hashtable_set_ptr requires table and name  to exist.");
-        return FALSE;
-    }
-    if (!table->is_pointer_type) {
-        LOG_ERROR("hashtable_set_ptr should not be used with tables that do not have pointer types. Use hashtable_set instead.");
-        return FALSE;
-    }
-
-    u64 hash = hash_name(name, table->element_count);
-    *value = ((void**)table->memory)[hash];
-    return *value;
-}
-
-b8 hashtable_fill(String_Map* table, void* value)
-{
-    if (!table || !value) {
-        LOG_WARNING("hashtable_set requires table, name and value to exist.");
-        return FALSE;
-    }
-    if (table->is_pointer_type) {
-        LOG_ERROR("hashtable_set should not be used with tables that have pointer types. Use hashtable_set_ptr instead.");
-        return FALSE;
-    }
-
-    for (u32 i = 0; i < table->element_count; ++i) {
-        memory_copy((u8*)table->memory + (table->element_size * i), value, table->element_size);
-    }
-    return TRUE;
-}
-
-u64 hash_name(char const* name, u32 element_count)
-{
-    // A multipler to use when generating a hash. Prime to hopefully avoid collisions.
-    static const u64 multiplier = 97;
-
-    unsigned char const* us;
-    u64 hash = 0;
-
-    for (us = (unsigned char const*)name; *us; us++) {
-        hash = hash * multiplier + *us;
-    }
-
-    // Mod it against the size of the table.
-    hash %= element_count;
 
     return hash;
+}
+
+u32 round_up_to_next_pow2(u32 value)
+{
+    value--;
+    value |= value >> 1;
+    value |= value >> 2;
+    value |= value >> 4;
+    value |= value >> 8;
+    value |= value >> 16;
+    value++;
+    return value;
+}
+
+Linked_List* get_bucket(String_Map const* map, u32 hash_key)
+{
+    u32 mask = map->size - 1;
+    u32 index = hash_key & mask;
+    return map->buckets[index];
+}
+
+void* insert(void const* data, u32 data_size)
+{
+    void* new_data = memory_system_allocate(data_size, MEMORY_TAG_CONTAINERS);
+    memory_system_copy(new_data, data, data_size);
+    return new_data;
+}
+
+void erase(void* data, u32 data_size)
+{
+    memory_system_free(data, data_size, MEMORY_TAG_CONTAINERS);
+}
+
+bool compare(void const* entry, void const* key, u32 data_size)
+{
+    return string_equal(((String_Map_Entry*)entry)->key, key);
 }

@@ -19,15 +19,15 @@ char* string_duplicate(char const* str)
     return copy;
 }
 
-b8 string_equal(char const* str0, char const* str1)
+bool string_equal(char const* str0, char const* str1)
 {
     return strcmp(str0, str1) == 0;
 }
 
-b8 string_equali(char const* str0, char const* str1)
+bool string_equali(char const* str0, char const* str1)
 {
 #ifdef _MSC_VER
-    b8 result = !_stricmp(str0, str1);
+    bool result = !_stricmp(str0, str1);
     return result;
 #elif
     return FALSE;
@@ -109,7 +109,7 @@ i32 string_index_of(char* str, char c) {
     return -1;
 }
 
-b8 string_to_vec4(char* str, vec4* out_vector) {
+bool string_to_vec4(char* str, vec4* out_vector) {
     if (!str) {
         return FALSE;
     }
@@ -119,7 +119,7 @@ b8 string_to_vec4(char* str, vec4* out_vector) {
     return result != -1;
 }
 
-b8 string_to_vec3(char* str, vec3* out_vector) {
+bool string_to_vec3(char* str, vec3* out_vector) {
     if (!str) {
         return FALSE;
     }
@@ -129,7 +129,7 @@ b8 string_to_vec3(char* str, vec3* out_vector) {
     return result != -1;
 }
 
-b8 string_to_vec2(char* str, vec2* out_vector) {
+bool string_to_vec2(char* str, vec2* out_vector) {
     if (!str) {
         return FALSE;
     }
@@ -139,7 +139,7 @@ b8 string_to_vec2(char* str, vec2* out_vector) {
     return result != -1;
 }
 
-b8 string_to_f32(char* str, f32* f) {
+bool string_to_f32(char* str, f32* f) {
     if (!str) {
         return FALSE;
     }
@@ -149,7 +149,7 @@ b8 string_to_f32(char* str, f32* f) {
     return result != -1;
 }
 
-b8 string_to_f64(char* str, f64* f) {
+bool string_to_f64(char* str, f64* f) {
     if (!str) {
         return FALSE;
     }
@@ -159,7 +159,7 @@ b8 string_to_f64(char* str, f64* f) {
     return result != -1;
 }
 
-b8 string_to_i8(char* str, i8* i) {
+bool string_to_i8(char* str, i8* i) {
     if (!str) {
         return FALSE;
     }
@@ -169,7 +169,7 @@ b8 string_to_i8(char* str, i8* i) {
     return result != -1;
 }
 
-b8 string_to_i16(char* str, i16* i) {
+bool string_to_i16(char* str, i16* i) {
     if (!str) {
         return FALSE;
     }
@@ -179,7 +179,7 @@ b8 string_to_i16(char* str, i16* i) {
     return result != -1;
 }
 
-b8 string_to_i32(char* str, i32* i) {
+bool string_to_i32(char* str, i32* i) {
     if (!str) {
         return FALSE;
     }
@@ -189,7 +189,7 @@ b8 string_to_i32(char* str, i32* i) {
     return result != -1;
 }
 
-b8 string_to_i64(char* str, i64* i) {
+bool string_to_i64(char* str, i64* i) {
     if (!str) {
         return FALSE;
     }
@@ -199,7 +199,7 @@ b8 string_to_i64(char* str, i64* i) {
     return result != -1;
 }
 
-b8 string_to_u8(char* str, u8* u) {
+bool string_to_u8(char* str, u8* u) {
     if (!str) {
         return FALSE;
     }
@@ -209,7 +209,7 @@ b8 string_to_u8(char* str, u8* u) {
     return result != -1;
 }
 
-b8 string_to_u16(char* str, u16* u) {
+bool string_to_u16(char* str, u16* u) {
     if (!str) {
         return FALSE;
     }
@@ -219,7 +219,7 @@ b8 string_to_u16(char* str, u16* u) {
     return result != -1;
 }
 
-b8 string_to_u32(char* str, u32* u) {
+bool string_to_u32(char* str, u32* u) {
     if (!str) {
         return FALSE;
     }
@@ -229,7 +229,7 @@ b8 string_to_u32(char* str, u32* u) {
     return result != -1;
 }
 
-b8 string_to_u64(char* str, u64* u) {
+bool string_to_u64(char* str, u64* u) {
     if (!str) {
         return FALSE;
     }
@@ -239,7 +239,7 @@ b8 string_to_u64(char* str, u64* u) {
     return result != -1;
 }
 
-b8 string_to_bool(char* str, b8* b) {
+bool string_to_bool(char* str, bool* b) {
     if (!str) {
         return FALSE;
     }

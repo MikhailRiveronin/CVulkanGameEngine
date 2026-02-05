@@ -8,10 +8,10 @@ u64 string_length(char const* str);
 char* string_duplicate(char const* str);
 
 // Case-sensitive
-b8 string_equal(char const* str0, char const* str1);
+bool string_equal(char const* str0, char const* str1);
 
 // Case-insensitive
-b8 string_equali(char const* str0, char const* str1);
+bool string_equali(char const* str0, char const* str1);
 
 LIB_API void string_format(char* str, char const* format, ...);
 
@@ -39,7 +39,7 @@ LIB_API i32 string_index_of(char* str, char c);
  * @param out_vector A pointer to the vector to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_vec4(char* str, vec4* out_vector);
+LIB_API bool string_to_vec4(char* str, vec4* out_vector);
 
 /**
  * @brief Attempts to parse a vector from the provided string.
@@ -48,7 +48,7 @@ LIB_API b8 string_to_vec4(char* str, vec4* out_vector);
  * @param out_vector A pointer to the vector to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_vec3(char* str, vec3* out_vector);
+LIB_API bool string_to_vec3(char* str, vec3* out_vector);
 
 /**
  * @brief Attempts to parse a vector from the provided string.
@@ -57,7 +57,7 @@ LIB_API b8 string_to_vec3(char* str, vec3* out_vector);
  * @param out_vector A pointer to the vector to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_vec2(char* str, vec2* out_vector);
+LIB_API bool string_to_vec2(char* str, vec2* out_vector);
 
 /**
  * @brief Attempts to parse a 32-bit floating-point number from the provided string.
@@ -66,7 +66,7 @@ LIB_API b8 string_to_vec2(char* str, vec2* out_vector);
  * @param f A pointer to the float to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_f32(char* str, f32* f);
+LIB_API bool string_to_f32(char* str, f32* f);
 
 /**
  * @brief Attempts to parse a 64-bit floating-point number from the provided string.
@@ -75,7 +75,7 @@ LIB_API b8 string_to_f32(char* str, f32* f);
  * @param f A pointer to the float to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_f64(char* str, f64* f);
+LIB_API bool string_to_f64(char* str, f64* f);
 
 /**
  * @brief Attempts to parse an 8-bit signed integer from the provided string.
@@ -84,7 +84,7 @@ LIB_API b8 string_to_f64(char* str, f64* f);
  * @param i A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_i8(char* str, i8* i);
+LIB_API bool string_to_i8(char* str, i8* i);
 
 /**
  * @brief Attempts to parse a 16-bit signed integer from the provided string.
@@ -93,7 +93,7 @@ LIB_API b8 string_to_i8(char* str, i8* i);
  * @param i A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_i16(char* str, i16* i);
+LIB_API bool string_to_i16(char* str, i16* i);
 
 /**
  * @brief Attempts to parse a 32-bit signed integer from the provided string.
@@ -102,7 +102,7 @@ LIB_API b8 string_to_i16(char* str, i16* i);
  * @param i A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_i32(char* str, i32* i);
+LIB_API bool string_to_i32(char* str, i32* i);
 
 /**
  * @brief Attempts to parse a 64-bit signed integer from the provided string.
@@ -111,7 +111,7 @@ LIB_API b8 string_to_i32(char* str, i32* i);
  * @param i A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_i64(char* str, i64* i);
+LIB_API bool string_to_i64(char* str, i64* i);
 
 /**
  * @brief Attempts to parse an 8-bit unsigned integer from the provided string.
@@ -120,7 +120,7 @@ LIB_API b8 string_to_i64(char* str, i64* i);
  * @param u A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_u8(char* str, u8* u);
+LIB_API bool string_to_u8(char* str, u8* u);
 
 /**
  * @brief Attempts to parse a 16-bit unsigned integer from the provided string.
@@ -129,7 +129,7 @@ LIB_API b8 string_to_u8(char* str, u8* u);
  * @param u A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_u16(char* str, u16* u);
+LIB_API bool string_to_u16(char* str, u16* u);
 
 /**
  * @brief Attempts to parse a 32-bit unsigned integer from the provided string.
@@ -138,7 +138,7 @@ LIB_API b8 string_to_u16(char* str, u16* u);
  * @param u A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_u32(char* str, u32* u);
+LIB_API bool string_to_u32(char* str, u32* u);
 
 /**
  * @brief Attempts to parse a 64-bit unsigned integer from the provided string.
@@ -147,7 +147,7 @@ LIB_API b8 string_to_u32(char* str, u32* u);
  * @param u A pointer to the int to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_u64(char* str, u64* u);
+LIB_API bool string_to_u64(char* str, u64* u);
 
 /**
  * @brief Attempts to parse a boolean from the provided string.
@@ -157,7 +157,7 @@ LIB_API b8 string_to_u64(char* str, u64* u);
  * @param b A pointer to the boolean to write to.
  * @return True if parsed successfully; otherwise false.
  */
-LIB_API b8 string_to_bool(char* str, b8* b);
+LIB_API bool string_to_bool(char* str, bool* b);
 
 /**
  * @brief Empties the provided string by setting the first character to 0.
