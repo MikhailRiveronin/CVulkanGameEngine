@@ -153,7 +153,7 @@ glm_aabb2d_invalidate(vec2 aabb[2]) {
  * @param[in]  aabb bounding aabb
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb2d_isvalid(vec2 aabb[2]) {
   return glm_vec2_max(aabb[0]) != FLT_MAX
          && glm_vec2_min(aabb[1]) != -FLT_MAX;
@@ -212,7 +212,7 @@ glm_aabb2d_center(vec2 aabb[2], vec2 dest) {
  * @param[in]   other  other bounding aabb
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb2d_aabb(vec2 aabb[2], vec2 other[2]) {
   return (aabb[0][0] <= other[1][0] && aabb[1][0] >= other[0][0])
       && (aabb[0][1] <= other[1][1] && aabb[1][1] >= other[0][1]);
@@ -227,7 +227,7 @@ glm_aabb2d_aabb(vec2 aabb[2], vec2 other[2]) {
  * @param[in]   c      solid circle
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb2d_circle(vec2 aabb[2], vec3 c) {
   float dmin;
   int   a, b;
@@ -248,7 +248,7 @@ glm_aabb2d_circle(vec2 aabb[2], vec3 c) {
  * @param[in]   point  point
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb2d_point(vec2 aabb[2], vec2 point) {
   return (point[0] >= aabb[0][0] && point[0] <= aabb[1][0])
       && (point[1] >= aabb[0][1] && point[1] <= aabb[1][1]);
@@ -261,7 +261,7 @@ glm_aabb2d_point(vec2 aabb[2], vec2 point) {
  * @param[in]   other  other bounding aabb
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb2d_contains(vec2 aabb[2], vec2 other[2]) {
   return (aabb[0][0] <= other[0][0] && aabb[1][0] >= other[1][0])
       && (aabb[0][1] <= other[0][1] && aabb[1][1] >= other[1][1]);

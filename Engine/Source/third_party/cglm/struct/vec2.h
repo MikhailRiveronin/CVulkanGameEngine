@@ -56,7 +56,7 @@
    CGLM_INLINE vec2s glms_vec2_step(vec2s edge, vec2s x)
    CGLM_INLINE vec2s glms_vec2_make(float * restrict src)
    CGLM_INLINE vec2s glms_vec2_reflect(vec2s v, vec2s n)
-   CGLM_INLINE bool  glms_vec2_refract(vec2s v, vec2s n, float eta, vec2s *dest)
+   CGLM_INLINE b8  glms_vec2_refract(vec2s v, vec2s n, float eta, vec2s *dest)
  */
 
 #ifndef cglms_vec2s_h
@@ -739,7 +739,7 @@ glms_vec2_(reflect)(vec2s v, vec2s n) {
  * @returns true if refraction occurs; false if total internal reflection occurs.
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(refract)(vec2s v, vec2s n, float eta, vec2s * __restrict dest) {
   return glm_vec2_refract(v.raw, n.raw, eta, dest->raw);
 }

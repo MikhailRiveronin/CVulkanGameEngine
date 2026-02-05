@@ -48,8 +48,8 @@
   CGLM_INLINE int glms_ivec3_distance2(ivec3s a, ivec3s b)
   CGLM_INLINE float glms_ivec3_distance(ivec3s a, ivec3s b)
   CGLM_INLINE ivec3s glms_ivec3_fill(int val)
-  CGLM_INLINE bool glms_ivec3_eq(ivec3s v, int val)
-  CGLM_INLINE bool glms_ivec3_eqv(ivec3s a, ivec3s b)
+  CGLM_INLINE b8 glms_ivec3_eq(ivec3s v, int val)
+  CGLM_INLINE b8 glms_ivec3_eqv(ivec3s a, ivec3s b)
   CGLM_INLINE ivec3s glms_ivec3_maxv(ivec3s a, ivec3s b)
   CGLM_INLINE ivec3s glms_ivec3_minv(ivec3s a, ivec3s b)
   CGLM_INLINE ivec3s glms_ivec3_clamp(ivec3s v, int minVal, int maxVal)
@@ -646,7 +646,7 @@ glms_ivec3_(fill)(int val) {
  * @param[in] val value
  */
 CGLM_INLINE
-bool
+b8
 glms_ivec3_(eq)(ivec3s v, int val) {
   return glm_ivec3_eq(v.raw, val);
 }
@@ -658,7 +658,7 @@ glms_ivec3_(eq)(ivec3s v, int val) {
  * @param[in] b vector
  */
 CGLM_INLINE
-bool
+b8
 glms_ivec3_(eqv)(ivec3s a, ivec3s b) {
   return glm_ivec3_eqv(a.raw, b.raw);
 }

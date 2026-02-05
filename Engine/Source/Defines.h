@@ -1,6 +1,8 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 // Types.
 typedef int8_t i8;
@@ -13,7 +15,7 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
-typedef _Bool b8;
+// typedef _Bool b8;
 typedef u32 b32;
 
 #define TRUE 1
@@ -63,3 +65,12 @@ typedef u32 b32;
         }                                                                 \
     }                                                                     \
     while (0)
+
+/**
+ *  @brief A memory range.
+ */
+typedef struct Memory_Range
+{
+    u64 offset;
+    u64 size;
+} Memory_Range;

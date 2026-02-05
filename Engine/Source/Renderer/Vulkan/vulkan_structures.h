@@ -185,30 +185,7 @@ typedef struct vulkan_swapchain
     vulkan_image depth_buffer;
 } vulkan_swapchain;
 
-typedef enum vulkan_renderpass_state
-{
-    RENDERPASS_READY,
-    RENDERPASS_RECORDING,
-    RENDERPASS_IN_RENDER_PASS,
-    RENDERPASS_RECORDING_ENDED,
-    RENDERPASS_SUBMITTED,
-    RENDERPASS_NOT_ALLOCATED
-} vulkan_renderpass_state;
 
-typedef struct vulkan_renderpass
-{
-    struct
-    {
-        vec4s color;
-        f32 depth;
-        u32 stencil;
-    } clear_values;
-
-    VkRenderPass handle;
-    vec4s render_area;
-    u8 clear_flags;
-    vulkan_renderpass_state state;
-} vulkan_renderpass;
 
 #define MATERIAL_SHADER_STAGE_COUNT 2
 #define VULKAN_MATERIAL_SHADER_SAMPLER_COUNT 2
@@ -344,61 +321,6 @@ typedef struct vulkan_command_buffer
     VulkanCommandBufferState state;
 } vulkan_command_buffer;
 
-typedef struct vulkan_context
-{
-    char const* app_name;
-    u32 framebuffer_width;
-    u32 framebuffer_height;
-
-    VkAllocationCallbacks* allocator;
-    VkInstance instance;
-
-
-    i32 (*find_memory_index)(u32 required_types, VkMemoryPropertyFlags required_properties);
-
-
-
-    f32 frame_delta_time;
-
-    u64 framebuffer_generation;
-    u64 framebuffer_last_generation;
-
-    vulkan_buffer object_vertex_buffer;
-    vulkan_buffer object_index_buffer;
-
-    vulkan_swapchain swapchain;
-    b8 recreating_swapchain;
-    u32 current_image;
-
-    // Sync objects
-    DARRAY(VkSemaphore) image_available_semaphors;
-    DARRAY(VkSemaphore) render_complete_semaphors;
-
-    VkFence fences_in_flight[2];
-    VkFence* images_in_flight[3];
-
-    u32 current_frame;
-
-    DARRAY(vulkan_command_buffer) command_buffers;
-    vulkan_renderpass main_renderpass;
-    vulkan_renderpass ui_renderpass;
-
-#ifdef _DEBUG
-    VkDebugUtilsMessengerEXT debug_utils_messenger;
-#endif
-    VkSurfaceKHR surface;
-    vulkan_device device;
-
-    vulkan_material_shader material_shader;
-    vulkan_ui_shader ui_shader;
-
-    // Framebuffers used for world rendering, one per frame
-    VkFramebuffer world_framebuffers[3];
-
-
-
-    vulkan_geometry_buffer_data geometries[VULKAN_MAX_GEOMETRY_COUNT];
-} vulkan_context;
 
 
 

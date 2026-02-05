@@ -16,6 +16,8 @@
 #include "systems/texture_system.h"
 
 
+#include "systems/shader_system.h"
+
 
 #include "string_utils.h"
 
@@ -55,6 +57,12 @@ typedef struct application_state
         u64 required_memory;
         void* block;
     } resource_system;
+
+    struct
+    {
+        u64 required_memory;
+        void* block;
+    } shader_system;
 
 
 
@@ -175,6 +183,27 @@ b8 application_init(game_instance* instance)
         return FALSE;
     }
 
+    // Shader system
+    {
+        Shader_System_Config config = {};
+        config.max_shader_count = 1024;
+        config.max_uniform_buffer_count = 128;
+        config.max_global_texture_count = 31;
+        config.max_instance_texture_count = 31;
+        if (!shader_system_startup(&state->shader_system.required_memory, 0, &config))
+        {
+            LOG_FATAL("application_init: Failed to startup shader system");
+            return FALSE;
+        }
+
+        state->shader_system.block = linear_allocator_allocate(&state->systems_allocator, state->shader_system.required_memory);
+        if (!shader_system_startup(&state->shader_system.required_memory, state->shader_system.block, &config))
+        {
+            LOG_FATAL("application_init: Failed to startup shader system");
+            return FALSE;
+        }
+    }
+
     renderer_system_startup(&state->renderer_system.required_memory, 0, 0);
     state->renderer_system.block = linear_allocator_allocate(&state->systems_allocator, state->renderer_system.required_memory);
     if (!renderer_system_startup(&state->renderer_system.required_memory, state->renderer_system.block, instance->application_config.name))
@@ -183,7 +212,7 @@ b8 application_init(game_instance* instance)
         return FALSE;
     }
 
-    Texture_System_Configuration texture_system_config;
+    Texture_System_Config texture_system_config;
     texture_system_config.max_texture_count = 65536;
     texture_system_startup(&state->texture_system.required_memory, 0, texture_system_config);
     state->texture_system.block = linear_allocator_allocate(&state->systems_allocator, state->texture_system.required_memory);

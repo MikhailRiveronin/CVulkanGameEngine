@@ -27,7 +27,7 @@
  * @return whether there is intersection
  */
 CGLM_INLINE
-bool
+b8
 glms_ray_(triangle)(vec3s  origin,
                     vec3s  direction,
                     vec3s  v0,
@@ -58,7 +58,7 @@ glms_ray_(triangle)(vec3s  origin,
  * @returns whether there is intersection
  */
 CGLM_INLINE
-bool
+b8
 glms_ray_(sphere)(vec3s origin,
                   vec3s dir,
                   vec4s s,

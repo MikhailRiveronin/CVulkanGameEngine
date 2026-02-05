@@ -48,8 +48,8 @@
   CGLM_INLINE int glm_ivec3_distance2(ivec3 a, ivec3 b)
   CGLM_INLINE float glm_ivec3_distance(ivec3 a, ivec3 b)
   CGLM_INLINE void glm_ivec3_fill(ivec3 v, int val);
-  CGLM_INLINE bool glm_ivec3_eq(ivec3 v, int val);
-  CGLM_INLINE bool glm_ivec3_eqv(ivec3 a, ivec3 b);
+  CGLM_INLINE b8 glm_ivec3_eq(ivec3 v, int val);
+  CGLM_INLINE b8 glm_ivec3_eqv(ivec3 a, ivec3 b);
   CGLM_INLINE void glm_ivec3_maxv(ivec3 a, ivec3 b, ivec3 dest)
   CGLM_INLINE void glm_ivec3_minv(ivec3 a, ivec3 b, ivec3 dest)
   CGLM_INLINE void glm_ivec3_clamp(ivec3 v, int minVal, int maxVal)
@@ -621,7 +621,7 @@ glm_ivec3_fill(ivec3 v, int val) {
  * @param[in] val value
  */
 CGLM_INLINE
-bool
+b8
 glm_ivec3_eq(ivec3 v, int val) {
   return v[0] == val && v[0] == v[1] && v[0] == v[2];
 }
@@ -633,7 +633,7 @@ glm_ivec3_eq(ivec3 v, int val) {
  * @param[in] b vector
  */
 CGLM_INLINE
-bool
+b8
 glm_ivec3_eqv(ivec3 a, ivec3 b) {
   return a[0] == b[0]
          && a[1] == b[1]

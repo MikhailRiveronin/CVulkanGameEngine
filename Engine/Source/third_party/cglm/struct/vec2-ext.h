@@ -12,16 +12,16 @@
 /*
  Functions:
    CGLM_INLINE vec2s glms_vec2_fill(float val)
-   CGLM_INLINE bool  glms_vec2_eq(vec2s v, float val)
-   CGLM_INLINE bool  glms_vec2_eq_eps(vec2s v, float val)
-   CGLM_INLINE bool  glms_vec2_eq_all(vec2s v)
-   CGLM_INLINE bool  glms_vec2_eqv(vec2s a, vec2s b)
-   CGLM_INLINE bool  glms_vec2_eqv_eps(vec2s a, vec2s b)
+   CGLM_INLINE b8  glms_vec2_eq(vec2s v, float val)
+   CGLM_INLINE b8  glms_vec2_eq_eps(vec2s v, float val)
+   CGLM_INLINE b8  glms_vec2_eq_all(vec2s v)
+   CGLM_INLINE b8  glms_vec2_eqv(vec2s a, vec2s b)
+   CGLM_INLINE b8  glms_vec2_eqv_eps(vec2s a, vec2s b)
    CGLM_INLINE float glms_vec2_max(vec2s v)
    CGLM_INLINE float glms_vec2_min(vec2s v)
-   CGLM_INLINE bool  glms_vec2_isnan(vec2s v)
-   CGLM_INLINE bool  glms_vec2_isinf(vec2s v)
-   CGLM_INLINE bool  glms_vec2_isvalid(vec2s v)
+   CGLM_INLINE b8  glms_vec2_isnan(vec2s v)
+   CGLM_INLINE b8  glms_vec2_isinf(vec2s v)
+   CGLM_INLINE b8  glms_vec2_isvalid(vec2s v)
    CGLM_INLINE vec2s glms_vec2_sign(vec2s v)
    CGLM_INLINE vec2s glms_vec2_abs(vec2s v)
    CGLM_INLINE vec2s glms_vec2_fract(vec2s v)
@@ -64,7 +64,7 @@ glms_vec2_(fill)(float val) {
  * @param[in] val value
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(eq)(vec2s v, float val) {
   return glm_vec2_eq(v.raw, val);
 }
@@ -76,7 +76,7 @@ glms_vec2_(eq)(vec2s v, float val) {
  * @param[in] val value
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(eq_eps)(vec2s v, float val) {
   return glm_vec2_eq_eps(v.raw, val);
 }
@@ -87,7 +87,7 @@ glms_vec2_(eq_eps)(vec2s v, float val) {
  * @param[in] v   vector
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(eq_all)(vec2s v) {
   return glm_vec2_eq_all(v.raw);
 }
@@ -99,7 +99,7 @@ glms_vec2_(eq_all)(vec2s v) {
  * @param[in] b vector
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(eqv)(vec2s a, vec2s b) {
   return glm_vec2_eqv(a.raw, b.raw);
 }
@@ -111,7 +111,7 @@ glms_vec2_(eqv)(vec2s a, vec2s b) {
  * @param[in] b vector
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(eqv_eps)(vec2s a, vec2s b) {
   return glm_vec2_eqv_eps(a.raw, b.raw);
 }
@@ -145,7 +145,7 @@ glms_vec2_min(vec2s v) {
  * @param[in] v vector
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(isnan)(vec2s v) {
   return glm_vec2_isnan(v.raw);
 }
@@ -157,7 +157,7 @@ glms_vec2_(isnan)(vec2s v) {
  * @param[in] v vector
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_(isinf)(vec2s v) {
   return glm_vec2_isinf(v.raw);
 }
@@ -169,7 +169,7 @@ glms_vec2_(isinf)(vec2s v) {
  * @param[in] v vector
  */
 CGLM_INLINE
-bool
+b8
 glms_vec2_isvalid(vec2s v) {
   return glm_vec2_isvalid(v.raw);
 }

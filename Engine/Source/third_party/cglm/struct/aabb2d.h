@@ -123,7 +123,7 @@ glms_aabb2d_(invalidate)(vec2s box[2]) {
  * @param[in]  aabb bounding box
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb2d_(isvalid)(vec2s aabb[2]) {
   vec2 rawAabb[2];
   glms_vec2_(unpack)(rawAabb, aabb, 2);
@@ -190,7 +190,7 @@ glms_aabb2d_(center)(vec2s aabb[2]) {
  * @param[in]   other  other bounding box
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb2d_(aabb)(vec2s aabb[2], vec2s other[2]) {
   vec2 rawAabb[2];
   vec2 rawOther[2];
@@ -210,7 +210,7 @@ glms_aabb2d_(aabb)(vec2s aabb[2], vec2s other[2]) {
  * @param[in]   s      solid sphere
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb2d_(circle)(vec2s aabb[2], vec3s c) {
   vec2 rawAabb[2];
 
@@ -225,7 +225,7 @@ glms_aabb2d_(circle)(vec2s aabb[2], vec3s c) {
  * @param[in]   point  point
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb2d_(point)(vec2s aabb[2], vec2s point) {
   vec2 rawAabb[2];
 
@@ -240,7 +240,7 @@ glms_aabb2d_(point)(vec2s aabb[2], vec2s point) {
  * @param[in]   other  other bounding box
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb2d_(contains)(vec2s aabb[2], vec2s other[2]) {
   vec2 rawAabb[2];
   vec2 rawOther[2];

@@ -132,7 +132,7 @@ glm_aabb_crop_until(vec3 box[2],
  * @param[in]  planes  frustum planes
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb_frustum(vec3 box[2], vec4 planes[6]) {
   float *p, dp;
   int    i;
@@ -168,7 +168,7 @@ glm_aabb_invalidate(vec3 box[2]) {
  * @param[in]  box bounding box
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb_isvalid(vec3 box[2]) {
   return glm_vec3_max(box[0]) != FLT_MAX
          && glm_vec3_min(box[1]) != -FLT_MAX;
@@ -215,7 +215,7 @@ glm_aabb_center(vec3 box[2], vec3 dest) {
  * @param[in]   other  other bounding box
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb_aabb(vec3 box[2], vec3 other[2]) {
   return (box[0][0] <= other[1][0] && box[1][0] >= other[0][0])
       && (box[0][1] <= other[1][1] && box[1][1] >= other[0][1])
@@ -234,7 +234,7 @@ glm_aabb_aabb(vec3 box[2], vec3 other[2]) {
  * @param[in]   s      solid sphere
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb_sphere(vec3 box[2], vec4 s) {
   float dmin;
   int   a, b, c;
@@ -257,7 +257,7 @@ glm_aabb_sphere(vec3 box[2], vec4 s) {
  * @param[in]   point  point
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb_point(vec3 box[2], vec3 point) {
   return (point[0] >= box[0][0] && point[0] <= box[1][0])
       && (point[1] >= box[0][1] && point[1] <= box[1][1])
@@ -271,7 +271,7 @@ glm_aabb_point(vec3 box[2], vec3 point) {
  * @param[in]   other  other bounding box
  */
 CGLM_INLINE
-bool
+b8
 glm_aabb_contains(vec3 box[2], vec3 other[2]) {
   return (box[0][0] <= other[0][0] && box[1][0] >= other[1][0])
       && (box[0][1] <= other[0][1] && box[1][1] >= other[1][1])

@@ -16,7 +16,7 @@ typedef struct Texture_Reference
 
 typedef struct Texture_System_State
 {
-    Texture_System_Configuration config;
+    Texture_System_Config config;
     Texture* registered_textures;
     hashtable texture_references;
     Texture default_texture;
@@ -29,7 +29,7 @@ static void destroy_texture(Texture* t);
 static b8 create_default_textures();
 static void destroy_default_textures();
 
-b8 texture_system_startup(u64* required_memory, void* block, Texture_System_Configuration config)
+b8 texture_system_startup(u64* required_memory, void* block, Texture_System_Config config)
 {
     if (config.max_texture_count == 0)
     {
@@ -37,18 +37,18 @@ b8 texture_system_startup(u64* required_memory, void* block, Texture_System_Conf
         return FALSE;
     }
 
-    u64 state_required_memory = sizeof(*state);
+    u64 state_struct_required_memory = sizeof(*state);
     u64 textures_reqired_memory = config.max_texture_count * sizeof(*state->registered_textures);
     u64 texture_references_required_memory = config.max_texture_count * sizeof(Texture_Reference);
-    *required_memory = state_required_memory + textures_reqired_memory + texture_references_required_memory;
+    *required_memory = state_struct_required_memory + textures_reqired_memory + texture_references_required_memory;
     if (!block)
     {
         return TRUE;
     }
 
-    state = (Texture_System_State*)block;
+    state = block;
     state->config = config;
-    state->registered_textures = (void*)((char*)state + state_required_memory);
+    state->registered_textures = (char*)state + state_struct_required_memory;
 
     for (u32 i = 0; i < state->config.max_texture_count; ++i)
     {
@@ -56,7 +56,7 @@ b8 texture_system_startup(u64* required_memory, void* block, Texture_System_Conf
         state->registered_textures[i].generation = INVALID_ID;
     }
 
-    void* texture_references_block = (void*)((char*)state->registered_textures + textures_reqired_memory);
+    void* texture_references_block = (char*)state->registered_textures + textures_reqired_memory;
     hashtable_create(sizeof(Texture_Reference), config.max_texture_count, texture_references_block, FALSE, &state->texture_references);
     Texture_Reference invalid_ref;
     invalid_ref.internal_id = INVALID_ID;

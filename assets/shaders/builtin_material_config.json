@@ -1,0 +1,31 @@
+{
+    "name": "builtin_material",
+    "renderpass": "builtin_world",
+    "stages": [
+        "vertex",
+        "fragment"
+    ],
+    "spv_binaries": [
+        "builtin_material_vert.spv",
+        "builtin_material_frag.spv"
+    ],
+    "attributes": {
+            "in_pos": "vec3",
+            "in_tex_coord": "vec2"
+        },
+    "per-material": true,
+    "per-object": true,
+    "uniforms": [
+        {
+            "view": "mat4",
+            "proj": "mat4"
+        },
+        {
+            "diffuse_color": "vec4",
+            "diffuse_texture": "sampler"
+        },
+        {
+            "world": "mat4"
+        }
+    ]
+}

@@ -73,7 +73,7 @@ glms_sphere_merge(vec4s s1, vec4s s2) {
  * @param[in]   s2  other sphere
  */
 CGLM_INLINE
-bool
+b8
 glms_sphere_sphere(vec4s s1, vec4s s2) {
   return glm_sphere_sphere(s1.raw, s2.raw);
 }
@@ -85,7 +85,7 @@ glms_sphere_sphere(vec4s s1, vec4s s2) {
  * @param[in]   point  point
  */
 CGLM_INLINE
-bool
+b8
 glms_sphere_point(vec4s s, vec3s point) {
   return glm_sphere_point(s.raw, point.raw);
 }

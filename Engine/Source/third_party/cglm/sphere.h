@@ -77,7 +77,7 @@ glm_sphere_merge(vec4 s1, vec4 s2, vec4 dest) {
  * @param[in]   s2  other sphere
  */
 CGLM_INLINE
-bool
+b8
 glm_sphere_sphere(vec4 s1, vec4 s2) {
   return glm_vec3_distance2(s1, s2) <= glm_pow2(s1[3] + s2[3]);
 }
@@ -89,7 +89,7 @@ glm_sphere_sphere(vec4 s1, vec4 s2) {
  * @param[in]   point  point
  */
 CGLM_INLINE
-bool
+b8
 glm_sphere_point(vec4 s, vec3 point) {
   float rr;
   rr = s[3] * s[3];

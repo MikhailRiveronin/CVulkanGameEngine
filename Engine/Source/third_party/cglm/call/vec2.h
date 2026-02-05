@@ -22,11 +22,11 @@ void
 glmc_vec2_fill(vec2 v, float val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec2_eq(vec2 v, float val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec2_eqv(vec2 a, vec2 b);
 
 CGLM_EXPORT
@@ -242,7 +242,7 @@ void
 glmc_vec2_reflect(vec2 v, vec2 n, vec2 dest);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec2_refract(vec2 v, vec2 n, float eta, vec2 dest);
 
 #ifdef __cplusplus

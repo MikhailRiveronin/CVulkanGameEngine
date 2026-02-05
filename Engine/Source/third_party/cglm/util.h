@@ -25,7 +25,7 @@
    CGLM_INLINE float glm_smoothstep(float edge0, float edge1, float x);
    CGLM_INLINE float glm_smoothinterp(float from, float to, float t);
    CGLM_INLINE float glm_smoothinterpc(float from, float to, float t);
-   CGLM_INLINE bool  glm_eq(float a, float b);
+   CGLM_INLINE b8  glm_eq(float a, float b);
    CGLM_INLINE float glm_percent(float from, float to, float current);
    CGLM_INLINE float glm_percentc(float from, float to, float current);
  */
@@ -319,7 +319,7 @@ glm_smoothinterpc(float from, float to, float t) {
  * @param[in]   b   b
  */
 CGLM_INLINE
-bool
+b8
 glm_eq(float a, float b) {
   return fabsf(a - b) <= GLM_FLT_EPSILON;
 }

@@ -3,23 +3,34 @@
 #include "defines.h"
 #include "resources/resources.h"
 
-typedef struct Resource_System_Config
+typedef enum Resource_Type
 {
-    u32 max_loader_count;
-    char* asset_folder_path;
-} Resource_System_Config;
+    RESOURCE_TYPE_TEXT,
+    RESOURCE_TYPE_BINARY,
+    RESOURCE_TYPE_IMAGE,
+    RESOURCE_TYPE_MATERIAL,
+    RESOURCE_TYPE_SHADER_CONFIG,
+    RESOURCE_TYPE_STATIC_MESH,
+    RESOURCE_TYPE_ENUM_COUNT
+} Resource_Type;
+
+typedef struct Resource
+{
+    u8 loader_id;
+    char const* path;
+    u64 data_size;
+    void* data;
+} Resource;
 
 typedef struct Resource_Loader
 {
-    u32 id;
-    resource_type type;
-    b8 (* load)(char const* const filename, Resource* const resource);
-    void (* unload)(Resource* const resource);
+    u8 id;
+    Resource_Type type;
+    b8 (* load)(char const* filename, Resource* resource);
+    void (* unload)(Resource* resource);
 } Resource_Loader;
 
-b8 resource_system_startup(u64* const required_memory, void* const block, Resource_System_Config config);
+b8 resource_system_startup(u64* required_memory, void* block);
 void resource_system_shutdown();
-b8 resource_system_register_loader(Resource_Loader loader);
-b8 resource_system_load(char const* name, resource_type type, Resource* resource);
+b8 resource_system_load(char const* filename, Resource_Type type, Resource* resource);
 void resource_system_unload(Resource* resource);
-char const* resource_system_asset_folder();

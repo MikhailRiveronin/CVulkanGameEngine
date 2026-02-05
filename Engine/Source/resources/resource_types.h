@@ -3,22 +3,7 @@
 #include "defines.h"
 #include "third_party/cglm/struct.h"
 
-typedef enum resource_type
-{
-    RESOURCE_TYPE_TEXT,
-    RESOURCE_TYPE_BINARY,
-    RESOURCE_TYPE_IMAGE,
-    RESOURCE_TYPE_MATERIAL,
-    RESOURCE_TYPE_STATIC_MESH
-} resource_type;
-
-typedef struct Resource
-{
-    char const* name;
-    u32 loader_id;
-    void* data;
-    u64 data_size;
-} Resource;
+#include "containers/dynamic_array.h"
 
 typedef struct image_resource_data
 {
@@ -93,3 +78,58 @@ typedef struct Geometry
     u32 generation;
     Material* material;
 } Geometry;
+
+
+
+
+
+
+
+
+
+
+
+typedef struct Vertex_Attribute_Config
+{
+    char name[32];
+    u8 size;
+    VkFormat type;
+} Vertex_Attribute_Config;
+
+typedef enum Uniform_Type
+{
+    UNIFORM_TYPE_VEC4,
+    UNIFORM_TYPE_MAT4,
+    UNIFORM_TYPE_SAMPLER
+} Uniform_Type;
+
+typedef enum Descriptor_Set_Scope
+{
+    DESCRIPTOR_SET_SCOPE_PER_FRAME,
+    DESCRIPTOR_SET_SCOPE_PER_MATERIAL,
+    DESCRIPTOR_SET_SCOPE_PER_OBJECT,
+    DESCRIPTOR_SET_SCOPE_ENUM_COUNT
+} Descriptor_Set_Scope;
+
+typedef struct Uniform_Config
+{
+    char name[32];
+    u8 size;
+    Uniform_Type type;
+    Descriptor_Set_Scope scope;
+} Uniform_Config;
+
+typedef struct Shader_Config
+{
+    char name[32];
+    char renderpass_name[32];
+
+    Dynamic_Array stages;
+    Dynamic_Array spv_binaries;
+
+    b8 per_material;
+    b8 per_object;
+
+    Dynamic_Array attributes;
+    Dynamic_Array uniforms;
+} Shader_Config;

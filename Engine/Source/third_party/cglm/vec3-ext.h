@@ -13,16 +13,16 @@
  Functions:
    CGLM_INLINE void  glm_vec3_broadcast(float val, vec3 d);
    CGLM_INLINE void  glm_vec3_fill(vec3 v, float val);
-   CGLM_INLINE bool  glm_vec3_eq(vec3 v, float val);
-   CGLM_INLINE bool  glm_vec3_eq_eps(vec3 v, float val);
-   CGLM_INLINE bool  glm_vec3_eq_all(vec3 v);
-   CGLM_INLINE bool  glm_vec3_eqv(vec3 a, vec3 b);
-   CGLM_INLINE bool  glm_vec3_eqv_eps(vec3 a, vec3 b);
+   CGLM_INLINE b8  glm_vec3_eq(vec3 v, float val);
+   CGLM_INLINE b8  glm_vec3_eq_eps(vec3 v, float val);
+   CGLM_INLINE b8  glm_vec3_eq_all(vec3 v);
+   CGLM_INLINE b8  glm_vec3_eqv(vec3 a, vec3 b);
+   CGLM_INLINE b8  glm_vec3_eqv_eps(vec3 a, vec3 b);
    CGLM_INLINE float glm_vec3_max(vec3 v);
    CGLM_INLINE float glm_vec3_min(vec3 v);
-   CGLM_INLINE bool  glm_vec3_isnan(vec3 v);
-   CGLM_INLINE bool  glm_vec3_isinf(vec3 v);
-   CGLM_INLINE bool  glm_vec3_isvalid(vec3 v);
+   CGLM_INLINE b8  glm_vec3_isnan(vec3 v);
+   CGLM_INLINE b8  glm_vec3_isinf(vec3 v);
+   CGLM_INLINE b8  glm_vec3_isvalid(vec3 v);
    CGLM_INLINE void  glm_vec3_sign(vec3 v, vec3 dest);
    CGLM_INLINE void  glm_vec3_abs(vec3 v, vec3 dest);
    CGLM_INLINE void  glm_vec3_fract(vec3 v, vec3 dest);
@@ -71,7 +71,7 @@ glm_vec3_fill(vec3 v, float val) {
  * @param[in] val value
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_eq(vec3 v, float val) {
   return v[0] == val && v[0] == v[1] && v[0] == v[2];
 }
@@ -83,7 +83,7 @@ glm_vec3_eq(vec3 v, float val) {
  * @param[in] val value
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_eq_eps(vec3 v, float val) {
   return fabsf(v[0] - val) <= GLM_FLT_EPSILON
          && fabsf(v[1] - val) <= GLM_FLT_EPSILON
@@ -96,7 +96,7 @@ glm_vec3_eq_eps(vec3 v, float val) {
  * @param[in] v   vector
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_eq_all(vec3 v) {
   return glm_vec3_eq_eps(v, v[0]);
 }
@@ -108,7 +108,7 @@ glm_vec3_eq_all(vec3 v) {
  * @param[in] b vector
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_eqv(vec3 a, vec3 b) {
   return a[0] == b[0]
          && a[1] == b[1]
@@ -122,7 +122,7 @@ glm_vec3_eqv(vec3 a, vec3 b) {
  * @param[in] b vector
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_eqv_eps(vec3 a, vec3 b) {
   return fabsf(a[0] - b[0]) <= GLM_FLT_EPSILON
          && fabsf(a[1] - b[1]) <= GLM_FLT_EPSILON
@@ -174,7 +174,7 @@ glm_vec3_min(vec3 v) {
  * @param[in] v vector
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_isnan(vec3 v) {
 #ifndef CGLM_FAST_MATH
   return isnan(v[0]) || isnan(v[1]) || isnan(v[2]);
@@ -190,7 +190,7 @@ glm_vec3_isnan(vec3 v) {
  * @param[in] v vector
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_isinf(vec3 v) {
 #ifndef CGLM_FAST_MATH
   return isinf(v[0]) || isinf(v[1]) || isinf(v[2]);
@@ -206,7 +206,7 @@ glm_vec3_isinf(vec3 v) {
  * @param[in] v vector
  */
 CGLM_INLINE
-bool
+b8
 glm_vec3_isvalid(vec3 v) {
   return !glm_vec3_isnan(v) && !glm_vec3_isinf(v);
 }

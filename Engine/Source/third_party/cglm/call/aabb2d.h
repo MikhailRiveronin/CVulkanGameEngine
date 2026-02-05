@@ -48,7 +48,7 @@ void
 glmc_aabb2d_invalidate(vec2 aabb[2]);
 
 CGLM_EXPORT
-bool
+b8
 glmc_aabb2d_isvalid(vec2 aabb[2]);
 
 CGLM_EXPORT
@@ -68,19 +68,19 @@ void
 glmc_aabb2d_center(vec2 aabb[2], vec2 dest);
 
 CGLM_EXPORT
-bool
+b8
 glmc_aabb2d_aabb(vec2 aabb[2], vec2 other[2]);
 
 CGLM_EXPORT
-bool
+b8
 glmc_aabb2d_point(vec2 aabb[2], vec2 point);
 
 CGLM_EXPORT
-bool
+b8
 glmc_aabb2d_contains(vec2 aabb[2], vec2 other[2]);
 
 CGLM_EXPORT
-bool
+b8
 glmc_aabb2d_circle(vec2 aabb[2], vec3 s);
 
 #ifdef __cplusplus

@@ -150,11 +150,11 @@ void
 glmc_ivec2_fill(ivec2 v, int val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_ivec2_eq(ivec2 v, int val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_ivec2_eqv(ivec2 a, ivec2 b);
 
 CGLM_EXPORT

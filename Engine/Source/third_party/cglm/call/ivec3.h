@@ -154,11 +154,11 @@ void
 glmc_ivec3_fill(ivec3 v, int val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_ivec3_eq(ivec3 v, int val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_ivec3_eqv(ivec3 a, ivec3 b);
 
 CGLM_EXPORT

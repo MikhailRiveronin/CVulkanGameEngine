@@ -272,23 +272,23 @@ void
 glmc_vec3_fill(vec3 v, float val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_eq(vec3 v, float val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_eq_eps(vec3 v, float val);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_eq_all(vec3 v);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_eqv(vec3 a, vec3 b);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_eqv_eps(vec3 a, vec3 b);
 
 CGLM_EXPORT
@@ -300,15 +300,15 @@ float
 glmc_vec3_min(vec3 v);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_isnan(vec3 v);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_isinf(vec3 v);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_isvalid(vec3 v);
 
 CGLM_EXPORT
@@ -360,7 +360,7 @@ void
 glmc_vec3_reflect(vec3 v, vec3 n, vec3 dest);
 
 CGLM_EXPORT
-bool
+b8
 glmc_vec3_refract(vec3 v, vec3 n, float eta, vec3 dest);
 
 #ifdef __cplusplus

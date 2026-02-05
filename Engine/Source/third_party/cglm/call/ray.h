@@ -13,7 +13,7 @@ extern "C" {
 #include "../cglm.h"
 
 CGLM_EXPORT
-bool
+b8
 glmc_ray_triangle(vec3   origin,
                   vec3   direction,
                   vec3   v0,
@@ -22,7 +22,7 @@ glmc_ray_triangle(vec3   origin,
                   float *d);
 
 CGLM_EXPORT
-bool
+b8
 glmc_ray_sphere(vec3 origin,
                 vec3 dir,
                 vec4 s,

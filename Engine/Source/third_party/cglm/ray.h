@@ -7,13 +7,13 @@
 
 /*
  Functions:
-   CGLM_INLINE bool glm_ray_triangle(vec3   origin,
+   CGLM_INLINE b8 glm_ray_triangle(vec3   origin,
                                      vec3   direction,
                                      vec3   v0,
                                      vec3   v1,
                                      vec3   v2,
                                      float *d);
- CGLM_INLINE bool glm_ray_sphere(vec3 origin,
+ CGLM_INLINE b8 glm_ray_sphere(vec3 origin,
                                  vec3 dir,
                                  vec4 s,
                                  float * __restrict t1,
@@ -38,7 +38,7 @@
  * @return whether there is intersection
  */
 CGLM_INLINE
-bool
+b8
 glm_ray_triangle(vec3   origin,
                  vec3   direction,
                  vec3   v0,
@@ -100,7 +100,7 @@ glm_ray_triangle(vec3   origin,
  * @returns whether there is intersection
  */
 CGLM_INLINE
-bool 
+b8 
 glm_ray_sphere(vec3 origin,
                vec3 dir,
                vec4 s,

@@ -120,7 +120,7 @@ glms_aabb_(crop_until)(vec3s box[2],
  * @param[in]  planes  frustum planes
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb_(frustum)(vec3s box[2], vec4s planes[6]) {
   vec3 rawBox[2];
   vec4 rawPlanes[6];
@@ -148,7 +148,7 @@ glms_aabb_(invalidate)(vec3s box[2]) {
  * @param[in]  box bounding box
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb_(isvalid)(vec3s box[2]) {
   vec3 rawBox[2];
   glms_vec3_(unpack)(rawBox, box, 2);
@@ -196,7 +196,7 @@ glms_aabb_(center)(vec3s box[2]) {
  * @param[in]   other  other bounding box
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb_(aabb)(vec3s box[2], vec3s other[2]) {
   vec3 rawBox[2];
   vec3 rawOther[2];
@@ -216,7 +216,7 @@ glms_aabb_(aabb)(vec3s box[2], vec3s other[2]) {
  * @param[in]   s      solid sphere
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb_(sphere)(vec3s box[2], vec4s s) {
   vec3 rawBox[2];
 
@@ -231,7 +231,7 @@ glms_aabb_(sphere)(vec3s box[2], vec4s s) {
  * @param[in]   point  point
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb_(point)(vec3s box[2], vec3s point) {
   vec3 rawBox[2];
 
@@ -246,7 +246,7 @@ glms_aabb_(point)(vec3s box[2], vec3s point) {
  * @param[in]   other  other bounding box
  */
 CGLM_INLINE
-bool
+b8
 glms_aabb_(contains)(vec3s box[2], vec3s other[2]) {
   vec3 rawBox[2];
   vec3 rawOther[2];

@@ -777,7 +777,7 @@ glm_vec2_reflect(vec2 v, vec2 n, vec2 dest) {
  * @returns true if refraction occurs; false if total internal reflection occurs.
  */
 CGLM_INLINE
-bool
+b8
 glm_vec2_refract(vec2 v, vec2 n, float eta, vec2 dest) {
   float ndi, eni, k;
 

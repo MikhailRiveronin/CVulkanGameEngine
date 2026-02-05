@@ -26,7 +26,7 @@
    CGLM_INLINE void glm_rotate_atm(mat4 m, vec3 pivot, float angle, vec3 axis);
    CGLM_INLINE void glm_spin(mat4 m, float angle, vec3 axis);
    CGLM_INLINE void glm_decompose_scalev(mat4 m, vec3 s);
-   CGLM_INLINE bool glm_uniscaled(mat4 m);
+   CGLM_INLINE b8 glm_uniscaled(mat4 m);
    CGLM_INLINE void glm_decompose_rs(mat4 m, mat4 r, vec3 s);
    CGLM_INLINE void glm_decompose(mat4 m, vec4 t, mat4 r, vec3 s);
  */
@@ -170,7 +170,7 @@ glm_decompose_scalev(mat4 m, vec3 s) {
  * @return boolean
  */
 CGLM_INLINE
-bool
+b8
 glm_uniscaled(mat4 m) {
   CGLM_ALIGN(8) vec3 s;
   glm_decompose_scalev(m, s);

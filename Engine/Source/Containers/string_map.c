@@ -5,26 +5,43 @@
 
 static u64 hash_name(char const* name, u32 element_count);
 
-void hashtable_create(u64 element_size, u32 element_count, void* memory, b8 is_pointer_type, hashtable* table)
+b8 hashtable_create(u64 count, u64 element_size, void const* block, void const* default_value, String_Map* table)
 {
-    if (!memory || !table) {
-        LOG_ERROR("hashtable_create failed! Pointer to memory and out_hashtable are required.");
-        return;
-    }
-    if (!element_count || !element_size) {
-        LOG_ERROR("element_size and element_count must be a positive non-zero value.");
-        return;
+    if (!table || count == 0 || element_size == 0)
+    {
+        LOG_FATAL("hashtable_create: Invalid input parameters");
+        return FALSE;
     }
 
-    // TODO: Might want to require an allocator and allocate this memory instead.
-    table->memory = memory;
-    table->element_count = element_count;
+    table->count = count;
     table->element_size = element_size;
-    table->is_pointer_type = is_pointer_type;
-    memory_zero(table->memory, element_size * element_count);
+
+    if (block)
+    {
+        table->block = block;
+    }
+    else
+    {
+        table->block = memory_system_allocate(count * element_size, MEMORY_TAG_HASHTABLE);
+        if (!table->block)
+        {
+            LOG_FATAL("hashtable_create: Failed to allocate memory for hashtable");
+            return FALSE;
+        }
+    }
+
+    if (default_value)
+    {
+        for (u32 i = 0; i < table->count; ++i)
+        {
+            // memory_system_copy((char*)table->block + (i * table->element_size), default_value, table->element_size);
+        }
+    }
+
+    return TRUE;
 }
 
-void hashtable_destroy(hashtable* table)
+void hashtable_destroy(String_Map* table)
 {
     if (table) {
         // TODO: If using allocator above, free memory here.
@@ -32,7 +49,7 @@ void hashtable_destroy(hashtable* table)
     }
 }
 
-b8 hashtable_set(hashtable* table, char const* name, void* value)
+b8 hashtable_set(String_Map* table, char const* name, void* value)
 {
     if (!table || !name || !value) {
         LOG_WARNING("hashtable_set requires table, name and value to exist.");
@@ -48,7 +65,7 @@ b8 hashtable_set(hashtable* table, char const* name, void* value)
     return TRUE;
 }
 
-b8 hashtable_set_ptr(hashtable* table, char const* name, void** value)
+b8 hashtable_set_ptr(String_Map* table, char const* name, void** value)
 {
     if (!table || !name) {
         LOG_WARNING("hashtable_set_ptr requires table and name  to exist.");
@@ -64,7 +81,7 @@ b8 hashtable_set_ptr(hashtable* table, char const* name, void** value)
     return TRUE;
 }
 
-b8 hashtable_get(hashtable* table, char const* name, void* value)
+b8 hashtable_get(String_Map* table, char const* name, void* value)
 {
     if (!table || !name || !value) {
         LOG_WARNING("hashtable_get requires table, name and value to exist.");
@@ -80,7 +97,7 @@ b8 hashtable_get(hashtable* table, char const* name, void* value)
     return TRUE;
 }
 
-b8 hashtable_get_ptr(hashtable* table, char const* name, void** value)
+b8 hashtable_get_ptr(String_Map* table, char const* name, void** value)
 {
     if (!table || !name) {
         LOG_WARNING("hashtable_set_ptr requires table and name  to exist.");
@@ -96,7 +113,7 @@ b8 hashtable_get_ptr(hashtable* table, char const* name, void** value)
     return *value;
 }
 
-b8 hashtable_fill(hashtable* table, void* value)
+b8 hashtable_fill(String_Map* table, void* value)
 {
     if (!table || !value) {
         LOG_WARNING("hashtable_set requires table, name and value to exist.");

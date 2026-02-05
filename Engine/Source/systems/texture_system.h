@@ -2,14 +2,14 @@
 
 #include "resources/resources.h"
 
-typedef struct Texture_System_Configuration
+typedef struct Texture_System_Config
 {
     u32 max_texture_count;
-} Texture_System_Configuration;
+} Texture_System_Config;
 
 #define DEFAULT_TEXTURE_NAME "default"
 
-b8 texture_system_startup(u64* required_memory, void* block, Texture_System_Configuration config);
+b8 texture_system_startup(u64* required_memory, void* block, Texture_System_Config config);
 void texture_system_shutdown();
 Texture* texture_system_acquire(char const* name, b8 auto_release);
 void texture_system_release(char const* name);

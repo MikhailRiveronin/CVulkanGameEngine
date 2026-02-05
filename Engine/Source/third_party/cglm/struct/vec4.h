@@ -67,7 +67,7 @@
    CGLM_INLINE vec4s glms_vec4_swizzle(vec4s v, int mask);
    CGLM_INLINE vec4s glms_vec4_make(float * restrict src);
    CGLM_INLINE vec4s glms_vec4_reflect(vec4s v, vec4s n);
-   CGLM_INLINE bool  glms_vec4_refract(vec4s v, vec4s n, float eta, vec4s *dest)
+   CGLM_INLINE b8  glms_vec4_refract(vec4s v, vec4s n, float eta, vec4s *dest)
 
  Deprecated:
    glms_vec4_step_uni  -->  use glms_vec4_steps
@@ -953,7 +953,7 @@ glms_vec4_(reflect)(vec4s v, vec4s n) {
  * @returns true if refraction occurs; false if total internal reflection occurs.
  */
 CGLM_INLINE
-bool
+b8
 glms_vec4_(refract)(vec4s v, vec4s n, float eta, vec4s * __restrict dest) {
   return glm_vec4_refract(v.raw, n.raw, eta, dest->raw);
 }

@@ -1,7 +1,7 @@
 #include "string_utils.h"
 
 #include "memory_system.h"
-#include <string.h>
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>

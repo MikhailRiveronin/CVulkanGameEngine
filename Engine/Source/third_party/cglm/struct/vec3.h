@@ -77,7 +77,7 @@
    CGLM_INLINE vec3s glms_vec3_make(float * restrict src);
    CGLM_INLINE vec3s glms_vec3_faceforward(vec3s n, vec3s v, vec3s nref);
    CGLM_INLINE vec3s glms_vec3_reflect(vec3s v, vec3s n);
-   CGLM_INLINE bool  glms_vec3_refract(vec3s v, vec3s n, float eta, vec3s *dest)
+   CGLM_INLINE b8  glms_vec3_refract(vec3s v, vec3s n, float eta, vec3s *dest)
 
  Convenient:
    CGLM_INLINE vec3s glms_cross(vec3s a, vec3s b);
@@ -1124,7 +1124,7 @@ glms_vec3_(reflect)(vec3s v, vec3s n) {
  * @returns true if refraction occurs; false if total internal reflection occurs.
  */
 CGLM_INLINE
-bool
+b8
 glms_vec3_(refract)(vec3s v, vec3s n, float eta, vec3s * __restrict dest) {
   return glm_vec3_refract(v.raw, n.raw, eta, dest->raw);
 }

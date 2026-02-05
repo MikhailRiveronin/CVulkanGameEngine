@@ -90,7 +90,7 @@ void
 glmc_decompose_scalev(mat4 m, vec3 s);
 
 CGLM_EXPORT
-bool
+b8
 glmc_uniscaled(mat4 m);
 
 CGLM_EXPORT

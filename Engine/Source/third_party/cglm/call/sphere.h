@@ -26,11 +26,11 @@ void
 glmc_sphere_merge(vec4 s1, vec4 s2, vec4 dest);
 
 CGLM_EXPORT
-bool
+b8
 glmc_sphere_sphere(vec4 s1, vec4 s2);
 
 CGLM_EXPORT
-bool
+b8
 glmc_sphere_point(vec4 s, vec3 point);
 
 #ifdef __cplusplus
