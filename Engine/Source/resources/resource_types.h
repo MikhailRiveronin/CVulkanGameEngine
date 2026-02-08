@@ -1,9 +1,33 @@
 #pragma once
 
 #include "defines.h"
-#include "third_party/cglm/struct.h"
-
 #include "containers/dynamic_array.h"
+
+// #include "third_party/cglm/struct.h"
+
+
+
+typedef struct Shader_Config
+{
+    char name[32];
+    char renderpass_name[32];
+
+    Dynamic_Array stages;
+    Dynamic_Array spv_binaries;
+
+    bool per_material;
+    bool per_object;
+
+    Dynamic_Array attributes;
+    Dynamic_Array uniforms;
+
+    u32 max_descriptor_set_count;
+} Shader_Config;
+
+
+
+
+
 
 typedef struct image_resource_data
 {
@@ -119,17 +143,4 @@ typedef struct Uniform_Config
     Descriptor_Set_Scope scope;
 } Uniform_Config;
 
-typedef struct Shader_Config
-{
-    char name[32];
-    char renderpass_name[32];
 
-    Dynamic_Array stages;
-    Dynamic_Array spv_binaries;
-
-    b8 per_material;
-    b8 per_object;
-
-    Dynamic_Array attributes;
-    Dynamic_Array uniforms;
-} Shader_Config;

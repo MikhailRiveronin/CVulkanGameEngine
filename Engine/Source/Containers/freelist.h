@@ -1,20 +1,29 @@
 #pragma once
 
 #include "defines.h"
-
-typedef struct freelist
-{
-    void* internal;
-} freelist;
+#include "linked_list.h"
 
 /**
- * @brief Creates a freelist. Must be called twice; once passing NULL to _memory_ to obtain amount of _required_memory_, and a second time passing a pre-allocated block to _memory_.
- * @param required_memory Total memory required, in bytes, including bookkeeping.
- * @param block NULL, or a pre-allocated block of memory.
- * @param tracked_memory The amount of tracked memory, in bytes.
- * @param list A pointer to the created freelist.
+ * @brief A first-fit freelist organized as linked list.
  */
-LIB_API void freelist_create(u64* required_memory, void* block, u32 tracked_memory, freelist* list);
+typedef struct Freelist
+{
+    u32 total_size;
+    Linked_List* nodes;
+} Freelist;
+
+LIB_API Freelist* freelist_create(u32 size);
+LIB_API void freelist_destroy(Freelist* list);
+LIB_API bool freelist_allocate(Freelist* list, u32 required_size, u32* offset);
+LIB_API bool freelist_free(Freelist* list, u32 offset, u32 size);
+
+
+
+
+
+
+
+
 
 /**
  * @brief Destroys a freelist.

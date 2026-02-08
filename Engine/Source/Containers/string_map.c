@@ -1,7 +1,6 @@
 #include "string_map.h"
 
 #include "core/logger.h"
-#include "core/string_utils.h"
 #include "systems/memory_system.h"
 
 typedef struct String_Map_Entry
@@ -13,17 +12,17 @@ typedef struct String_Map_Entry
 /**
  * @brief DJB2 algorithm implementation.
  */
-static inline u32 hash(unsigned char* str);
-static inline u32 round_up_to_next_pow2(u32 value);
-static inline Linked_List* get_bucket(String_Map const* map, u32 hash_key);
-static void* insert(void const* data, u32 data_size);
-static void erase(void* data, u32 data_size);
-static bool compare(void const* entry, void const* key, u32 data_size);
+static u32 hash(unsigned char* str);
+static u32 round_up_to_next_pow2(u32 value);
+static Linked_List* get_bucket(String_Map const* map, u32 hash_key);
+static void* insert(void const* data);
+static void erase(void* data);
+static bool compare(void const* node_data, void const* key);
 
-String_Map* string_map_create(char const* value_type, u32 size, u32 data_size)
+String_Map* string_map_create(char const* type, u32 size, u32 data_size)
 {
     String_Map* map = memory_system_allocate(sizeof(*map), MEMORY_TAG_CONTAINERS);
-    strncpy(map->value_type, value_type, sizeof(map->value_type) - 1);
+    strncpy(map->type, type, sizeof(map->type) - 1);
     map->size = round_up_to_next_pow2(size);
     map->data_size = data_size;
     map->buckets = memory_system_allocate(map->size * sizeof(*map->buckets), MEMORY_TAG_CONTAINERS);
@@ -48,21 +47,20 @@ void string_map_destroy(String_Map* map)
 
 void string_map_insert(String_Map* map, char const* key, void const* data)
 {
-    String_Map_Entry entry;
-    strncpy(entry.key, key, sizeof(entry.key) - 1);
-    entry.data = memory_system_allocate(map->data_size, MEMORY_TAG_CONTAINERS);
-    memory_system_copy(entry.data, data, map->data_size);
-
     u32 hash_key = hash(key);
     Linked_List* bucket = get_bucket(map, hash_key);
     if (!bucket)
     {
-        bucket = LINKED_LIST_CREATE(String_Map_Entry, insert, erase, compare);
+        bucket = linked_list_create("String_Map_Entry", insert, erase, compare);
     }
 
-    if (!linked_list_contains(bucket, &entry))
+    if (!linked_list_contains(bucket, key))
     {
-        linked_list_insert(bucket, &entry);
+        String_Map_Entry entry;
+        strncpy(entry.key, key, sizeof(entry.key) - 1);
+        entry.data = memory_system_allocate(map->data_size, MEMORY_TAG_CONTAINERS);
+        memory_system_copy(entry.data, data, map->data_size);
+        linked_list_insert_front(bucket, &entry);
     }
     else
     {
@@ -91,16 +89,16 @@ bool string_map_contains(String_Map* map, char const* key)
     return bucket && linked_list_contains(bucket, &key);
 }
 
-void* string_map_find(String_Map* map, char const* key)
+void* string_map_at(String_Map* map, char const* key)
 {
     u32 hash_key = hash(key);
     Linked_List* bucket = get_bucket(map, hash_key);
     if (bucket)
     {
-        return linked_list_find(bucket, key);
+        return linked_list_at(bucket, key);
     }
 
-    LOG_WARNING("string_map_find: Trying to find non-existing data");
+    LOG_WARNING("string_map_at: Trying to access non-existing data");
     return 0;
 }
 
@@ -135,19 +133,19 @@ Linked_List* get_bucket(String_Map const* map, u32 hash_key)
     return map->buckets[index];
 }
 
-void* insert(void const* data, u32 data_size)
+void* insert(void const* data)
 {
-    void* new_data = memory_system_allocate(data_size, MEMORY_TAG_CONTAINERS);
-    memory_system_copy(new_data, data, data_size);
+    void* new_data = memory_system_allocate(sizeof(String_Map_Entry), MEMORY_TAG_CONTAINERS);
+    memory_system_copy(new_data, data, sizeof(String_Map_Entry));
     return new_data;
 }
 
-void erase(void* data, u32 data_size)
+void erase(void* data)
 {
-    memory_system_free(data, data_size, MEMORY_TAG_CONTAINERS);
+    memory_system_free(data, sizeof(String_Map_Entry), MEMORY_TAG_CONTAINERS);
 }
 
-bool compare(void const* entry, void const* key, u32 data_size)
+bool compare(void const* node_data, void const* key)
 {
-    return string_equal(((String_Map_Entry*)entry)->key, key);
+    return strcmp(((String_Map_Entry*)node_data)->key, key) == 0;
 }

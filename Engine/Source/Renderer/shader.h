@@ -1,6 +1,5 @@
 #include "defines.h"
+#include "renderer_types.h"
+#include "resources/resource_types.h"
 
-b8 shader_create(char const* renderpass_name);
-
-
-
+bool shader_create(Context const* context, Shader_Config const* config, Shader* shader);

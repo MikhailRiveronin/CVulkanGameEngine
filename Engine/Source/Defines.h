@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 // Types.
 typedef int8_t i8;

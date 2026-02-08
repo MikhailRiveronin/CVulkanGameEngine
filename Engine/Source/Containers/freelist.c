@@ -3,262 +3,127 @@
 #include "core/logger.h"
 #include "systems/memory_system.h"
 
-typedef struct freelist_node
+typedef struct Freelist_Entry
 {
-    u64 offset;
-    u64 tracked_memory;
-    struct freelist_node* next;
-} freelist_node;
+    u32 offset;
+    u32 size;
+} Freelist_Entry;
 
-typedef struct freelist_state
+static void* insert(void const* data);
+static void erase(void* data);
+static bool compare(void const* node_data, void const* offset);
+static void coalesce(Linked_List const* nodes, Linked_List_Node* first);
+
+Freelist* freelist_create(u32 size)
 {
-    u64 tracked_memory;
-    freelist_node* head;
-    void* nodes;
-} freelist_state;
+    Freelist* list = memory_system_allocate(sizeof(*list), MEMORY_TAG_CONTAINERS);
+    list->total_size = size;
+    list->nodes = linked_list_create("Freelist_Entry", insert, erase, compare);
 
-#define MAX_ENTRY_COUNT 1024
-
-static void invalidate_node(freelist_node* node);
-static freelist_node* get_empty_node(freelist* list);
-static void try_coalesce_nodes(freelist* list, freelist_node* previous, freelist_node* new_node);
-
-void freelist_create(u64* required_memory, void* block, u32 tracked_memory, freelist* list)
-{
-    if (!required_memory || tracked_memory == 0)
-    {
-        LOG_ERROR("freelist_create: Invalid input parameters");
-        return FALSE;
-    }
-
-    u64 state_required_memory = sizeof(freelist_state);
-    u64 node_array_required_memory = MAX_ENTRY_COUNT * sizeof(freelist_node);
-    *required_memory = state_required_memory + node_array_required_memory;
-    if (!block)
-    {
-        return;
-    }
-
-    freelist_state* state = (freelist_state*)block;
-    state->tracked_memory = tracked_memory;
-    state->head = (freelist_node*)state->nodes;
-    state->head->offset = 0;
-    state->head->tracked_memory = state->tracked_memory;
-    state->head->next = 0;
-    state->nodes = (void*)((char*)state + state_required_memory);
-    memory_system_zero(state->nodes, node_array_required_memory);
-    for (u32 i = 1; i < MAX_ENTRY_COUNT; ++i)
-    {
-        freelist_node* node = &((freelist_node*)state->nodes)[i];
-        invalidate_node(node);
-    }
-
-    list->internal = state;
+    Freelist_Entry entry;
+    entry.offset = 0;
+    entry.size = list->total_size;
+    linked_list_insert_front(list->nodes, &entry);
+    return list;
 }
 
-void freelist_destroy(freelist* list)
+void freelist_destroy(Freelist* list)
 {
-    if (!list || !list->internal)
-    {
-        LOG_ERROR("freelist_destroy: Invalid input parameters");
-        return;
-    }
-
-    freelist_state* state = list->internal;
-    u64 state_required_memory = sizeof(freelist_state);
-    u64 node_array_required_memory = MAX_ENTRY_COUNT * sizeof(freelist_node);
-    u64 required_memory = state_required_memory + node_array_required_memory;
-    memory_system_zero(state, required_memory);
-
-    list->internal = 0;
+    linked_list_destroy(list->nodes);
+    memory_system_free(list, sizeof(*list), MEMORY_TAG_CONTAINERS);
 }
 
-b8 freelist_allocate(freelist* list, u64 size, u32* offset)
+bool freelist_allocate(Freelist* list, u32 required_size, u32* offset)
 {
-    if (!list || !list->internal || !offset)
+    Linked_List_Node** head = list->nodes->head;
+    for (; *head; head = &(*head)->next)
     {
-        LOG_ERROR("freelist_allocate: Invalid input parameters");
-        return FALSE;
-    }
-
-    freelist_state* state = (freelist_state*)list->internal;
-    freelist_node* node = state->head;
-    freelist_node* previous = 0;
-    while (node)
-    {
-        if (node->tracked_memory >= size)
+        Freelist_Entry* entry = (*head)->data;
+        if (entry->size >= required_size)
         {
-            *offset = node->offset;
-            node->offset += size;
-            node->tracked_memory -= size;
-            if (node->tracked_memory == 0)
+            *offset = entry->offset;
+            entry->offset += required_size;
+            entry->size -= required_size;
+            if (entry->size == 0)
             {
-                if (previous)
-                {
-                    previous->next = node->next;
-                }
-                else
-                {
-                    state->head = node->next;
-                }
-
-                invalidate_node(node);
+                linked_list_erase(list->nodes, *head);
             }
 
-            return TRUE;
+            return true;
         }
-
-        previous = node;
-        node = node->next;
     }
 
-    LOG_WARNING("freelist_allocate: Failed to find a block of memory with enough free space");
-    return FALSE;
+    LOG_WARNING("freelist_allocate: Failed to find block with required size");
+    return false;
 }
 
-b8 freelist_free(freelist* list, u64 size, u64 offset)
+bool freelist_free(Freelist* list, u32 offset, u32 size)
 {
-    if (!list || !list->internal || size == 0)
-    {
-        LOG_ERROR("freelist_free: Invalid input parameters");
-        return FALSE;
-    }
+    Freelist_Entry new_entry;
+    new_entry.offset = offset;
+    new_entry.size = size;
 
-    freelist_state* state = list->internal;
-    freelist_node* node = state->head;
-    freelist_node* previous = 0;
-    while (node)
+    Linked_List_Node* prev = 0;
+    for (Linked_List_Node** head = list->nodes->head; (*head); head = &(*head)->next)
     {
-        if (node->offset > offset)
+        if (((Freelist_Entry*)*head)->offset > offset)
         {
-            freelist_node* new_node = get_empty_node(list);
-            new_node->tracked_memory = size;
-            new_node->offset = offset;
-            if (previous)
-            {
-                new_node->next = node;
-                previous->next = new_node;
-            }
-            else
-            {
-                new_node->next = node;
-                state->head = new_node;
-            }
-
-            try_coalesce_nodes(list, previous, new_node);
-            return TRUE;
+            linked_list_insert_after(list->nodes, prev, &new_entry);
+            coalesce(list->nodes, prev);
+            return true;
         }
 
-        previous = node;
-        node = node->next;
+        prev = *head;
     }
 
-    LOG_WARNING("freelist_free: Failed to find block to be freed");
-    return FALSE;
+    if ((new_entry.offset + new_entry.size) <= list->total_size)
+    {
+        linked_list_insert_after(list->nodes, prev, &new_entry);
+        coalesce(list->nodes, prev);
+        return true;
+    }
+
+    LOG_WARNING("freelist_free: Failed to free block at required offset");
+    return false;
 }
 
-b8 freelist_resize(freelist* list, u64 new_tracked_memory)
+void* insert(void const* data)
 {
-    freelist_state* state = (freelist_state*)list->internal;
-    if (!list || (new_tracked_memory <= state->tracked_memory))
-    {
-        LOG_ERROR("freelist_resize: Invalid input parameters");
-        return FALSE;
-    }
+    void* new_data = memory_system_allocate(sizeof(Freelist_Entry), MEMORY_TAG_CONTAINERS);
+    memory_system_copy(new_data, data, sizeof(Freelist_Entry));
+    return new_data;
+}
 
-    for (u32 i = 0; i < MAX_ENTRY_COUNT; ++i)
+void erase(void* data)
+{
+    memory_system_free(data, sizeof(Freelist_Entry), MEMORY_TAG_CONTAINERS);
+}
+
+bool compare(void const* node_data, void const* offset)
+{
+    return ((Freelist_Entry*)node_data)->offset == *(u32*)offset;
+}
+
+void coalesce(Linked_List const* nodes, Linked_List_Node* first)
+{
+    Linked_List_Node* second = first->next;
+    Linked_List_Node* third = second->next;
+
+    Freelist_Entry* first_entry = first->data;
+    Freelist_Entry* second_entry = second->data;
+    if (third)
     {
-        freelist_node* node = &((freelist_node*)state->nodes)[i];
-        if (node->offset == INVALID_ID)
+        Freelist_Entry* third_entry = third->data;
+        if ((second_entry->offset + second_entry->size) == third_entry->offset)
         {
-            u64 diff = new_tracked_memory - state->tracked_memory;
-            node->tracked_memory += diff;
-            return TRUE;
+            second_entry->size += third_entry->size;
+            linked_list_erase(nodes, third);
         }
     }
 
-    LOG_WARNING("freelist_resize: Failed to resize freelist");
-    return FALSE;
-}
-
-void freelist_clear(freelist* list)
-{
-    if (!list || !list->internal)
+    if ((first_entry->offset + first_entry->size) == second_entry->offset)
     {
-        LOG_ERROR("freelist_clear: Invalid input parameters");
-        return;
-    }
-
-    freelist_state* state = (freelist_state*)list->internal;
-    state->head->offset = 0;
-    state->head->tracked_memory = state->tracked_memory;
-    state->head->next = 0;
-    for (u32 i = 1; i < MAX_ENTRY_COUNT; ++i)
-    {
-        freelist_node* node = &((freelist_node*)state->nodes)[i];
-        node->offset = INVALID_ID;
-        node->tracked_memory = INVALID_ID;
-        node->next = 0;
-    }
-}
-
-u64 freelist_free_space(freelist* list)
-{
-    if (!list || !list->internal)
-    {
-        LOG_ERROR("freelist_free_space: Invalid input parameters");
-        return 0;
-    }
-
-    freelist_state* state = (freelist_state*)list->internal;
-    freelist_node* node = state->head;
-    u64 space = 0;
-    while (node)
-    {
-        space += node->tracked_memory;
-        node = node->next;
-    }
-
-    return space;
-}
-
-void invalidate_node(freelist_node* node)
-{
-    node->offset = INVALID_ID;
-    node->tracked_memory = INVALID_ID;
-    node->next = 0;
-}
-
-freelist_node* get_empty_node(freelist* list)
-{
-    freelist_state* state = (freelist_state*)list->internal;
-    for (u32 i = 0; i < MAX_ENTRY_COUNT; ++i)
-    {
-        freelist_node* node = &((freelist_node*)state->nodes)[i];
-        if (node->offset == INVALID_ID)
-        {
-            return node;
-        }
-    }
-
-    return 0;
-}
-
-void try_coalesce_nodes(freelist* list, freelist_node* previous, freelist_node* new_node)
-{
-    if (new_node->next && ((new_node->offset + new_node->tracked_memory) == new_node->next->offset))
-    {
-        new_node->tracked_memory += new_node->next->tracked_memory;
-        freelist_node* tmp = new_node->next;
-        new_node->next = tmp->next;
-        invalidate_node(tmp);
-    }
-
-    if (previous && ((previous->offset + previous->tracked_memory) == new_node->offset))
-    {
-        previous->tracked_memory += new_node->tracked_memory;
-        freelist_node* tmp = new_node;
-        previous->next = tmp->next;
-        invalidate_node(tmp);
+        first_entry->size += second_entry->size;
+        linked_list_erase(nodes, second);
     }
 }

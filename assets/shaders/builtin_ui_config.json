@@ -1,6 +1,6 @@
 {
     "name": "builtin_material",
-    "renderpass": "renderpass_builtin_world",
+    "renderpass": "renderpass_builtin_ui",
     "stages": [
         "vertex",
         "fragment"

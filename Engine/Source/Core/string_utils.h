@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "third_party/cglm/cglm.h"
-#include <string.h>
+
 
 u64 string_length(char const* str);
 char* string_duplicate(char const* str);
