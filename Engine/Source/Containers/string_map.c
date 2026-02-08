@@ -1,23 +1,22 @@
 #include "string_map.h"
 
-#include "core/logger.h"
+#include "core/string_utils.h"
 #include "systems/memory_system.h"
-
-typedef struct String_Map_Entry
-{
-    char key[32];
-    void* data;
-} String_Map_Entry;
 
 /**
  * @brief DJB2 algorithm implementation.
  */
-static u32 hash(unsigned char* str);
+static u32 hash(char* str);
 static u32 round_up_to_next_pow2(u32 value);
-static Linked_List* get_bucket(String_Map const* map, u32 hash_key);
-static void* insert(void const* data);
-static void erase(void* data);
-static bool compare(void const* node_data, void const* key);
+static u32 probe(u32 hash_key, u32 i, u32 map_size);
+
+/**
+ * @brief Find the bucket containing key, if the key is in the table, or the first one past the end of its probe.
+ */
+static Bucket* find_by_key(String_Map* map, char const* key);
+static Bucket* find_empty(String_Map* map, u32 hash_key);
+static bool contains(String_Map* map, char const* key);
+static void resize(String_Map* map, u32 new_size);
 
 String_Map* string_map_create(char const* type, u32 size, u32 data_size)
 {
@@ -25,10 +24,12 @@ String_Map* string_map_create(char const* type, u32 size, u32 data_size)
     strncpy(map->type, type, sizeof(map->type) - 1);
     map->size = round_up_to_next_pow2(size);
     map->data_size = data_size;
+    map->used = 0;
     map->buckets = memory_system_allocate(map->size * sizeof(*map->buckets), MEMORY_TAG_CONTAINERS);
     for (u32 i = 0; i < map->size; ++i)
     {
-        map->buckets[i] = 0;
+        memory_system_zero(&map->buckets[i], sizeof(map->buckets[i]));
+        map->buckets[i].is_empty = true;
     }
 
     return map;
@@ -38,71 +39,52 @@ void string_map_destroy(String_Map* map)
 {
     for (u32 i = 0; i < map->size; ++i)
     {
-        linked_list_destroy(map->buckets[i]);
+        memory_system_free(&map->buckets[i], sizeof(map->buckets[i]), MEMORY_TAG_CONTAINERS);
     }
 
     memory_system_free(map->buckets, map->size * sizeof(*map->buckets), MEMORY_TAG_CONTAINERS);
     memory_system_free(map, sizeof(*map), MEMORY_TAG_CONTAINERS);
 }
 
-void string_map_insert(String_Map* map, char const* key, void const* data)
+void string_map_insert(String_Map* map, char const* key, void const* value)
 {
-    u32 hash_key = hash(key);
-    Linked_List* bucket = get_bucket(map, hash_key);
-    if (!bucket)
+    if (!contains(map, key))
     {
-        bucket = linked_list_create("String_Map_Entry", insert, erase, compare);
-    }
+        Bucket* bucket = find_empty(map, hash(key));
+        if (!bucket->in_probe)
+        {
+            ++map->used;
+        }
 
-    if (!linked_list_contains(bucket, key))
-    {
-        String_Map_Entry entry;
-        strncpy(entry.key, key, sizeof(entry.key) - 1);
-        entry.data = memory_system_allocate(map->data_size, MEMORY_TAG_CONTAINERS);
-        memory_system_copy(entry.data, data, map->data_size);
-        linked_list_insert_front(bucket, &entry);
-    }
-    else
-    {
-        LOG_WARNING("string_map_insert: Trying to insert already existing data. Not happening");
+        bucket->is_empty = false;
+        bucket->in_probe = true;
+        strncpy(bucket->key, key, sizeof(bucket->key) - 1);
+        memory_system_copy(bucket->value, value, map->data_size);
+
+        if (map->used > map->size / 2)
+        {
+            resize(map, map->size * 2);
+        }
     }
 }
 
 void string_map_erase(String_Map* map, char const* key)
 {
-    u32 hash_key = hash(key);
-    Linked_List* bucket = get_bucket(map, hash_key);
-    if (bucket)
+    Bucket* bucket = find_by_key(map, key);
+    if (string_equal(bucket->key, key))
     {
-        linked_list_erase(bucket, key);
-    }
-    else
-    {
-        LOG_WARNING("string_map_erase: Trying to delete non-existing data");
+        memory_system_free(bucket->value, map->data_size, MEMORY_TAG_CONTAINERS);
+        bucket->is_empty = true;
     }
 }
 
-bool string_map_contains(String_Map* map, char const* key)
+void* string_map_at(String_Map const* map, char const* key)
 {
-    u32 hash_key = hash(key);
-    Linked_List* bucket = get_bucket(map, hash_key);
-    return bucket && linked_list_contains(bucket, &key);
+    Bucket* bucket = find_by_key(map, key);
+    return bucket->in_probe ? bucket->value : 0;
 }
 
-void* string_map_at(String_Map* map, char const* key)
-{
-    u32 hash_key = hash(key);
-    Linked_List* bucket = get_bucket(map, hash_key);
-    if (bucket)
-    {
-        return linked_list_at(bucket, key);
-    }
-
-    LOG_WARNING("string_map_at: Trying to access non-existing data");
-    return 0;
-}
-
-u32 hash(unsigned char* str)
+u32 hash(char* str)
 {
     u32 hash = 5381;
     int c;
@@ -126,26 +108,68 @@ u32 round_up_to_next_pow2(u32 value)
     return value;
 }
 
-Linked_List* get_bucket(String_Map const* map, u32 hash_key)
+u32 probe(u32 hash_key, u32 i, u32 map_size)
 {
-    u32 mask = map->size - 1;
-    u32 index = hash_key & mask;
-    return map->buckets[index];
+    return (hash_key + i * ((hash_key << 1) | 1)) & (map_size - 1);
 }
 
-void* insert(void const* data)
+Bucket* find_by_key(String_Map* map, char const* key)
 {
-    void* new_data = memory_system_allocate(sizeof(String_Map_Entry), MEMORY_TAG_CONTAINERS);
-    memory_system_copy(new_data, data, sizeof(String_Map_Entry));
-    return new_data;
+    for (u32 i = 0; i < map->size; ++i)
+    {
+        Bucket* bucket = map->buckets + probe(hash(key), i, map->size);
+        if (string_equal(bucket->key, key) || !bucket->in_probe)
+        {
+            return bucket;
+        }
+    }
+
+    return 0;
 }
 
-void erase(void* data)
+Bucket* find_empty(String_Map* map, u32 hash_key)
 {
-    memory_system_free(data, sizeof(String_Map_Entry), MEMORY_TAG_CONTAINERS);
+    for (u32 i = 0; i < map->size; ++i)
+    {
+        Bucket* bucket = map->buckets + probe(hash_key, i, map->size);
+        if (bucket->is_empty)
+        {
+            return bucket;
+        }
+    }
+
+    return 0;
 }
 
-bool compare(void const* node_data, void const* key)
+bool contains(String_Map* map, char const* key)
 {
-    return strcmp(((String_Map_Entry*)node_data)->key, key) == 0;
+    Bucket* bucket = find_by_key(map, key);
+    return string_equal(bucket->key, key);
+}
+
+void resize(String_Map* map, u32 new_size)
+{
+    u32 old_size = map->size;
+    Bucket* old_buckets = map->buckets;
+
+    map->size = new_size;
+    map->used = 0;
+    map->buckets = memory_system_allocate(map->size * sizeof(*map->buckets), MEMORY_TAG_CONTAINERS);
+    for (u32 i = 0; i < map->size; ++i)
+    {
+        memory_system_zero(&map->buckets[i], sizeof(map->buckets[i]));
+        map->buckets[i].is_empty = true;
+    }
+
+    for (u32 i = 0; i < old_size; ++i)
+    {
+        if (!old_buckets[i].is_empty)
+        {
+            string_map_insert(map, old_buckets[i].key, old_buckets[i].value);
+        }
+
+        memory_system_free(old_buckets[i].value, map->data_size, MEMORY_TAG_CONTAINERS);
+    }
+
+    memory_system_free(old_buckets, old_size * sizeof(*old_buckets), MEMORY_TAG_CONTAINERS);
 }
