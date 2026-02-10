@@ -1,69 +1,62 @@
 #include "binary_loader.h"
-#include "loader_utils.h"
 
+#include "config.h"
 #include "core/logger.h"
-#include "systems/memory_system.h"
 #include "core/string_utils.h"
-#include "resources/resources.h"
-#include "systems/resource_system.h"
-
 #include "platform/filesystem.h"
+#include "systems/memory_system.h"
 
-b8 binary_loader_load(struct Resource_Loader* self, char const* name, Resource* out_resource) {
-    if (!self || !name || !out_resource) {
-        return FALSE;
-    }
+static bool load(char const* filename, Resource* resource);
+static void unload(Resource* resource);
 
-    char* format_str = "%s/%s";
-    char full_file_path[512];
-    string_format(full_file_path, format_str, "D:/Projects/CVulkanGameEngine/build/assets", name);
-
-    File_Handle f;
-    if (!filesystem_open(full_file_path, ACCESS_MODE_READ, &f)) {
-        LOG_ERROR("binary_loader_load - unable to open file for binary reading: '%s'.", full_file_path);
-        return FALSE;
-    }
-
-    // TODO: Should be using an allocator here.
-    out_resource->complete_path = string_duplicate(full_file_path);
-
-    u64 file_size = 0;
-    if (!filesystem_size(&f, &file_size)) {
-        LOG_ERROR("Unable to binary read file: %s.", full_file_path);
-        filesystem_close(&f);
-        return FALSE;
-    }
-
-    // TODO: Should be using an allocator here.
-    u8* resource_data = memory_allocate(sizeof(u8) * file_size, MEMORY_TAG_ARRAY);
-    u64 read_size = 0;
-    if (!filesystem_read_all(&f, resource_data, &read_size)) {
-        LOG_ERROR("Unable to binary read file: %s.", full_file_path);
-        filesystem_close(&f);
-        return FALSE;
-    }
-
-    filesystem_close(&f);
-
-    out_resource->data = resource_data;
-    out_resource->data_size = read_size;
-    out_resource->name = name;
-
-    return TRUE;
-}
-
-void binary_loader_unload(struct Resource_Loader* self, Resource* resource) {
-    if (!resource_unload(self, resource, MEMORY_TAG_ARRAY)) {
-        LOG_WARNING("binary_loader_unload called with nullptr for self or resource.");
-    }
-}
-
-Resource_Loader binary_loader_create() {
-    Resource_Loader loader;
-    loader.type = RESOURCE_TYPE_BINARY;
-    loader.load = binary_loader_load;
-    loader.unload = binary_loader_unload;
-    loader.resource_type_subfolder = "";
-
+Resource_Loader* binary_loader_create()
+{
+    Resource_Loader* loader = memory_system_allocate(sizeof(*loader), MEMORY_TAG_LOADERS);
+    loader->load = load;
+    loader->unload = unload;
     return loader;
+}
+
+bool load(char const* filename, Resource* resource)
+{
+    if (!filename || !resource)
+    {
+        LOG_FATAL("binary_loader load: Invalid parameters");
+        return false;
+    }
+
+    char path[256];
+    string_format(path, "%s/%s/%s", ASSETS_DIR, "shaders/spirv", filename);
+    File_Handle handle;
+    if (!filesystem_open(path, FILE_ACCESS_MODE_READ_BINARY, &handle))
+    {
+        LOG_FATAL("binary_loader load: Failed to open %s for binary reading", path);
+        return false;
+    }
+
+    u32 data_size = filesystem_size(&handle);
+    u8* data = memory_system_allocate(data_size, MEMORY_TAG_RESOURCES);
+    if (!filesystem_read(&handle, data, data_size))
+    {
+        LOG_FATAL("binary_loader load: Failed to read %s", path);
+        filesystem_close(&handle);
+        return false;
+    }
+
+    filesystem_close(&handle);
+    resource->data = data;
+    resource->data_size = data_size;
+    return true;
+}
+
+void unload(Resource* resource)
+{
+    if (!resource)
+    {
+        LOG_WARNING("binary_loader unload: Invalid parameters");
+    }
+
+    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
+    resource->data = 0;
+    resource->data_size = 0;
 }

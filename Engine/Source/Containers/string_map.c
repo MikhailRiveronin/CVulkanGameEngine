@@ -6,7 +6,7 @@
 /**
  * @brief DJB2 algorithm implementation.
  */
-static u32 hash(char* str);
+static u32 hash(unsigned char* str);
 static u32 round_up_to_next_pow2(u32 value);
 static u32 probe(u32 hash_key, u32 i, u32 map_size);
 
@@ -84,7 +84,7 @@ void* string_map_at(String_Map const* map, char const* key)
     return bucket->in_probe ? bucket->value : 0;
 }
 
-u32 hash(char* str)
+u32 hash(unsigned char* str)
 {
     u32 hash = 5381;
     int c;

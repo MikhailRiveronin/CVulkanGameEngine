@@ -1,45 +1,47 @@
 #include "shader_config_loader.h"
 
 #include "config.h"
+#include "core/logger.h"
 #include "core/string_utils.h"
-#include "resources/resource_types.h"
 #include "systems/memory_system.h"
-#include "systems/resource_system.h"
 #include "third_party/cJSON/cJSON.h"
 
-b8 load_shader_config(char const* filename, Resource* resource);
-void unload_shader_config(Resource* resource);
+static bool load(char const* filename, Resource* resource);
+static void unload(Resource* resource);
 
-Resource_Loader shader_config_loader_create()
+Resource_Loader* shader_config_loader_create()
 {
-    Resource_Loader loader;
-    loader.id = RESOURCE_TYPE_SHADER_CONFIG;
-    loader.type = RESOURCE_TYPE_SHADER_CONFIG;
-    loader.load = load_shader_config;
-    loader.unload = unload_shader_config;
+    Resource_Loader* loader = memory_system_allocate(sizeof(*loader), MEMORY_TAG_LOADERS);
+    loader->load = load;
+    loader->unload = unload;
     return loader;
 }
 
-b8 load_shader_config(char const* filename, Resource* resource)
+bool load(char const* filename, Resource* resource)
 {
+    if (!filename || !resource)
+    {
+        LOG_FATAL("shader_config_loader load: Invalid parameters");
+        return false;
+    }
+
     char path[256];
     string_format(path, "%s/%s/%s", ASSETS_DIR, "shaders", filename);
-
     cJSON* json = cJSON_Parse(path);
     if (!json)
     {
         char const* error = cJSON_GetErrorPtr();
         if (error)
         {
-            LOG_FATAL("load: %s", error);
+            LOG_FATAL("shader_config_loader load: %s", error);
             return FALSE;
         }
 
-        LOG_FATAL("load: Unknown parsing error");
+        LOG_FATAL("shader_config_loader load: Unknown parsing error");
         return FALSE;
     }
 
-    Shader_Config* config = memory_system_allocate(sizeof(*config), MEMORY_TAG_RESOURCE);
+    Shader_Config_Resource* config = memory_system_allocate(sizeof(*config), MEMORY_TAG_RESOURCES);
 
     cJSON* name = cJSON_GetObjectItemCaseSensitive(json, "name");
     if (cJSON_IsString(name) && name->valuestring)
@@ -48,7 +50,7 @@ b8 load_shader_config(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse name");
+        LOG_FATAL("shader_config_loader load: Failed to parse name");
         return FALSE;
     }
 
@@ -59,35 +61,35 @@ b8 load_shader_config(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse renderpass");
+        LOG_FATAL("shader_config_loader load: Failed to parse renderpass");
         return FALSE;
     }
 
-    DYNAMIC_ARRAY_CREATE(char const*, &config->stages);
+    config->stages = DYNAMIC_ARRAY_CREATE(char const*);
     cJSON* elem = 0;
     cJSON* stages = cJSON_GetObjectItemCaseSensitive(json, "stages");
-    if (cJSON_IsArray(spv_binaries))
+    if (cJSON_IsArray(stages))
     {
         cJSON_ArrayForEach(elem, stages)
         {
             if (cJSON_IsString(elem) && elem->valuestring)
             {
-                DYNAMIC_ARRAY_PUSH(&config->stages, elem->valuestring);
+                dynamic_array_push(config->stages, elem->valuestring);
             }
             else
             {
-                LOG_FATAL("load_shader_config: Failed to parse stages");
+                LOG_FATAL("shader_config_loader load: Failed to parse stages");
                 return FALSE;
             }
         }
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse stages");
+        LOG_FATAL("shader_config_loader load: Failed to parse stages");
         return FALSE;
     }
 
-    DYNAMIC_ARRAY_CREATE(char const*, &config->spv_binaries);
+    config->spv_binaries = DYNAMIC_ARRAY_CREATE(char const*);
     cJSON* spv_binaries = cJSON_GetObjectItemCaseSensitive(json, "spv_binaries");
     if (cJSON_IsArray(spv_binaries))
     {
@@ -99,20 +101,20 @@ b8 load_shader_config(char const* filename, Resource* resource)
             }
             else
             {
-                LOG_FATAL("load_shader_config: Failed to parse spv binaries");
+                LOG_FATAL("shader_config_loader load: Failed to parse spv binaries");
                 return FALSE;
             }
         }
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse spv binaries");
+        LOG_FATAL("shader_config_loader load: Failed to parse spv binaries");
         return FALSE;
     }
 
-    ASSERT(config->stages.size == config->spv_binaries.size);
+    ASSERT(config->stages->size == config->spv_binaries->size);
 
-    DYNAMIC_ARRAY_CREATE(Vertex_Attribute_Config, &config->attributes);
+    config->attributes = DYNAMIC_ARRAY_CREATE(Vertex_Attribute_Config);
     cJSON* attributes = cJSON_GetObjectItemCaseSensitive(json, "attributes");
     if (cJSON_IsObject(attributes))
     {
@@ -136,13 +138,13 @@ b8 load_shader_config(char const* filename, Resource* resource)
                 }
                 else
                 {
-                    LOG_FATAL("load_shader_config: Failed to parse attributes");
+                    LOG_FATAL("shader_config_loader load: Failed to parse attributes");
                     return FALSE;
                 }
             }
             else
             {
-                LOG_FATAL("load_shader_config: Failed to parse attributes");
+                LOG_FATAL("shader_config_loader load: Failed to parse attributes");
                 return FALSE;
             }
 
@@ -151,7 +153,7 @@ b8 load_shader_config(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse attributes");
+        LOG_FATAL("shader_config_loader load: Failed to parse attributes");
         return FALSE;
     }
 
@@ -169,7 +171,7 @@ b8 load_shader_config(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse per-material");
+        LOG_FATAL("shader_config_loader load: Failed to parse per-material");
         return FALSE;
     }
 
@@ -187,11 +189,11 @@ b8 load_shader_config(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse per-object");
+        LOG_FATAL("shader_config_loader load: Failed to parse per-object");
         return FALSE;
     }
 
-    DYNAMIC_ARRAY_CREATE(Uniform_Config, &config->uniforms);
+    config->uniforms = DYNAMIC_ARRAY_CREATE(Uniform_Config);
     cJSON* uniforms = cJSON_GetObjectItemCaseSensitive(json, "uniforms");
     if (cJSON_IsArray(uniforms))
     {
@@ -226,7 +228,7 @@ b8 load_shader_config(char const* filename, Resource* resource)
                         }
                         else
                         {
-                            LOG_FATAL("load_shader_config: Failed to parse uniforms");
+                            LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
                             return FALSE;
                         }
 
@@ -235,7 +237,7 @@ b8 load_shader_config(char const* filename, Resource* resource)
                     }
                     else
                     {
-                        LOG_FATAL("load_shader_config: Failed to parse uniforms");
+                        LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
                         return FALSE;
                     }
                 }
@@ -244,35 +246,33 @@ b8 load_shader_config(char const* filename, Resource* resource)
             }
             else
             {
-                LOG_FATAL("load_shader_config: Failed to parse uniforms");
+                LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
                 return FALSE;
             }
         }
-
-        ASSERT(i < DESCRIPTOR_SET_SCOPE_ENUM_COUNT);
     }
     else
     {
-        LOG_FATAL("load_shader_config: Failed to parse uniforms");
+        LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
         return FALSE;
     }
 
     cJSON_Delete(json);
 
-    resource->loader_id = RESOURCE_TYPE_SHADER_CONFIG;
-    resource->path = path;
     resource->data_size = sizeof(*config);
     resource->data = config;
 }
 
-void unload_shader_config(Resource* resource)
+void unload(Resource* resource)
 {
-    Shader_Config* config = resource->data;
+    if (!resource)
+    {
+        LOG_WARNING("shader_config_loader unload: Invalid parameters");
+    }
 
-    DYNAMIC_ARRAY_DESTROY(&config->attributes);
-    DYNAMIC_ARRAY_DESTROY(&config->attributes);
-    DYNAMIC_ARRAY_DESTROY(&config->spv_binaries);
-    DYNAMIC_ARRAY_DESTROY(&config->stages);
-
-    memory_system_free(config, sizeof(*config), MEMORY_TAG_RESOURCE);
+    dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->attributes);
+    dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->attributes);
+    dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->spv_binaries);
+    dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->stages);
+    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
 }

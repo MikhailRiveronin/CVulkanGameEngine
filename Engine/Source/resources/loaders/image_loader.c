@@ -1,80 +1,63 @@
 #include "image_loader.h"
 
+#include "config.h"
 #include "core/logger.h"
 #include "core/string_utils.h"
-#include "resources/resources.h"
 #include "systems/memory_system.h"
 #include "third_party/stb_image.h"
 
-static b8 load_image(Resource_Loader* loader, char const* name, Resource* resource);
-static void unload_image(Resource_Loader* self, Resource* resource);
+static bool load(char const* filename, Resource* resource);
+static void unload(Resource* resource);
 
-Resource_Loader image_loader_create()
+Resource_Loader* image_loader_create()
 {
-    Resource_Loader loader;
-    loader.type = RESOURCE_TYPE_IMAGE;
-    loader.resource_type_subfolder = "textures";
-    loader.load = load_image;
-    loader.unload = unload_image;
-
+    Resource_Loader* loader = memory_system_allocate(sizeof(*loader), MEMORY_TAG_LOADERS);
+    loader->load = load;
+    loader->unload = unload;
     return loader;
 }
 
-b8 load_image(Resource_Loader* loader, char const* name, Resource* resource)
+bool load(char const* filename, Resource* resource)
 {
-    if (!loader || !name || !resource)
+    if (!filename || !resource)
     {
-        return FALSE;
+        LOG_FATAL("image_loader load: Invalid parameters");
+        return false;
     }
 
-    char complete_path[512];
-    string_format(complete_path, "%s/%s/%s", resource_system_asset_folder(), loader->resource_type_subfolder, name);
-
-    const i32 required_channel_count = 4;
+    char path[256];
+    string_format(path, "%s/%s/%s", ASSETS_DIR, "materials", filename);
+    i32 required_channel_count = 4;
     i32 width;
     i32 height;
     i32 channel_count;
-    u8* pixels = stbi_load(complete_path, &width, &height, &channel_count, required_channel_count);
+    u8* pixels = stbi_load(path, &width, &height, &channel_count, required_channel_count);
     if (!pixels)
     {
-        LOG_ERROR("load: Failed to load image '%s'", complete_path);
-        return FALSE;
+        LOG_FATAL("image_loader load: Failed to load image %s", path);
+        return false;
     }
 
-    image_resource_data* resource_data = memory_system_allocate(sizeof(*resource_data), MEMORY_TAG_TEXTURE);
-    resource_data->pixels = pixels;
-    resource_data->width = width;
-    resource_data->height = height;
-    resource_data->channel_count = channel_count;
+    Image_Resource* image = memory_system_allocate(sizeof(*image), MEMORY_TAG_RESOURCES);
+    image->pixels = pixels;
+    image->width = width;
+    image->height = height;
+    image->channel_count = channel_count;
+    stbi_image_free(pixels);
 
-    resource->name = name;
-    resource->loader_id = loader->id;
-    resource->complete_path = string_duplicate(complete_path);
-    resource->data_size = sizeof(*resource_data);
-    resource->data = resource_data;
-
-    return TRUE;
+    resource->data = image;
+    resource->data_size = sizeof(*image);
+    return true;
 }
 
-void unload_image(Resource_Loader* loader, Resource* resource)
+void unload(Resource* resource)
 {
-    if (!loader || !resource)
+    if (!resource)
     {
-        LOG_WARNING("unload: Failed to unload");
-        return;
+        LOG_WARNING("image_loader unload: Invalid parameters");
     }
 
-    u32 length = string_length(resource->complete_path);
-    if (length > 0)
-    {
-        memory_system_free(resource->complete_path, sizeof(char) * length + 1, MEMORY_TAG_STRING);
-    }
-
-    if (resource->data)
-    {
-        memory_free(resource->data, resource->data_size, MEMORY_TAG_TEXTURE);
-        resource->loader_id = INVALID_ID;
-        resource->data_size = 0;
-        resource->data = 0;
-    }
+    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
+    resource->data = 0;
+    resource->data_size = 0;
 }

@@ -1,50 +1,46 @@
 #include "material_loader.h"
 
+#include "config.h"
 #include "core/logger.h"
 #include "core/string_utils.h"
 #include "systems/memory_system.h"
 #include "third_party/cJSON/cJSON.h"
 
-#include "config.h"
+static bool load(char const* filename, Resource* resource);
+static void unload(Resource* resource);
 
-
-#include "platform/filesystem.h"
-#include "resources/resources.h"
-#include "systems/resource_system.h"
-#include "third_party/cglm/cglm.h"
-
-b8 load_material(Resource_Loader* loader, char const* name, Resource* resource);
-void unload_material(Resource_Loader* loader, Resource* resource);
-
-Resource_Loader material_loader_create()
+Resource_Loader* material_loader_create()
 {
-    Resource_Loader loader;
-    loader.type = RESOURCE_TYPE_MATERIAL;
-    loader.load = load_material;
-    loader.unload = unload_material;
+    Resource_Loader* loader = memory_system_allocate(sizeof(*loader), MEMORY_TAG_LOADERS);
+    loader->load = load;
+    loader->unload = unload;
     return loader;
 }
 
-b8 load_material(char const* filename, Resource* resource)
+bool load(char const* filename, Resource* resource)
 {
+    if (!filename || !resource)
+    {
+        LOG_WARNING("material loader unload: Invalid parameters");
+    }
+
     char path[256];
     string_format(path, "%s/%s/%s", ASSETS_DIR, "materials", filename);
-
     cJSON* json = cJSON_Parse(path);
     if (!json)
     {
         char const* error = cJSON_GetErrorPtr();
         if (error)
         {
-            LOG_FATAL("load_material: %s", error);
-            return FALSE;
+            LOG_FATAL("material_loader load: %s", error);
+            return false;
         }
 
-        LOG_FATAL("load_material: Unknown parsing error");
-        return FALSE;
+        LOG_FATAL("material_loader load: Unknown parsing error");
+        return false;
     }
 
-    Material_Config* config = memory_system_allocate(sizeof(*config), MEMORY_TAG_MATERIAL_INSTANCE);
+    Material_Config_Resource* config = memory_system_allocate(sizeof(*config), MEMORY_TAG_RESOURCES);
     cJSON* version = cJSON_GetObjectItemCaseSensitive(json, "version");
     if (cJSON_IsString(version) && version->valuestring)
     {
@@ -52,8 +48,8 @@ b8 load_material(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_material: Failed to parse version");
-        return FALSE;
+        LOG_FATAL("material_loader load: Failed to parse version");
+        return false;
     }
 
     cJSON* name = cJSON_GetObjectItemCaseSensitive(json, "name");
@@ -63,8 +59,8 @@ b8 load_material(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_material: Failed to parse name");
-        return FALSE;
+        LOG_FATAL("load: Failed to parse name");
+        return false;
     }
 
     u8 index = 0;
@@ -79,8 +75,8 @@ b8 load_material(char const* filename, Resource* resource)
         }
         else
         {
-            LOG_FATAL("load_material: Failed to parse duffuse_color");
-            return FALSE;
+            LOG_FATAL("load: Failed to parse duffuse_color");
+            return false;
         }
     }
 
@@ -91,8 +87,8 @@ b8 load_material(char const* filename, Resource* resource)
     }
     else
     {
-        LOG_FATAL("load_material: Failed to parse duffuse_map_name");
-        return FALSE;
+        LOG_FATAL("load: Failed to parse duffuse_map_name");
+        return false;
     }
 
     cJSON* type = cJSON_GetObjectItemCaseSensitive(json, "type");
@@ -108,14 +104,14 @@ b8 load_material(char const* filename, Resource* resource)
         }
         else
         {
-            LOG_FATAL("load_material: Unknown material type");
-            return FALSE;
+            LOG_FATAL("load: Unknown material type");
+            return false;
         }
     }
     else
     {
-        LOG_FATAL("load_material: Failed to parse type");
-        return FALSE;
+        LOG_FATAL("load: Failed to parse type");
+        return false;
     }
 
     cJSON* auto_release = cJSON_GetObjectItemCaseSensitive(json, "auto_release");
@@ -123,32 +119,33 @@ b8 load_material(char const* filename, Resource* resource)
     {
         if (cJSON_IsTrue(auto_release))
         {
-            config->auto_release = TRUE;
+            config->auto_release = true;
         }
         else
         {
-            config->auto_release = FALSE;
+            config->auto_release = false;
         }
     }
     else
     {
-        LOG_FATAL("load_material: Failed to parse auto_release");
-        return FALSE;
+        LOG_FATAL("load: Failed to parse auto_release");
+        return false;
     }
 
     cJSON_Delete(json);
-
-    resource->name = filename;
     resource->data = config;
     resource->data_size = sizeof(*config);
-
-    return TRUE;
+    return true;
 }
 
-void unload_material(Resource* resource)
+void unload(Resource* resource)
 {
-    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_MATERIAL_INSTANCE);
-    resource->loader_id = INVALID_ID;
+    if (!resource)
+    {
+        LOG_WARNING("material loader unload: Invalid parameters");
+    }
+
+    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
     resource->data = 0;
     resource->data_size = 0;
 }

@@ -16,39 +16,11 @@ typedef struct Shader_System_Config
     u8 max_instance_texture_count;
 } Shader_System_Config;
 
-/**
- * @brief The current state of a shader.
- */
-typedef enum Shader_State
-{
-    SHADER_STATE_NULL,
-    SHADER_STATE_UNINITIALIZED,
-    SHADER_STATE_INITIALIZED,
-} Shader_State;
 
-/**
- * @brief An entry in the uniform array.
- */
-typedef struct Uniform_Buffer
-{
-    u64 offset;
-    u16 location;
-    u16 index;
-    u16 size;
-    u8 set_index;
-    Shader_Scope scope;
-    VkFormat type;
-} Uniform_Buffer;
 
-/**
- * @brief A shader vertex attribute.
- */
-typedef struct Vertex_Attribute
-{
-    char* name;
-    VkFormat type;
-    u32 size;
-} Vertex_Attribute;
+
+
+
 
 /**
  * @brief A shader on the frontend.
@@ -58,8 +30,8 @@ typedef struct Shader
     u32 id;
     char* name;
 
-    b8 use_instances;
-    b8 use_locals;
+    bool use_instances;
+    bool use_locals;
 
     u64 required_ubo_alignment;
 
@@ -95,8 +67,8 @@ typedef struct Shader
     void* internal_data;
 } Shader;
 
-b8 shader_system_startup(u64* required_memory, void const* block, Shader_System_Config const* config);
+bool shader_system_startup(u64* required_memory, void const* block, Shader_System_Config const* config);
 void shader_system_shutdown();
 
-b8 shader_system_create(Shader_Config const* config);
+bool shader_system_create(Shader_Config_Resource const* config);
 

@@ -5,51 +5,67 @@
 
 // #include "third_party/cglm/struct.h"
 
+typedef enum Resource_Type
+{
+    RESOURCE_TYPE_TEXT,
+    RESOURCE_TYPE_BINARY,
+    RESOURCE_TYPE_IMAGE,
+    RESOURCE_TYPE_MATERIAL,
+    RESOURCE_TYPE_SHADER_CONFIG,
+    RESOURCE_TYPE_STATIC_MESH,
+    RESOURCE_TYPE_ENUM_COUNT
+} Resource_Type;
+
+typedef struct Resource_Loader
+{
+    bool (* load)(char const* filename, Resource* resource);
+    void (* unload)(Resource* resource);
+} Resource_Loader;
+
+typedef struct Resource
+{
+    Resource_Type type;
+    u64 data_size;
+    void* data;
+} Resource;
 
 
-typedef struct Shader_Config
+
+
+
+typedef struct Shader_Config_Resource
 {
     char name[32];
     char renderpass_name[32];
 
-    Dynamic_Array stages;
-    Dynamic_Array spv_binaries;
+    Dynamic_Array* stages;
+    Dynamic_Array* spv_binaries;
 
     bool per_material;
     bool per_object;
 
-    Dynamic_Array attributes;
-    Dynamic_Array uniforms;
+    Dynamic_Array* attributes;
+    Dynamic_Array* uniforms;
 
     u32 max_descriptor_set_count;
-} Shader_Config;
+} Shader_Config_Resource;
 
 
 
 
 
 
-typedef struct image_resource_data
+typedef struct Image_Resource
 {
-    u8 channel_count;
+    u8* pixels;
     u32 width;
     u32 height;
-    u8* pixels;
-} image_resource_data;
+    u8 channel_count;
+} Image_Resource;
 
 #define TEXTURE_NAME_MAX_LENGTH 128
 
-typedef struct Texture
-{
-    char name[TEXTURE_NAME_MAX_LENGTH];
-    u32 id;
-    u32 generation;
-    u32 width;
-    u32 height;
-    u8 channel_count;
-    b8 has_transparency;
-    void* internal;
-} Texture;
+
 
 typedef enum Texture_Use
 {
@@ -71,15 +87,15 @@ typedef enum Material_Type
     MATERIAL_TYPE_UI
 } Material_Type;
 
-typedef struct Material_Config
+typedef struct Material_Config_Resource
 {
     char version[4];
     char name[MAX_MATERIAL_NAME_LENGTH];
     vec4s diffuse_colour;
     char diffuse_texture_name[TEXTURE_NAME_MAX_LENGTH];
     Material_Type type;
-    b8 auto_release;
-} Material_Config;
+    bool auto_release;
+} Material_Config_Resource;
 
 typedef struct Material
 {
@@ -127,13 +143,7 @@ typedef enum Uniform_Type
     UNIFORM_TYPE_SAMPLER
 } Uniform_Type;
 
-typedef enum Descriptor_Set_Scope
-{
-    DESCRIPTOR_SET_SCOPE_PER_FRAME,
-    DESCRIPTOR_SET_SCOPE_PER_MATERIAL,
-    DESCRIPTOR_SET_SCOPE_PER_OBJECT,
-    DESCRIPTOR_SET_SCOPE_ENUM_COUNT
-} Descriptor_Set_Scope;
+
 
 typedef struct Uniform_Config
 {

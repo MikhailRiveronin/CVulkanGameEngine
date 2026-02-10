@@ -1,14 +1,14 @@
 #include "shader_system.h"
 
-#include "containers/darray.h"
+#include "containers/string_map.h"
 #include "core/string_utils.h"
 #include "memory_system.h"
+#include "renderer/renderer.h"
 
 typedef struct Shader_System_State
 {
     Shader_System_Config config;
-    Hashtable lut; // shader name -> shader id
-    void* lut_block;
+    String_Map shader_ids;
     Shader* shaders;
     u32 current_shader_id;
 } Shader_System_State;
@@ -17,43 +17,15 @@ Shader_System_State* state;
 
 void destroy_shader(Shader* shader);
 
-b8 shader_system_startup(u64* required_memory, void const* block, Shader_System_Config const* config)
+bool shader_system_startup(Shader_System_Config const* config)
 {
-    if (config->max_shader_count == 0)
-    {
-        LOG_FATAL("shader_system_startup: Invalid input parameters");
-        return FALSE;
-    }
-
-    u64 state_struct_required_memory = sizeof(*state);
-    u64 lut_reqired_memory = config->max_shader_count * sizeof(((Shader*)0)->id);
-    u64 shader_array_reqired_memory = config->max_shader_count * sizeof(*state->shaders);
-    *required_memory = state_struct_required_memory + lut_reqired_memory + shader_array_reqired_memory;
-
-    if (!block)
-    {
-        return TRUE;
-    }
-
-    state = block;
+    state = memory_system_allocate(sizeof(*state), MEMORY_TAG_SYSTEMS);
     state->config = *config;
-    state->lut_block = (char*)state + state_struct_required_memory;
-    state->shaders = (char*)state->lut_block + lut_reqired_memory;
+    state->shader_ids = string_map_create("u32", config->max_shader_count, sizeof(((Shader*)0)->id));
+    state->shaders = memory_system_allocate(config->max_shader_count * sizeof(*state->shaders), MEMORY_TAG_SYSTEMS);
     state->current_shader_id = INVALID_ID;
 
-    if (!hashtable_create(sizeof(((Shader*)0)->id), state->config.max_shader_count, state->lut_block, FALSE, &state->lut))
-    {
-        LOG_FATAL("shader_system_startup: Failed to fiil the hash table");
-        return FALSE;
-    }
-
-    u32 invalid_id = INVALID_ID;
-    if (!hashtable_fill(&state->lut, &invalid_id))
-    {
-        LOG_FATAL("shader_system_startup: Failed to fiil the hash table");
-        return FALSE;
-    }
-
+    // TODO: Check if really needed
     for (u32 i = 0; i < state->config.max_shader_count; ++i)
     {
         state->shaders[i].id = INVALID_ID;
@@ -66,23 +38,22 @@ void shader_system_shutdown()
 {
     if (state)
     {
-        hashtable_destroy(&state->lut);
-
+        string_map_destroy(state->shader_ids);
         for (u32 i = 0; i < state->config.max_shader_count; ++i)
         {
-            Shader* shader = &state->shaders[i];
-            if (shader->id != INVALID_ID)
+            if (state->shaders[i].id != INVALID_ID)
             {
-                shader_destroy(shader);
+                renderer_shader_destroy(&state->shaders[i]);
             }
         }
 
-        memory_system_zero(state, sizeof(*state));
+        memory_system_free(state->shaders, config->max_shader_count * sizeof(*state->shaders), MEMORY_TAG_SYSTEMS);
+        memory_system_free(state, sizeof(*state), MEMORY_TAG_SYSTEMS);
         state = 0;
     }
 }
 
-b8 shader_system_create(Shader_Config const* config)
+bool shader_system_create(Shader_Config_Resource const* config)
 {
     u32 id = INVALID_ID;
     for (u32 i = 0; i < state->config.max_shader_count; ++i)
@@ -96,21 +67,30 @@ b8 shader_system_create(Shader_Config const* config)
     if (id == INVALID_ID)
     {
         LOG_FATAL("shader_system_create: Failed to find free slot to create new shader");
-        return FALSE;
+        return false;
     }
 
     Shader* shader = &state->shaders[id];
     shader->id = id;
-    shader->name = string_duplicate(config->name);
-    shader->state = SHADER_STATE_NULL;
-    shader->use_instances = config->use_instances;
-    shader->use_locals = config->use_local;
-    shader->push_constant_range_count = 0;
-    shader->bound_instance_id = INVALID_ID;
-    shader->attribute_stride = 0;
-    memory_system_zero(shader->push_constant_ranges, 32 * sizeof(Memory_Range));
+    // strncpy(shader->name, config->name, sizeof(shader->name) - 1);
+    // shader->state = SHADER_STATE_UNINITIALIZED;
+    // shader->use_instances = config->use_instances;
+    // shader->use_locals = config->use_local;
+    // shader->push_constant_range_count = 0;
+    // shader->bound_instance_id = INVALID_ID;
+    // shader->attribute_stride = 0;
+    // memory_system_zero(shader->push_constant_ranges, 32 * sizeof(Memory_Range));
 
-    DYNAMIC_ARRAY_CREATE(Texture*, shader->global_textures);
+    shader->attributes = DYNAMIC_ARRAY_CREATE(Vertex_Attribute);
+    shader->global_textures = DYNAMIC_ARRAY_CREATE(Texture*);
+    shader->uniforms = DYNAMIC_ARRAY_CREATE(Uniform_Buffer);
+
+    // Arbitrarily chosen size
+    shader->uniform_indices = STRING_MAP_CREATE(u16, 1024);
+
+
+
+
     // DARRAY_DEFINE(Texture*, indices, indexCount, MEMORY_TAG_RENDERER);
 
     if (HASHTABLE_CREATE(u16, 1024, INVALID_ID, &shader->uniform_buffer_index_lut))

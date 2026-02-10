@@ -1,8 +1,11 @@
 #pragma once
 
 #include "defines.h"
+#include "containers/dynamic_array.h"
+#include "containers/string_map.h"
+#include "resources/resource_types.h"
+
 // #include "third_party/cglm/cglm.h"
-// #include "resources/resources.h"
 
 typedef struct Renderpass
 {
@@ -30,28 +33,92 @@ typedef struct Renderpass
     vulkan_render_pass_state state;
 } Renderpass;
 
-typedef struct vulkan_shader_stage_config {
-    /** @brief The shader stage bit flag. */
-    VkShaderStageFlagBits stage;
-    /** @brief The shader file name. */
-    char file_name[255];
+// typedef struct vulkan_shader_stage_config {
+//     /** @brief The shader stage bit flag. */
+//     VkShaderStageFlagBits stage;
+//     /** @brief The shader file name. */
+//     char file_name[255];
 
-} vulkan_shader_stage_config;
+// } vulkan_shader_stage_config;
+
+/**
+ * @brief Pipeline shader stage-related data.
+ */
+typedef struct Pipeline_Shader_Stage
+{
+    VkShaderModuleCreateInfo shader_module_create_info;
+    VkShaderModule shader_module;
+    VkPipelineShaderStageCreateInfo create_info;
+} Pipeline_Shader_Stage;
 
 
+/**
+ * @brief The current state of a shader.
+ */
+typedef enum Shader_State
+{
+    SHADER_STATE_UNINITIALIZED,
+    SHADER_STATE_INITIALIZED
+} Shader_State;
+
+/**
+ * @brief A shader vertex attribute.
+ */
+typedef struct Vertex_Attribute
+{
+    char name[32];
+    VkFormat type;
+    u32 size;
+} Vertex_Attribute;
+
+typedef enum Descriptor_Set_Scope
+{
+    DESCRIPTOR_SET_SCOPE_PER_FRAME,
+    DESCRIPTOR_SET_SCOPE_PER_MATERIAL,
+    DESCRIPTOR_SET_SCOPE_PER_OBJECT
+} Descriptor_Set_Scope;
+
+/**
+ * @brief An entry in the uniform array.
+ */
+typedef struct Uniform_Buffer
+{
+    u64 offset;
+    u16 location;
+    u16 index;
+    u16 size;
+    u8 set_index;
+    Descriptor_Set_Scope scope;
+    VkFormat type;
+} Uniform_Buffer;
 
 /**
  * @brief Represents a shader.
  */
 typedef struct Shader
 {
+    u32 id;
+    Shader_Config_Resource config;
+    Shader_State state;
+
+
+
+
+    Dynamic_Array* attributes;
+    Dynamic_Array* global_textures;
+    Dynamic_Array* uniforms;
+
+    String_Map uniform_indices;
+
+
+
+
+
+
     /** @brief The block of memory mapped to the uniform buffer. */
     void* mapped_uniform_buffer_block;
 
-    /** @brief The shader identifier. */
-    u32 id;
 
-    Shader_Config config;
 
     /** @brief A pointer to the renderpass to be used with this shader. */
     Renderpass* renderpass;
@@ -77,6 +144,20 @@ typedef struct Shader
     vulkan_shader_instance_state instance_states[VULKAN_MAX_MATERIAL_COUNT];
 
 } Shader;
+
+typedef struct Texture
+{
+    char name[32];
+    u32 id;
+    u32 generation;
+    u32 width;
+    u32 height;
+    u8 channel_count;
+    b8 has_transparency;
+    void* internal;
+} Texture;
+
+
 
 /**
  * @brief The overall context for the renderer.

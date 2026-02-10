@@ -2,4 +2,4 @@
 
 #include "systems/resource_system.h"
 
-Resource_Loader image_loader_create();
+Resource_Loader* image_loader_create();
