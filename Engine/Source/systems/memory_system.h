@@ -30,6 +30,7 @@ typedef enum memory_tag
     MEMORY_TAG_SYSTEMS,
     MEMORY_TAG_LOADERS,
     MEMORY_TAG_RESOURCES,
+    MEMORY_TAG_SPV_BYTECODE,
     MEMORY_TAG_ENUM_COUNT
 } memory_tag;
 

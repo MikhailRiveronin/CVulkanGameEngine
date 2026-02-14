@@ -25,7 +25,7 @@ typedef struct Resource_Loader
 typedef struct Resource
 {
     Resource_Type type;
-    u64 data_size;
+    u32 size;
     void* data;
 } Resource;
 
@@ -41,10 +41,15 @@ typedef struct Shader_Config_Resource
     Dynamic_Array* stages;
     Dynamic_Array* spv_binaries;
 
+    VkPipelineVertexInputStateCreateInfo vertex_input_state;
+
+
+
+
     bool per_material;
     bool per_object;
 
-    Dynamic_Array* attributes;
+    // Dynamic_Array* attributes;
     Dynamic_Array* uniforms;
 
     u32 max_descriptor_set_count;
@@ -129,12 +134,12 @@ typedef struct Geometry
 
 
 
-typedef struct Vertex_Attribute_Config
-{
-    char name[32];
-    u8 size;
-    VkFormat type;
-} Vertex_Attribute_Config;
+// typedef struct Vertex_Attribute_Config
+// {
+//     char name[32];
+//     u8 size;
+//     VkFormat type;
+// } Vertex_Attribute_Config;
 
 typedef enum Uniform_Type
 {

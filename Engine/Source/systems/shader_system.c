@@ -28,10 +28,11 @@ bool shader_system_startup(Shader_System_Config const* config)
     // TODO: Check if really needed
     for (u32 i = 0; i < state->config.max_shader_count; ++i)
     {
+        state->shaders[i].config = memory_system_allocate(sizeof(*state->shaders[i].config), MEMORY_TAG_SYSTEMS);
         state->shaders[i].id = INVALID_ID;
     }
 
-    return TRUE;
+    return true;
 }
 
 void shader_system_shutdown()
@@ -41,6 +42,7 @@ void shader_system_shutdown()
         string_map_destroy(state->shader_ids);
         for (u32 i = 0; i < state->config.max_shader_count; ++i)
         {
+            memory_system_free(state->shaders[i].config, sizeof(*state->shaders[i].config), MEMORY_TAG_SYSTEMS);
             if (state->shaders[i].id != INVALID_ID)
             {
                 renderer_shader_destroy(&state->shaders[i]);
@@ -96,13 +98,13 @@ bool shader_system_create(Shader_Config_Resource const* config)
     if (HASHTABLE_CREATE(u16, 1024, INVALID_ID, &shader->uniform_buffer_index_lut))
     {
         LOG_FATAL("shader_system_create: Failed to create hash table");
-        return FALSE;
+        return false;
     }
 
 
 
 
-    return TRUE;
+    return true;
 }
 
 void destroy_shader(Shader* shader)

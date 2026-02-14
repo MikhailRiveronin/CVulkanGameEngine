@@ -7,31 +7,29 @@
 
 // #include "third_party/cglm/cglm.h"
 
-typedef struct Renderpass
-{
-    /** @brief The internal renderpass handle. */
-    VkRenderPass handle;
-    /** @brief The current render area of the renderpass. */
-    vec4 render_area;
-    /** @brief The clear colour used for this renderpass. */
-    vec4 clear_colour;
+#define VULKAN_CHECK_RESULT(expr)                                                    \
+    do                                                                    \
+    {                                                                     \
+        if ((expr) != VK_SUCCESS)                                           \
+        {                                                                 \
+            LOG_FATAL("%s(%u): %s", __FILE__, __LINE__, "Vulkan failed"); \
+            return false;                                                \
+        }                                                                 \
+    }                                                                     \
+    while (0)
 
-    /** @brief The depth clear value. */
-    f32 depth;
-    /** @brief The stencil clear value. */
-    u32 stencil;
+#define SPV_REFLECT_CHECK_RESULT(expr)                                                    \
+    do                                                                    \
+    {                                                                     \
+        if ((expr) != SPV_REFLECT_RESULT_SUCCESS)                                           \
+        {                                                                 \
+            LOG_FATAL("%s(%u): %s", __FILE__, __LINE__, "SPIRV-Reflect failed"); \
+            return false;                                                \
+        }                                                                 \
+    }                                                                     \
+    while (0)
 
-    /** @brief The clear flags for this renderpass. */
-    u8 clear_flags;
 
-    /** @brief Indicates if there is a previous renderpass. */
-    b8 has_prev_pass;
-    /** @brief Indicates if there is a next renderpass. */
-    b8 has_next_pass;
-
-    /** @brief Indicates renderpass state. */
-    vulkan_render_pass_state state;
-} Renderpass;
 
 // typedef struct vulkan_shader_stage_config {
 //     /** @brief The shader stage bit flag. */
@@ -46,8 +44,8 @@ typedef struct Renderpass
  */
 typedef struct Pipeline_Shader_Stage
 {
-    VkShaderModuleCreateInfo shader_module_create_info;
-    VkShaderModule shader_module;
+    // VkShaderModuleCreateInfo shader_module_create_info;
+    // VkShaderModule shader_module;
     VkPipelineShaderStageCreateInfo create_info;
 } Pipeline_Shader_Stage;
 
@@ -92,14 +90,72 @@ typedef struct Uniform_Buffer
     VkFormat type;
 } Uniform_Buffer;
 
+// #define MAX_SHADER_STAGE_COUNT 8
+
+typedef enum Pipeline_Shader_Stage
+{
+    PIPELINE_SHADER_STAGE_VERTEX,
+    PIPELINE_SHADER_STAGE_FRAGMENT,
+    PIPELINE_SHADER_STAGE_ENUM_COUNT
+} Pipeline_Shader_Stage;
+
 /**
  * @brief Represents a shader.
  */
 typedef struct Shader
 {
+    Dynamic_Array* spv_paths;
+
     u32 id;
-    Shader_Config_Resource config;
+    Shader_Config_Resource* config;
     Shader_State state;
+
+    // Simplifying assumption: All descriptors are organized into 3 sets
+    VkDescriptorSetLayout descriptor_set_layouts[3];
+
+    struct
+    {
+        VkPipeline handle;
+        VkPipelineLayout pipeline_layout;
+    } pipeline;
+
+    struct
+    {
+        /** @brief The internal renderpass handle. */
+        VkRenderPass handle;
+        /** @brief The current render area of the renderpass. */
+        vec4 render_area;
+        /** @brief The clear colour used for this renderpass. */
+        vec4 clear_colour;
+
+        /** @brief The depth clear value. */
+        f32 depth;
+        /** @brief The stencil clear value. */
+        u32 stencil;
+
+        /** @brief The clear flags for this renderpass. */
+        u8 clear_flags;
+
+        /** @brief Indicates if there is a previous renderpass. */
+        b8 has_prev_pass;
+        /** @brief Indicates if there is a next renderpass. */
+        b8 has_next_pass;
+
+        /** @brief Indicates renderpass state. */
+        vulkan_render_pass_state state;
+    } renderpass;
+
+
+
+
+
+
+
+
+
+
+    // Dynamic_Array* stages;
+    // Dynamic_Array* stage_set_layouts[PIPELINE_SHADER_STAGE_ENUM_COUNT];
 
 
 
@@ -120,28 +176,36 @@ typedef struct Shader
 
 
 
-    /** @brief A pointer to the renderpass to be used with this shader. */
-    Renderpass* renderpass;
 
-    /** @brief An array of stages (such as vertex and fragment) for this shader. Count is located in config.*/
-    vulkan_shader_stage stages[VULKAN_SHADER_MAX_STAGES];
 
     /** @brief The descriptor pool used for this shader. */
     VkDescriptorPool descriptor_pool;
 
-    /** @brief Descriptor set layouts, max of 2. Index 0=global, 1=instance. */
-    VkDescriptorSetLayout descriptor_set_layouts[2];
+    
     /** @brief Global descriptor sets, one per frame. */
     VkDescriptorSet global_descriptor_sets[3];
     /** @brief The uniform buffer used by this shader. */
     vulkan_buffer uniform_buffer;
 
-    /** @brief The pipeline associated with this shader. */
-    vulkan_pipeline pipeline;
+
+
+
+
+
+
+
+    Pipeline_Shader_Stage pipeline_stages[MAX_SHADER_STAGE_COUNT];
+
+
+
 
     /** @brief The instance states for all instances. @todo TODO: make dynamic */
     u32 instance_count;
     vulkan_shader_instance_state instance_states[VULKAN_MAX_MATERIAL_COUNT];
+
+
+
+
 
 } Shader;
 
@@ -162,7 +226,7 @@ typedef struct Texture
 /**
  * @brief The overall context for the renderer.
  */
-typedef struct Context
+typedef struct Renderer_Context
 {
     /** @brief The time in seconds since the last frame. */
     f32 frame_delta_time;
@@ -192,7 +256,43 @@ typedef struct Context
 #endif
 
     /** @brief The Vulkan device. */
-    vulkan_device device;
+    struct
+    {
+        VkDevice handle;
+        VkPhysicalDevice physical_device;
+        VulkanSwapchainSupportInfo swapchain_support;
+
+        struct
+        {
+            struct {
+                VkQueue handle;
+                u32 index;
+            } graphics;
+
+            struct {
+                VkQueue handle;
+                u32 index;
+            } compute;
+
+            struct {
+                VkQueue handle;
+                u32 index;
+            } transfer;
+
+            struct {
+                VkQueue handle;
+                u32 index;
+            } present;
+        } queues;
+
+        VkCommandPool graphics_command_pool;
+
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceFeatures features;
+        VkPhysicalDeviceMemoryProperties memoryProperties;
+
+        VkFormat depthFormat;
+    } device;
 
     /** @brief The swapchain. */
     vulkan_swapchain swapchain;
@@ -248,7 +348,14 @@ typedef struct Context
      */
     i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
 
-} Context;
+} Renderer_Context;
+
+typedef enum Descriptor_Type
+{
+    DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    DESCRIPTOR_TYPE_ENUM_COUNT
+} Descriptor_Type;
 
 
 

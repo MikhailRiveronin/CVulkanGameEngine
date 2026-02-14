@@ -85,7 +85,7 @@ void vulkan_renderpass_create(vulkan_context const* const context, vec4s render_
     create_info.pSubpasses = &subpass;
     create_info.dependencyCount = 1;
     create_info.pDependencies = &subpass_dependency;
-    VK_CHECK(vkCreateRenderPass(context->device.handle, &create_info, context->allocator, &renderpass->handle));
+    VULKAN_CHECK_RESULT(vkCreateRenderPass(context->device.handle, &create_info, context->allocator, &renderpass->handle));
 }
 
 void vulkan_renderpass_destroy(vulkan_context* context, vulkan_renderpass* renderpass)

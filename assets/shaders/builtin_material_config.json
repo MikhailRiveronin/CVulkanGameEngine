@@ -2,30 +2,24 @@
     "name": "builtin_material",
     "renderpass": "renderpass_builtin_world",
     "stages": [
-        "vertex",
-        "fragment"
+        { "vertex": "builtin_material_vert.spv" },
+        { "fragment": "builtin_material_frag.spv" }
     ],
-    "spv_binaries": [
-        "builtin_material_vert.spv",
-        "builtin_material_frag.spv"
+    "attributes": [
+        [ "vec3" ],
+        [ "vec2" ]
     ],
-    "attributes": {
-            "in_pos": "vec3",
-            "in_tex_coord": "vec2"
-        },
-    "per-material": true,
-    "per-object": true,
-    "uniforms": [
-        {
-            "view": "mat4",
-            "proj": "mat4"
-        },
-        {
-            "diffuse_color": "vec4",
-            "diffuse_texture": "sampler"
-        },
-        {
-            "world": "mat4"
-        }
+    "descriptors": [
+        [
+            { "uniform": "mat4" },
+            { "uniform": "mat4" }
+        ],
+        [
+            { "uniform": "vec4" },
+            { "sampler": 5 }
+        ],
+        [
+            { "uniform": { "mat4": 100 } }
+        ]
     ]
 }

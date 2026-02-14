@@ -14,7 +14,7 @@ void vulkanCommandBufferAllocate(
     allocateInfo.commandPool = pool;
     allocateInfo.level = primary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
     allocateInfo.commandBufferCount = 1;
-    VK_CHECK(vkAllocateCommandBuffers(context->device.handle, &allocateInfo, &commandBuffer->handle));
+    VULKAN_CHECK_RESULT(vkAllocateCommandBuffers(context->device.handle, &allocateInfo, &commandBuffer->handle));
     commandBuffer->state = COMMAND_BUFFER_STATE_READY;
 }
 
@@ -52,13 +52,13 @@ void vulkan_command_buffer_begin(
         beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     }
 
-    VK_CHECK(vkBeginCommandBuffer(commandBuffer->handle, &beginInfo));
+    VULKAN_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer->handle, &beginInfo));
     commandBuffer->state = COMMAND_BUFFER_STATE_RECORDING;
 }
 
 void vulkan_command_buffer_end(vulkan_command_buffer* commandBuffer)
 {
-    VK_CHECK(vkEndCommandBuffer(commandBuffer->handle));
+    VULKAN_CHECK_RESULT(vkEndCommandBuffer(commandBuffer->handle));
     commandBuffer->state = COMMAND_BUFFER_STATE_RECORDING_ENDED;
 }
 
@@ -99,8 +99,8 @@ void vulkan_command_buffer_end_single_use(
     submitInfo.pCommandBuffers = &commandBuffer->handle;
     submitInfo.signalSemaphoreCount = 0;
     submitInfo.pSignalSemaphores = NULL;
-    VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+    VULKAN_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
 
-    VK_CHECK(vkQueueWaitIdle(queue));
+    VULKAN_CHECK_RESULT(vkQueueWaitIdle(queue));
     vulkanCommandBufferFree(context, pool, commandBuffer);
 }

@@ -35,7 +35,7 @@ b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader
     VkDescriptorSetLayoutCreateInfo global_layout_info = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
     global_layout_info.bindingCount = 1;
     global_layout_info.pBindings = &global_ubo_layout_binding;
-    VK_CHECK(vkCreateDescriptorSetLayout(context->device.handle, &global_layout_info, context->allocator, &out_shader->global_descriptor_set_layout));
+    VULKAN_CHECK_RESULT(vkCreateDescriptorSetLayout(context->device.handle, &global_layout_info, context->allocator, &out_shader->global_descriptor_set_layout));
 
     // Global descriptor pool: Used for global items such as view/projection matrix.
     VkDescriptorPoolSize global_pool_size;
@@ -46,7 +46,7 @@ b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader
     global_pool_info.poolSizeCount = 1;
     global_pool_info.pPoolSizes = &global_pool_size;
     global_pool_info.maxSets = context->swapchain.images.size;
-    VK_CHECK(vkCreateDescriptorPool(context->device.handle, &global_pool_info, context->allocator, &out_shader->global_descriptor_pool));
+    VULKAN_CHECK_RESULT(vkCreateDescriptorPool(context->device.handle, &global_pool_info, context->allocator, &out_shader->global_descriptor_pool));
 
     // Sampler uses.
     out_shader->sampler_uses[0] = TEXTURE_USE_MAP_DIFFUSE;
@@ -68,7 +68,7 @@ b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader
     VkDescriptorSetLayoutCreateInfo layout_info = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
     layout_info.bindingCount = VULKAN_UI_SHADER_DESCRIPTOR_COUNT;
     layout_info.pBindings = bindings;
-    VK_CHECK(vkCreateDescriptorSetLayout(context->device.handle, &layout_info, 0, &out_shader->object_descriptor_set_layout));
+    VULKAN_CHECK_RESULT(vkCreateDescriptorSetLayout(context->device.handle, &layout_info, 0, &out_shader->object_descriptor_set_layout));
 
     // Local/Object descriptor pool: Used for object-specific items like diffuse colour
     VkDescriptorPoolSize object_pool_sizes[2];
@@ -86,7 +86,7 @@ b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader
     object_pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     // Create object descriptor pool.
-    VK_CHECK(vkCreateDescriptorPool(context->device.handle, &object_pool_info, context->allocator, &out_shader->object_descriptor_pool));
+    VULKAN_CHECK_RESULT(vkCreateDescriptorPool(context->device.handle, &object_pool_info, context->allocator, &out_shader->object_descriptor_pool));
 
     // Pipeline creation
     VkViewport viewport;
@@ -178,7 +178,7 @@ b8 vulkan_ui_shader_create(vulkan_context* context, vulkan_ui_shader* out_shader
     alloc_info.descriptorPool = out_shader->global_descriptor_pool;
     alloc_info.descriptorSetCount = 3;
     alloc_info.pSetLayouts = global_layouts;
-    VK_CHECK(vkAllocateDescriptorSets(context->device.handle, &alloc_info, out_shader->global_descriptor_sets));
+    VULKAN_CHECK_RESULT(vkAllocateDescriptorSets(context->device.handle, &alloc_info, out_shader->global_descriptor_sets));
 
     // Create the object uniform buffer.
     if (!vulkan_buffer_create(

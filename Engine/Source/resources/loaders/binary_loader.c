@@ -45,7 +45,7 @@ bool load(char const* filename, Resource* resource)
 
     filesystem_close(&handle);
     resource->data = data;
-    resource->data_size = data_size;
+    resource->size = data_size;
     return true;
 }
 
@@ -56,7 +56,7 @@ void unload(Resource* resource)
         LOG_WARNING("binary_loader unload: Invalid parameters");
     }
 
-    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
+    memory_system_free(resource->data, resource->size, MEMORY_TAG_RESOURCES);
     resource->data = 0;
-    resource->data_size = 0;
+    resource->size = 0;
 }

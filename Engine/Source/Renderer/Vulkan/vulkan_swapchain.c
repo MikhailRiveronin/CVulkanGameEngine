@@ -154,17 +154,17 @@ b8 create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swap
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
-    VK_CHECK(vkCreateSwapchainKHR(context->device.handle, &createInfo, context->allocator, &swapchain->handle));
+    VULKAN_CHECK_RESULT(vkCreateSwapchainKHR(context->device.handle, &createInfo, context->allocator, &swapchain->handle));
 
     context->current_frame = 0;
 
     u32 swapchainImageCount = 0;
-    VK_CHECK(vkGetSwapchainImagesKHR(context->device.handle, swapchain->handle, &swapchainImageCount, NULL));
+    VULKAN_CHECK_RESULT(vkGetSwapchainImagesKHR(context->device.handle, swapchain->handle, &swapchainImageCount, NULL));
     if (!swapchain->images.capacity) {
         DARRAY_RESERVE(swapchain->images, swapchainImageCount, MEMORY_TAG_RENDERER);
         swapchain->images.size = swapchainImageCount;
     }
-    VK_CHECK(vkGetSwapchainImagesKHR(context->device.handle, swapchain->handle, &swapchainImageCount, swapchain->images.data));
+    VULKAN_CHECK_RESULT(vkGetSwapchainImagesKHR(context->device.handle, swapchain->handle, &swapchainImageCount, swapchain->images.data));
 
     DARRAY_RESERVE(swapchain->image_views, swapchain->images.size, MEMORY_TAG_RENDERER);
     swapchain->image_views.size = swapchain->images.size;
@@ -183,7 +183,7 @@ b8 create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swap
         createInfo.subresourceRange.levelCount = 1;
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 1;
-        VK_CHECK(vkCreateImageView(
+        VULKAN_CHECK_RESULT(vkCreateImageView(
             context->device.handle,
             &createInfo,
             context->allocator,

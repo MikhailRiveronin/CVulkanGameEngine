@@ -3,8 +3,10 @@
 #include "config.h"
 #include "core/logger.h"
 #include "core/string_utils.h"
+#include "renderer/vulkan_structure_initializers.h"
 #include "systems/memory_system.h"
 #include "third_party/cJSON/cJSON.h"
+#include "third_party/cglm/struct.h"
 
 static bool load(char const* filename, Resource* resource);
 static void unload(Resource* resource);
@@ -34,11 +36,11 @@ bool load(char const* filename, Resource* resource)
         if (error)
         {
             LOG_FATAL("shader_config_loader load: %s", error);
-            return FALSE;
+            return false;
         }
 
         LOG_FATAL("shader_config_loader load: Unknown parsing error");
-        return FALSE;
+        return false;
     }
 
     Shader_Config_Resource* config = memory_system_allocate(sizeof(*config), MEMORY_TAG_RESOURCES);
@@ -51,7 +53,7 @@ bool load(char const* filename, Resource* resource)
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse name");
-        return FALSE;
+        return false;
     }
 
     cJSON* renderpass = cJSON_GetObjectItemCaseSensitive(json, "renderpass");
@@ -62,10 +64,10 @@ bool load(char const* filename, Resource* resource)
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse renderpass");
-        return FALSE;
+        return false;
     }
 
-    config->stages = DYNAMIC_ARRAY_CREATE(char const*);
+    config->stages = DYNAMIC_ARRAY_CREATE(VkShaderStageFlagBits);
     cJSON* elem = 0;
     cJSON* stages = cJSON_GetObjectItemCaseSensitive(json, "stages");
     if (cJSON_IsArray(stages))
@@ -74,19 +76,31 @@ bool load(char const* filename, Resource* resource)
         {
             if (cJSON_IsString(elem) && elem->valuestring)
             {
-                dynamic_array_push(config->stages, elem->valuestring);
+                if (string_equal(elem->valuestring, "vertex"))
+                {
+                    dynamic_array_push_back(config->stages, VK_SHADER_STAGE_VERTEX_BIT);
+                }
+                else if (string_equal(elem->valuestring, "fragment"))
+                {
+                    dynamic_array_push_back(config->stages, VK_SHADER_STAGE_FRAGMENT_BIT);
+                }
+                else
+                {
+                    LOG_FATAL("shader_config_loader load: Unsupported shader stage");
+                    return false;
+                }
             }
             else
             {
                 LOG_FATAL("shader_config_loader load: Failed to parse stages");
-                return FALSE;
+                return false;
             }
         }
     }
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse stages");
-        return FALSE;
+        return false;
     }
 
     config->spv_binaries = DYNAMIC_ARRAY_CREATE(char const*);
@@ -102,59 +116,65 @@ bool load(char const* filename, Resource* resource)
             else
             {
                 LOG_FATAL("shader_config_loader load: Failed to parse spv binaries");
-                return FALSE;
+                return false;
             }
         }
     }
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse spv binaries");
-        return FALSE;
+        return false;
     }
 
     ASSERT(config->stages->size == config->spv_binaries->size);
 
-    config->attributes = DYNAMIC_ARRAY_CREATE(Vertex_Attribute_Config);
+    Dynamic_Array* vertex_binding_descriptions = DYNAMIC_ARRAY_CREATE(VkVertexInputBindingDescription);
+    Dynamic_Array* vertex_attribute_descriptions = DYNAMIC_ARRAY_CREATE(VkVertexInputAttributeDescription);
     cJSON* attributes = cJSON_GetObjectItemCaseSensitive(json, "attributes");
     if (cJSON_IsObject(attributes))
     {
+        u32 i = 0;
         cJSON_ArrayForEach(elem, attributes)
         {
-            Vertex_Attribute_Config attribute;
-            strcpy(attribute.name, elem->string);
-
             cJSON* item = cJSON_GetObjectItemCaseSensitive(elem, elem->string);
             if (cJSON_IsString(item) && item->valuestring)
             {
+                VkVertexInputBindingDescription binding;
+                VkVertexInputAttributeDescription attribute;
                 if (string_equal(item->valuestring, "vec2"))
                 {
-                    attribute.size = 8;
-                    attribute.type = VK_FORMAT_R32G32_SFLOAT;
+                    binding = vertex_input_binding_description(i, sizeof(vec2s));
+                    attribute = vertex_input_attribute_description(i, binding.binding, VK_FORMAT_R32G32_SFLOAT, 0);
                 }
                 else if (string_equal(item->valuestring, "vec3"))
                 {
-                    attribute.size = 12;
-                    attribute.type = VK_FORMAT_R32G32B32_SFLOAT;
+                    binding = vertex_input_binding_description(i, sizeof(vec3s));
+                    attribute = vertex_input_attribute_description(i, binding.binding, VK_FORMAT_R32G32B32_SFLOAT, 0);
                 }
                 else
                 {
                     LOG_FATAL("shader_config_loader load: Failed to parse attributes");
-                    return FALSE;
+                    return false;
                 }
+
+                dynamic_array_push_back(vertex_binding_descriptions, &binding);
+                dynamic_array_push_back(vertex_attribute_descriptions, &attribute);
             }
             else
             {
                 LOG_FATAL("shader_config_loader load: Failed to parse attributes");
-                return FALSE;
+                return false;
             }
-
-            DYNAMIC_ARRAY_PUSH(&config->attributes, attribute);
         }
+
+        dynamic_array_destroy(vertex_binding_descriptions);
+        dynamic_array_destroy(vertex_attribute_descriptions);
+        config->vertex_input_state = pipeline_vertex_input_state_create_info(vertex_binding_descriptions->data, vertex_binding_descriptions->size, vertex_attribute_descriptions->data, vertex_attribute_descriptions->size);
     }
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse attributes");
-        return FALSE;
+        return false;
     }
 
     cJSON* per_material = cJSON_GetObjectItemCaseSensitive(json, "per-material");
@@ -162,17 +182,17 @@ bool load(char const* filename, Resource* resource)
     {
         if (cJSON_IsTrue(per_material))
         {
-            config->per_material = TRUE;
+            config->per_material = true;
         }
         else
         {
-            config->per_material = FALSE;
+            config->per_material = false;
         }
     }
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse per-material");
-        return FALSE;
+        return false;
     }
 
     cJSON* per_object = cJSON_GetObjectItemCaseSensitive(json, "per-object");
@@ -180,17 +200,17 @@ bool load(char const* filename, Resource* resource)
     {
         if (cJSON_IsTrue(per_object))
         {
-            config->per_object = TRUE;
+            config->per_object = true;
         }
         else
         {
-            config->per_object = FALSE;
+            config->per_object = false;
         }
     }
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse per-object");
-        return FALSE;
+        return false;
     }
 
     config->uniforms = DYNAMIC_ARRAY_CREATE(Uniform_Config);
@@ -223,13 +243,13 @@ bool load(char const* filename, Resource* resource)
                         }
                         else if (string_equal(item->valuestring, "sampler"))
                         {
-                            attribute.size = 0;
-                            attribute.type = UNIFORM_TYPE_SAMPLER;
+                            uniform.size = 0;
+                            uniform.type = UNIFORM_TYPE_SAMPLER;
                         }
                         else
                         {
                             LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
-                            return FALSE;
+                            return false;
                         }
 
                         uniform.scope = DESCRIPTOR_SET_SCOPE_PER_FRAME + i;
@@ -238,7 +258,7 @@ bool load(char const* filename, Resource* resource)
                     else
                     {
                         LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
-                        return FALSE;
+                        return false;
                     }
                 }
 
@@ -247,19 +267,19 @@ bool load(char const* filename, Resource* resource)
             else
             {
                 LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
-                return FALSE;
+                return false;
             }
         }
     }
     else
     {
         LOG_FATAL("shader_config_loader load: Failed to parse uniforms");
-        return FALSE;
+        return false;
     }
 
     cJSON_Delete(json);
 
-    resource->data_size = sizeof(*config);
+    resource->size = sizeof(*config);
     resource->data = config;
 }
 
@@ -274,5 +294,5 @@ void unload(Resource* resource)
     dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->attributes);
     dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->spv_binaries);
     dynamic_array_destroy(((Shader_Config_Resource*)resource->data)->stages);
-    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
+    memory_system_free(resource->data, resource->size, MEMORY_TAG_RESOURCES);
 }

@@ -33,7 +33,7 @@ b8 vulkan_buffer_create(vulkan_context* context, u64 size, VkBufferUsageFlagBits
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     createInfo.queueFamilyIndexCount = 0;
     createInfo.pQueueFamilyIndices = 0;
-    VK_CHECK(vkCreateBuffer(context->device.handle, &createInfo, context->allocator, &buffer->handle));
+    VULKAN_CHECK_RESULT(vkCreateBuffer(context->device.handle, &createInfo, context->allocator, &buffer->handle));
 
     VkMemoryRequirements memory_requirements;
     vkGetBufferMemoryRequirements(context->device.handle, buffer->handle, &memory_requirements);
@@ -50,8 +50,8 @@ b8 vulkan_buffer_create(vulkan_context* context, u64 size, VkBufferUsageFlagBits
     allocate_info.pNext = 0;
     allocate_info.allocationSize = memory_requirements.size;
     allocate_info.memoryTypeIndex = buffer->memory_index;
-    VK_CHECK(vkAllocateMemory(context->device.handle, &allocate_info, context->allocator, &buffer->device_memory));
-    VK_CHECK(vkBindBufferMemory(context->device.handle, buffer->handle, buffer->device_memory, 0));
+    VULKAN_CHECK_RESULT(vkAllocateMemory(context->device.handle, &allocate_info, context->allocator, &buffer->device_memory));
+    VULKAN_CHECK_RESULT(vkBindBufferMemory(context->device.handle, buffer->handle, buffer->device_memory, 0));
 
     return TRUE;
 }
@@ -105,13 +105,13 @@ b8 vulkan_buffer_resize(vulkan_context* context, vulkan_buffer* buffer, u64 new_
 
 void vulkan_buffer_bind(vulkan_context* context, vulkan_buffer* buffer, u64 offset)
 {
-    VK_CHECK(vkBindBufferMemory(context->device.handle, buffer->handle, buffer->device_memory, offset));
+    VULKAN_CHECK_RESULT(vkBindBufferMemory(context->device.handle, buffer->handle, buffer->device_memory, offset));
 }
 
 void vulkan_buffer_upload_to_host_visible_memory(vulkan_context* context, vulkan_buffer* buffer, u64 offset, u64 size, u32 flags, void const* data)
 {
     void* mapped;
-    VK_CHECK(vkMapMemory(context->device.handle, buffer->device_memory, 0, buffer->size, 0, &mapped));
+    VULKAN_CHECK_RESULT(vkMapMemory(context->device.handle, buffer->device_memory, 0, buffer->size, 0, &mapped));
     memory_copy(mapped, data, size);
     vkUnmapMemory(context->device.handle, buffer->device_memory);
 }

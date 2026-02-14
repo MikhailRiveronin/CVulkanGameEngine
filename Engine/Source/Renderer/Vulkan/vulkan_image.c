@@ -26,7 +26,7 @@ void vulkan_image_create(vulkan_context* context, VkImageType imageType, u32 wid
     createInfo.queueFamilyIndexCount = 0;
     createInfo.pQueueFamilyIndices = 0;
     createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    VK_CHECK(vkCreateImage(context->device.handle, &createInfo, context->allocator, &image->handle));
+    VULKAN_CHECK_RESULT(vkCreateImage(context->device.handle, &createInfo, context->allocator, &image->handle));
 
     VkMemoryRequirements memoryRequirements;
     vkGetImageMemoryRequirements(context->device.handle, image->handle, &memoryRequirements);
@@ -41,8 +41,8 @@ void vulkan_image_create(vulkan_context* context, VkImageType imageType, u32 wid
     allocateInfo.pNext = NULL;
     allocateInfo.allocationSize = memoryRequirements.size;
     allocateInfo.memoryTypeIndex = memoryType;
-    VK_CHECK(vkAllocateMemory(context->device.handle, &allocateInfo, context->allocator, &image->memory));
-    VK_CHECK(vkBindImageMemory(context->device.handle, image->handle, image->memory, 0));
+    VULKAN_CHECK_RESULT(vkAllocateMemory(context->device.handle, &allocateInfo, context->allocator, &image->memory));
+    VULKAN_CHECK_RESULT(vkBindImageMemory(context->device.handle, image->handle, image->memory, 0));
 
     if (createView) {
         image->view = VK_NULL_HANDLE;
@@ -72,7 +72,7 @@ void vulkan_image_view_create(
     createInfo.subresourceRange.levelCount = 1;
     createInfo.subresourceRange.baseArrayLayer = 0;
     createInfo.subresourceRange.layerCount = 1;
-    VK_CHECK(vkCreateImageView(context->device.handle, &createInfo, context->allocator, &image->view));
+    VULKAN_CHECK_RESULT(vkCreateImageView(context->device.handle, &createInfo, context->allocator, &image->view));
 }
 
 void vulkan_image_destroy(vulkan_context* context, vulkan_image* image)

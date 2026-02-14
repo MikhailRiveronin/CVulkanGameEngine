@@ -46,7 +46,7 @@ bool load(char const* filename, Resource* resource)
     stbi_image_free(pixels);
 
     resource->data = image;
-    resource->data_size = sizeof(*image);
+    resource->size = sizeof(*image);
     return true;
 }
 
@@ -57,7 +57,7 @@ void unload(Resource* resource)
         LOG_WARNING("image_loader unload: Invalid parameters");
     }
 
-    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
+    memory_system_free(resource->data, resource->size, MEMORY_TAG_RESOURCES);
     resource->data = 0;
-    resource->data_size = 0;
+    resource->size = 0;
 }

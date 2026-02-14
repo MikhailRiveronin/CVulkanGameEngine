@@ -37,7 +37,7 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
     descriptor_set_layout_create_info.flags = 0;
     descriptor_set_layout_create_info.bindingCount = 1;
     descriptor_set_layout_create_info.pBindings = &descriptor_set_layout_binding;
-    VK_CHECK(vkCreateDescriptorSetLayout(
+    VULKAN_CHECK_RESULT(vkCreateDescriptorSetLayout(
         context->device.handle,
         &descriptor_set_layout_create_info,
         context->allocator,
@@ -54,7 +54,7 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
     descriptor_pool_create_info.maxSets = context->swapchain.images.size;
     descriptor_pool_create_info.poolSizeCount = 1;
     descriptor_pool_create_info.pPoolSizes = &global_pool_size;
-    VK_CHECK(vkCreateDescriptorPool(
+    VULKAN_CHECK_RESULT(vkCreateDescriptorPool(
         context->device.handle,
         &descriptor_pool_create_info,
         context->allocator,
@@ -81,7 +81,7 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
     object_set_layout_create_info.flags = 0;
     object_set_layout_create_info.bindingCount = _countof(bindings);
     object_set_layout_create_info.pBindings = bindings;
-    VK_CHECK(vkCreateDescriptorSetLayout(
+    VULKAN_CHECK_RESULT(vkCreateDescriptorSetLayout(
         context->device.handle,
         &object_set_layout_create_info,
         context->allocator,
@@ -102,7 +102,7 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
     object_pool_create_info.maxSets = VULKAN_MAX_MATERIAL_COUNT;
     object_pool_create_info.poolSizeCount = _countof(object_pool_sizes);
     object_pool_create_info.pPoolSizes = object_pool_sizes;
-    VK_CHECK(vkCreateDescriptorPool(
+    VULKAN_CHECK_RESULT(vkCreateDescriptorPool(
         context->device.handle,
         &object_pool_create_info,
         context->allocator,
@@ -181,7 +181,7 @@ b8 vulkan_material_shader_create(vulkan_context* context, vulkan_material_shader
     descriptor_set_allocate_info.descriptorPool = shader->global_descriptor_pool;
     descriptor_set_allocate_info.descriptorSetCount = _countof(global_layouts);
     descriptor_set_allocate_info.pSetLayouts = global_layouts;
-    VK_CHECK(vkAllocateDescriptorSets(
+    VULKAN_CHECK_RESULT(vkAllocateDescriptorSets(
         context->device.handle,
         &descriptor_set_allocate_info,
         shader->global_descriptor_sets));
@@ -427,7 +427,7 @@ void vulkan_material_shader_release_resources(vulkan_context* context, vulkan_ma
     vkDeviceWaitIdle(context->device.handle);
 
     u32 descriptor_set_count = 3;
-    VK_CHECK(vkFreeDescriptorSets(
+    VULKAN_CHECK_RESULT(vkFreeDescriptorSets(
         context->device.handle,
         shader->object_descriptor_pool,
         descriptor_set_count,

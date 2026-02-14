@@ -102,7 +102,7 @@ b8 vulkan_device_create(vulkan_context* context)
     deviceCreateInfo.enabledExtensionCount = requiredDeviceExtensions.size;
     deviceCreateInfo.ppEnabledExtensionNames = requiredDeviceExtensions.data;
     deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
-    VK_CHECK(vkCreateDevice(
+    VULKAN_CHECK_RESULT(vkCreateDevice(
         context->device.physical_device,
         &deviceCreateInfo,
         context->allocator,
@@ -122,7 +122,7 @@ b8 vulkan_device_create(vulkan_context* context)
     commandPoolcreateInfo.pNext = NULL;
     commandPoolcreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     commandPoolcreateInfo.queueFamilyIndex = context->device.queues.graphics.index;
-    VK_CHECK(vkCreateCommandPool(
+    VULKAN_CHECK_RESULT(vkCreateCommandPool(
         context->device.handle,
         &commandPoolcreateInfo,
         context->allocator,
@@ -164,16 +164,16 @@ void vulkan_device_query_swapchain_support(
     VkSurfaceKHR surface,
     VulkanSwapchainSupportInfo* swapchainSupportInfo)
 {
-    VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapchainSupportInfo->capabilities));
+    VULKAN_CHECK_RESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapchainSupportInfo->capabilities));
 
     u32 surfaceFormatCount = 0;
-    VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, NULL));
+    VULKAN_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, NULL));
     if (surfaceFormatCount) {
         if (!swapchainSupportInfo->formats.capacity) {
             DARRAY_RESERVE(swapchainSupportInfo->formats, surfaceFormatCount, MEMORY_TAG_RENDERER);
         }
 
-        VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(
+        VULKAN_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDevice,
             surface,
             &surfaceFormatCount,
@@ -182,13 +182,13 @@ void vulkan_device_query_swapchain_support(
     }
 
     u32 presentModeCount = 0;
-    VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, NULL));
+    VULKAN_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, NULL));
     if (presentModeCount) {
         if (!swapchainSupportInfo->modes.capacity) {
             DARRAY_INIT(swapchainSupportInfo->modes, MEMORY_TAG_RENDERER);
             DARRAY_EXPAND(swapchainSupportInfo->modes, presentModeCount);
         }
-        VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
+        VULKAN_CHECK_RESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(
             physicalDevice,
             surface,
             &presentModeCount,
@@ -219,13 +219,13 @@ b8 vulkan_device_detect_depth_format(vulkan_device* device)
 b8 selectPhysicalDevice(vulkan_context* context)
 {
     u32 deviceCount = 0;
-    VK_CHECK(vkEnumeratePhysicalDevices(context->instance, &deviceCount, NULL));
+    VULKAN_CHECK_RESULT(vkEnumeratePhysicalDevices(context->instance, &deviceCount, NULL));
     if (!deviceCount) {
         LOG_FATAL("No devices which support Vulkan were found");
         return FALSE;
     }
     DARRAY_DEFINE(VkPhysicalDevice, physicalDevices, deviceCount, MEMORY_TAG_RENDERER);
-    VK_CHECK(vkEnumeratePhysicalDevices(context->instance, &deviceCount, physicalDevices.data));
+    VULKAN_CHECK_RESULT(vkEnumeratePhysicalDevices(context->instance, &deviceCount, physicalDevices.data));
     physicalDevices.size = deviceCount;
 
     for (u32 i = 0; i < physicalDevices.size; ++i) {
@@ -369,7 +369,7 @@ b8 physicalDeviceMeetsRequirements(
         }
 
         VkBool32 supportsPresent = VK_FALSE;
-        VK_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent));
+        VULKAN_CHECK_RESULT(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent));
         if (supportsPresent) {
             queueFamilyInfo->presentFamilyIndex = i;
         }
@@ -394,10 +394,10 @@ b8 physicalDeviceMeetsRequirements(
 
         if (requirements->deviceExtensionNames.size) {
             u32 propertyCount = 0;
-            VK_CHECK(vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &propertyCount, NULL));
+            VULKAN_CHECK_RESULT(vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &propertyCount, NULL));
             if (propertyCount) {
                 DARRAY_DEFINE(VkExtensionProperties, availableExtensions, propertyCount, MEMORY_TAG_RENDERER);
-                VK_CHECK(vkEnumerateDeviceExtensionProperties(
+                VULKAN_CHECK_RESULT(vkEnumerateDeviceExtensionProperties(
                     physicalDevice,
                     NULL,
                     &propertyCount,

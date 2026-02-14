@@ -134,7 +134,7 @@ bool load(char const* filename, Resource* resource)
 
     cJSON_Delete(json);
     resource->data = config;
-    resource->data_size = sizeof(*config);
+    resource->size = sizeof(*config);
     return true;
 }
 
@@ -145,7 +145,7 @@ void unload(Resource* resource)
         LOG_WARNING("material loader unload: Invalid parameters");
     }
 
-    memory_system_free(resource->data, resource->data_size, MEMORY_TAG_RESOURCES);
+    memory_system_free(resource->data, resource->size, MEMORY_TAG_RESOURCES);
     resource->data = 0;
-    resource->data_size = 0;
+    resource->size = 0;
 }

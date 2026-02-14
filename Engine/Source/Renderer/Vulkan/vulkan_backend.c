@@ -65,9 +65,9 @@ b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
     }
 #endif
     u32 layer_property_count;
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_property_count, 0));
+    VULKAN_CHECK_RESULT(vkEnumerateInstanceLayerProperties(&layer_property_count, 0));
     DARRAY_DEFINE(VkLayerProperties, available_layers, layer_property_count, MEMORY_TAG_RENDERER);
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&layer_property_count, available_layers.data));
+    VULKAN_CHECK_RESULT(vkEnumerateInstanceLayerProperties(&layer_property_count, available_layers.data));
     for (u32 i = 0; i < required_layers.size; ++i)
     {
         b8 found = FALSE;
@@ -104,9 +104,9 @@ b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
     }
 
     u32 extension_property_count;
-    VK_CHECK(vkEnumerateInstanceExtensionProperties(0, &extension_property_count, 0));
+    VULKAN_CHECK_RESULT(vkEnumerateInstanceExtensionProperties(0, &extension_property_count, 0));
     DARRAY_DEFINE(VkExtensionProperties, available_extensions, extension_property_count, MEMORY_TAG_RENDERER);
-    VK_CHECK(vkEnumerateInstanceExtensionProperties(0, &extension_property_count, available_extensions.data));
+    VULKAN_CHECK_RESULT(vkEnumerateInstanceExtensionProperties(0, &extension_property_count, available_extensions.data));
     for (u32 i = 0; i < required_extensions.size; ++i)
     {
         b8 found = FALSE;
@@ -136,7 +136,7 @@ b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
     instance_create_info.ppEnabledLayerNames = required_layers.data;
     instance_create_info.enabledExtensionCount = required_extensions.size;
     instance_create_info.ppEnabledExtensionNames = required_extensions.data;
-    VK_CHECK(vkCreateInstance(&instance_create_info, context.allocator, &context.instance));
+    VULKAN_CHECK_RESULT(vkCreateInstance(&instance_create_info, context.allocator, &context.instance));
 
     DARRAY_DESTROY(required_layers);
     DARRAY_DESTROY(required_extensions);
@@ -153,7 +153,7 @@ b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
     debug_messenger_create_info.messageType = messageType;
     debug_messenger_create_info.pfnUserCallback = debug_utils_messenger_callback;
     debug_messenger_create_info.pUserData = 0;
-    VK_CHECK(func(context.instance, &debug_messenger_create_info, context.allocator, &context.debug_utils_messenger));
+    VULKAN_CHECK_RESULT(func(context.instance, &debug_messenger_create_info, context.allocator, &context.debug_utils_messenger));
 #endif
 
     if (!create_vulkan_surface(&context))
@@ -210,12 +210,12 @@ b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         semaphoreCreateInfo.pNext = 0;
         semaphoreCreateInfo.flags = 0;
-        VK_CHECK(vkCreateSemaphore(
+        VULKAN_CHECK_RESULT(vkCreateSemaphore(
             context.device.handle,
             &semaphoreCreateInfo,
             context.allocator,
             &DARRAY_AT(context.image_available_semaphors, i)));
-        VK_CHECK(vkCreateSemaphore(
+        VULKAN_CHECK_RESULT(vkCreateSemaphore(
             context.device.handle,
             &semaphoreCreateInfo,
             context.allocator,
@@ -226,7 +226,7 @@ b8 vulkan_backend_startup(char const* app_name, u32 width, u32 height)
         // cannot be rendered until a frame is "rendered" before it.
         VkFenceCreateInfo fence_create_info = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
         fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-        VK_CHECK(vkCreateFence(context.device.handle, &fence_create_info, context.allocator, &context.fences_in_flight[i]));
+        VULKAN_CHECK_RESULT(vkCreateFence(context.device.handle, &fence_create_info, context.allocator, &context.fences_in_flight[i]));
     }
 
     // Create builtin shaders
@@ -443,7 +443,7 @@ b8 vulkan_backend_end_frame(struct renderer_backend* backend, f64 deltaTime)
     submitInfo.pCommandBuffers = &command_buffer->handle;
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &context.render_complete_semaphors.data[context.current_frame];
-    VK_CHECK(vkQueueSubmit(context.device.queues.graphics.handle, 1, &submitInfo, context.fences_in_flight[context.current_frame]));
+    VULKAN_CHECK_RESULT(vkQueueSubmit(context.device.queues.graphics.handle, 1, &submitInfo, context.fences_in_flight[context.current_frame]));
 
     vulkanCommandBufferUpdateSubmitted(command_buffer);
 
@@ -594,7 +594,7 @@ void vulkan_backend_create_texture(u8 const* pixels, Texture* texture)
     sampler_create_info.maxLod = 0.f;
     sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
     sampler_create_info.unnormalizedCoordinates = VK_FALSE;
-    VK_CHECK(vkCreateSampler(context.device.handle, &sampler_create_info, context.allocator, &data->sampler));
+    VULKAN_CHECK_RESULT(vkCreateSampler(context.device.handle, &sampler_create_info, context.allocator, &data->sampler));
 
     texture->generation++;
 }
@@ -914,7 +914,7 @@ void regenerate_framebuffers()
         framebuffer_create_info.width = context.framebuffer_width;
         framebuffer_create_info.height = context.framebuffer_height;
         framebuffer_create_info.layers = 1;
-        VK_CHECK(vkCreateFramebuffer(context.device.handle, &framebuffer_create_info, context.allocator, &context.world_framebuffers[i]));
+        VULKAN_CHECK_RESULT(vkCreateFramebuffer(context.device.handle, &framebuffer_create_info, context.allocator, &context.world_framebuffers[i]));
 
         // Swapchain framebuffers (UI pass). Outputs to swapchain images
         VkImageView ui_attachments[1] = { context.swapchain.image_views.data[i] };
@@ -925,7 +925,7 @@ void regenerate_framebuffers()
         sc_framebuffer_create_info.width = context.framebuffer_width;
         sc_framebuffer_create_info.height = context.framebuffer_height;
         sc_framebuffer_create_info.layers = 1;
-        VK_CHECK(vkCreateFramebuffer(context.device.handle, &sc_framebuffer_create_info, context.allocator, &context.swapchain.framebuffers[i]));
+        VULKAN_CHECK_RESULT(vkCreateFramebuffer(context.device.handle, &sc_framebuffer_create_info, context.allocator, &context.swapchain.framebuffers[i]));
     }
 }
 

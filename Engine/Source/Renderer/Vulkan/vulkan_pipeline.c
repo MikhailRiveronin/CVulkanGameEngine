@@ -141,7 +141,7 @@ b8 vulkan_pipeline_create(
     pipeline_layout_create_info.pSetLayouts = set_layouts;
     pipeline_layout_create_info.pushConstantRangeCount = 1;
     pipeline_layout_create_info.pPushConstantRanges = &push_constant_range;
-    VK_CHECK(vkCreatePipelineLayout(
+    VULKAN_CHECK_RESULT(vkCreatePipelineLayout(
         context->device.handle,
         &pipeline_layout_create_info,
         context->allocator,

@@ -61,7 +61,7 @@ void dynamic_array_resize(Dynamic_Array* array, u32 count)
     }
 }
 
-void dynamic_array_push(Dynamic_Array* array, void const* value)
+void dynamic_array_push_back(Dynamic_Array* array, void const* value)
 {
     if (array->size == array->capacity)
     {

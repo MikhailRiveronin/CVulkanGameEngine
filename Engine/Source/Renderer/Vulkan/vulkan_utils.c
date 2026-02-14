@@ -156,9 +156,9 @@ b8 create_shader_module(
     stages[stage_index].module.create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     stages[stage_index].module.create_info.pNext = 0;
     stages[stage_index].module.create_info.flags = 0;
-    stages[stage_index].module.create_info.codeSize = binary_resource.data_size;
+    stages[stage_index].module.create_info.codeSize = binary_resource.size;
     stages[stage_index].module.create_info.pCode = (u32*)binary_resource.data;
-    VK_CHECK(vkCreateShaderModule(context->device.handle, &stages[stage_index].module.create_info, context->allocator, &stages[stage_index].module.handle));
+    VULKAN_CHECK_RESULT(vkCreateShaderModule(context->device.handle, &stages[stage_index].module.create_info, context->allocator, &stages[stage_index].module.handle));
 
     resource_system_unload(&binary_resource);
 
