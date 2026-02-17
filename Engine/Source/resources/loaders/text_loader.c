@@ -14,7 +14,7 @@ Resource_Loader* text_loader_create()
     return loader;
 }
 
-bool load(char const* filename, Resource* resource)
+bool load(char const* filename, Resource_Data* resource)
 {
     if (!filename || !resource)
     {
@@ -46,7 +46,7 @@ bool load(char const* filename, Resource* resource)
     return true;
 }
 
-void unload(Resource* resource)
+void unload(Resource_Data* resource)
 {
     if (!resource)
     {

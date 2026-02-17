@@ -13,8 +13,8 @@ static u32 probe(u32 hash_key, u32 i, u32 map_size);
 /**
  * @brief Find the bucket containing key, if the key is in the table, or the first one past the end of its probe.
  */
-static Bucket* find_by_key(String_Map* map, char const* key);
-static Bucket* find_empty(String_Map* map, u32 hash_key);
+static Resource_Reference* find_by_key(String_Map* map, char const* key);
+static Resource_Reference* find_empty(String_Map* map, u32 hash_key);
 static bool contains(String_Map* map, char const* key);
 static void resize(String_Map* map, u32 new_size);
 
@@ -50,7 +50,7 @@ void string_map_insert(String_Map* map, char const* key, void const* value)
 {
     if (!contains(map, key))
     {
-        Bucket* bucket = find_empty(map, hash(key));
+        Resource_Reference* bucket = find_empty(map, hash(key));
         if (!bucket->in_probe)
         {
             ++map->used;
@@ -70,7 +70,7 @@ void string_map_insert(String_Map* map, char const* key, void const* value)
 
 void string_map_erase(String_Map* map, char const* key)
 {
-    Bucket* bucket = find_by_key(map, key);
+    Resource_Reference* bucket = find_by_key(map, key);
     if (string_equal(bucket->key, key))
     {
         memory_system_free(bucket->value, map->data_size, MEMORY_TAG_CONTAINERS);
@@ -80,7 +80,7 @@ void string_map_erase(String_Map* map, char const* key)
 
 void* string_map_at(String_Map const* map, char const* key)
 {
-    Bucket* bucket = find_by_key(map, key);
+    Resource_Reference* bucket = find_by_key(map, key);
     return bucket->in_probe ? bucket->value : 0;
 }
 
@@ -113,11 +113,11 @@ u32 probe(u32 hash_key, u32 i, u32 map_size)
     return (hash_key + i * ((hash_key << 1) | 1)) & (map_size - 1);
 }
 
-Bucket* find_by_key(String_Map* map, char const* key)
+Resource_Reference* find_by_key(String_Map* map, char const* key)
 {
     for (u32 i = 0; i < map->size; ++i)
     {
-        Bucket* bucket = map->buckets + probe(hash(key), i, map->size);
+        Resource_Reference* bucket = map->buckets + probe(hash(key), i, map->size);
         if (string_equal(bucket->key, key) || !bucket->in_probe)
         {
             return bucket;
@@ -127,11 +127,11 @@ Bucket* find_by_key(String_Map* map, char const* key)
     return 0;
 }
 
-Bucket* find_empty(String_Map* map, u32 hash_key)
+Resource_Reference* find_empty(String_Map* map, u32 hash_key)
 {
     for (u32 i = 0; i < map->size; ++i)
     {
-        Bucket* bucket = map->buckets + probe(hash_key, i, map->size);
+        Resource_Reference* bucket = map->buckets + probe(hash_key, i, map->size);
         if (bucket->is_empty)
         {
             return bucket;
@@ -143,14 +143,14 @@ Bucket* find_empty(String_Map* map, u32 hash_key)
 
 bool contains(String_Map* map, char const* key)
 {
-    Bucket* bucket = find_by_key(map, key);
+    Resource_Reference* bucket = find_by_key(map, key);
     return string_equal(bucket->key, key);
 }
 
 void resize(String_Map* map, u32 new_size)
 {
     u32 old_size = map->size;
-    Bucket* old_buckets = map->buckets;
+    Resource_Reference* old_buckets = map->buckets;
 
     map->size = new_size;
     map->used = 0;

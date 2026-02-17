@@ -288,7 +288,7 @@ void vulkan_ui_shader_apply_material(vulkan_context* context, struct vulkan_ui_s
         vulkan_ui_shader_instance_ubo instance_ubo;
 
         // Get diffuse colour from a material.
-        glm_vec4_copy(material->diffuse_colour, instance_ubo.diffuse_color);
+        glm_vec4_copy(material->diffuse_color, instance_ubo.diffuse_color);
 
         // Load the data into the buffer.
         vulkan_buffer_upload_to_host_visible_memory(context, &shader->object_uniform_buffer, offset, range, 0, &instance_ubo);

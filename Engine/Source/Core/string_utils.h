@@ -8,7 +8,7 @@ u64 string_length(char const* str);
 // char* string_duplicate(char const* str);
 
 // Case-sensitive
-bool string_equal(char const* str0, char const* str1);
+bool string_equal(char const* lhs, char const* rhs);
 
 // Case-insensitive
 bool string_equali(char const* str0, char const* str1);

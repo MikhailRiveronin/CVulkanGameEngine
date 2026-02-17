@@ -2,16 +2,16 @@
 
 #include "defines.h"
 
-#include "resources/resources.h"
+// #include "resources/resources.h"
 
-#define DEFAULT_MATERIAL_NAME "default"
+// #define DEFAULT_MATERIAL_NAME "default"
 
 typedef struct Material_System_Config
 {
     u32 max_material_count;
 } Material_System_Config;
 
-b8 material_system_startup(u64* const required_memory, void* const block, Material_System_Config config);
+bool material_system_startup(Material_System_Config* config);
 void material_system_shutdown();
 
 Material* material_system_acquire(char const* name);

@@ -186,7 +186,7 @@ Texture* texture_system_get_default_texture()
 
 b8 create_texture(char const* name, Texture* t)
 {
-    Resource resource;
+    Resource_Data resource;
     if (!resource_system_load(name, RESOURCE_TYPE_IMAGE, &resource))
     {
         LOG_ERROR("create_texture: Failed to load image resource for texture '%s'", name);

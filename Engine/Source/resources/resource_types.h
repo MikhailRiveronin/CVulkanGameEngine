@@ -5,29 +5,10 @@
 
 // #include "third_party/cglm/struct.h"
 
-typedef enum Resource_Type
-{
-    RESOURCE_TYPE_TEXT,
-    RESOURCE_TYPE_BINARY,
-    RESOURCE_TYPE_IMAGE,
-    RESOURCE_TYPE_MATERIAL,
-    RESOURCE_TYPE_SHADER_CONFIG,
-    RESOURCE_TYPE_STATIC_MESH,
-    RESOURCE_TYPE_ENUM_COUNT
-} Resource_Type;
 
-typedef struct Resource_Loader
-{
-    bool (* load)(char const* filename, Resource* resource);
-    void (* unload)(Resource* resource);
-} Resource_Loader;
 
-typedef struct Resource
-{
-    Resource_Type type;
-    u32 size;
-    void* data;
-} Resource;
+
+
 
 
 
@@ -92,15 +73,15 @@ typedef enum Material_Type
     MATERIAL_TYPE_UI
 } Material_Type;
 
-typedef struct Material_Config_Resource
-{
-    char version[4];
-    char name[MAX_MATERIAL_NAME_LENGTH];
-    vec4s diffuse_colour;
-    char diffuse_texture_name[TEXTURE_NAME_MAX_LENGTH];
-    Material_Type type;
-    bool auto_release;
-} Material_Config_Resource;
+// typedef struct Material_Config_Resource
+// {
+//     char version[4];
+//     char name[MAX_MATERIAL_NAME_LENGTH];
+//     vec4s diffuse_colour;
+//     char diffuse_texture_name[TEXTURE_NAME_MAX_LENGTH];
+//     Material_Type type;
+//     bool auto_release;
+// } Material_Config_Resource;
 
 typedef struct Material
 {
@@ -109,7 +90,7 @@ typedef struct Material
     u32 backend_id;
     u32 generation;
     Material_Type type;
-    vec4s diffuse_colour;
+    vec4s diffuse_color;
     Texture_Map diffuse_map;
 } Material;
 

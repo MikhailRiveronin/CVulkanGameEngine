@@ -8,8 +8,8 @@
 #include "third_party/cJSON/cJSON.h"
 #include "third_party/cglm/struct.h"
 
-static bool load(char const* filename, Resource* resource);
-static void unload(Resource* resource);
+static bool load(char const* filename, Resource_Data* resource);
+static void unload(Resource_Data* resource);
 
 Resource_Loader* shader_config_loader_create()
 {
@@ -19,7 +19,7 @@ Resource_Loader* shader_config_loader_create()
     return loader;
 }
 
-bool load(char const* filename, Resource* resource)
+bool load(char const* filename, Resource_Data* resource)
 {
     if (!filename || !resource)
     {
@@ -283,7 +283,7 @@ bool load(char const* filename, Resource* resource)
     resource->data = config;
 }
 
-void unload(Resource* resource)
+void unload(Resource_Data* resource)
 {
     if (!resource)
     {

@@ -292,7 +292,7 @@ void vulkan_material_shader_apply_material(vulkan_context* context, vulkan_mater
 
         // Descriptor set 0
         vulkan_material_shader_object_ubo_data object_ubo_data;
-        glm_vec4_copy(material->diffuse_colour, object_ubo_data.diffuse_color);
+        glm_vec4_copy(material->diffuse_color, object_ubo_data.diffuse_color);
         u32 range = sizeof(object_ubo_data);
         u32 offset = calculate_ubo_allignment(context, sizeof(object_ubo_data)) * material->backend_id;
         vulkan_buffer_upload_to_host_visible_memory(context, &shader->object_ubo, offset, range, 0, &object_ubo_data);

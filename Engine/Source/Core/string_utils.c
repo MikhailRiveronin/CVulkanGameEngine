@@ -19,9 +19,10 @@ u64 string_length(char const* str)
 //     return copy;
 // }
 
-bool string_equal(char const* str0, char const* str1)
+bool string_equal(char const* lhs, char const* rhs)
 {
-    return strcmp(str0, str1) == 0;
+    size_t count = strlen(lhs) < strlen(rhs) ? strlen(lhs) : strlen(rhs);
+    return strncmp(lhs, rhs, count) == 0;
 }
 
 bool string_equali(char const* str0, char const* str1)

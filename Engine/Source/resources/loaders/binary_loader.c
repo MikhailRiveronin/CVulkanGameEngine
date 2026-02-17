@@ -6,8 +6,8 @@
 #include "platform/filesystem.h"
 #include "systems/memory_system.h"
 
-static bool load(char const* filename, Resource* resource);
-static void unload(Resource* resource);
+static bool load(char const* filename, Resource_Data* resource);
+static void unload(Resource_Data* resource);
 
 Resource_Loader* binary_loader_create()
 {
@@ -17,7 +17,7 @@ Resource_Loader* binary_loader_create()
     return loader;
 }
 
-bool load(char const* filename, Resource* resource)
+bool load(char const* filename, Resource_Data* resource)
 {
     if (!filename || !resource)
     {
@@ -25,7 +25,10 @@ bool load(char const* filename, Resource* resource)
         return false;
     }
 
+    resource->type = RESOURCE_TYPE_BINARY;
+
     char path[256];
+    memory_system_zero(path, sizeof(path));
     string_format(path, "%s/%s/%s", ASSETS_DIR, "shaders/spirv", filename);
     File_Handle handle;
     if (!filesystem_open(path, FILE_ACCESS_MODE_READ_BINARY, &handle))
@@ -49,7 +52,7 @@ bool load(char const* filename, Resource* resource)
     return true;
 }
 
-void unload(Resource* resource)
+void unload(Resource_Data* resource)
 {
     if (!resource)
     {

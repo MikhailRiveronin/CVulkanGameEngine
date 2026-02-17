@@ -39,7 +39,7 @@ bool renderer_create_shader(Shader* shader)
     for (u32 path_index = 0; path_index < shader->spv_paths->size; ++path_index)
     {
         char const* spv_path = DYNAMIC_ARRAY_AT_AS(shader->spv_paths, path_index, char const*);
-        Resource spv;
+        Resource_Data spv;
         if (!resource_system_load(RESOURCE_TYPE_BINARY, spv_path, &spv))
         {
             LOG_FATAL("renderer_create_shader: Failed to load '%s' resource", spv_path);

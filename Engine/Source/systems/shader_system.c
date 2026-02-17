@@ -13,9 +13,9 @@ typedef struct Shader_System_State
     u32 current_shader_id;
 } Shader_System_State;
 
-Shader_System_State* state;
+static Shader_System_State* state;
 
-void destroy_shader(Shader* shader);
+static void destroy_shader(Shader* shader);
 
 bool shader_system_startup(Shader_System_Config const* config)
 {
