@@ -5,7 +5,7 @@
 
 
 u64 string_length(char const* str);
-// char* string_duplicate(char const* str);
+char* string_duplicate(char const* source);
 
 // Case-sensitive
 bool string_equal(char const* lhs, char const* rhs);

@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "containers/dynamic_array.h"
-#include "containers/string_map.h"
+#include "containers/hash_table.h"
 #include "resources/resource_types.h"
 
 // #include "third_party/cglm/cglm.h"

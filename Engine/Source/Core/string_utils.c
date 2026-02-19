@@ -11,13 +11,14 @@ u64 string_length(char const* str)
     return strlen(str);
 }
 
-// char* string_duplicate(char const* str)
-// {
-//     u64 length = string_length(str);
-//     char* copy = memory_system_allocate(length + 1, MEMORY_TAG_STRING);
-//     memory_system_copy(copy, str, length + 1);
-//     return copy;
-// }
+char* string_duplicate(char const* source)
+{
+#ifdef WIN32
+    return _strdup(source);
+#else
+    return strdup(source);
+#endif
+}
 
 bool string_equal(char const* lhs, char const* rhs)
 {

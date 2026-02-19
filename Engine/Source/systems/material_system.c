@@ -49,7 +49,7 @@ bool material_system_startup(Material_System_Config* config)
     state->max_material_count = config->max_material_count;
     state->materials = memory_system_allocate(config->max_material_count * sizeof(*state->materials), MEMORY_TAG_SYSTEMS);
     state->empty_slots = memory_system_allocate(config->max_material_count * sizeof(*state->empty_slots), MEMORY_TAG_SYSTEMS);
-    memory_system_set(state->empty_slots, 1, config->max_material_count * sizeof(*state->empty_slots));
+    memory_system_set(state->empty_slots, true, config->max_material_count * sizeof(*state->empty_slots));
 
     // Create default material
 
@@ -326,18 +326,18 @@ bool load_from_config(const char* filename)
 
     if (slot == -1)
     {
-        LOG_FATAL("load_from_config: Failed to load material from config");
+        LOG_FATAL("load_from_config: Failed to find empty slot");
         return false;
     }
 
-    Resource_Data resource;
-    if (!resource_system_load(RESOURCE_TYPE_MATERIAL, filename, slot, &resource))
+    Material_Config config;
+    if (!resource_system_load(filename, slot, true, &config))
     {
         LOG_FATAL("load_from_config: Failed to load material from config");
         return false;
     }
 
-    Material* new_material = &state->materials[slot];
+    Material* material = &state->materials[slot];
     Material_Config* config = resource.data;
     new_material->diffuse_color = config->diffuse_color;
 

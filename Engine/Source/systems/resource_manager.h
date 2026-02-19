@@ -9,16 +9,7 @@ typedef struct Resource_System_Config
     u32 initial_resource_lookup_table_size;
 } Resource_System_Config;
 
-// typedef enum Resource_Type
-// {
-//     RESOURCE_TYPE_TEXT,
-//     RESOURCE_TYPE_BINARY,
-//     RESOURCE_TYPE_IMAGE,
-//     RESOURCE_TYPE_MATERIAL,
-//     RESOURCE_TYPE_SHADER_CONFIG,
-//     RESOURCE_TYPE_STATIC_MESH,
-//     RESOURCE_TYPE_ENUM_COUNT
-// } Resource_Type;
+
 
 // typedef struct Resource_Reference
 // {
@@ -48,19 +39,24 @@ typedef struct Resource_Loader
 
 typedef struct Material_Config
 {
-    char name[128];
+    char name[MAX_MATERIAL_NAME_LENGTH];
+    u32 id;
+    u32 backend_id;
+    Material_Type type;
     vec4s diffuse_color;
-    char diffuse_texture_name[128];
+    Texture_Map diffuse_map;
 } Material_Config;
 
-bool resource_system_startup();
-void resource_system_shutdown();
+bool resource_manager_startup();
+void resource_manager_shutdown();
 
 
-bool resource_system_load(char const* filename, Resource_Data* resource);
-void resource_system_unload(Resource_Data* resource);
+bool resource_manager_load(char const* filename, u32 slot, void* resource);
+void resource_manager_unload(Resource_Data* resource);
+
+void* resource_manager_acquire(char const* filepath, bool auto_release);
 
 /**
  * @brief Returns the slot (index) of the resource in the corresponding array.
  */
-u32 resource_system_get_reference(char const* name);
+u32 resource_manager_get_reference(char const* name);

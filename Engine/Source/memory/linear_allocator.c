@@ -3,64 +3,67 @@
 #include "core/logger.h"
 #include "systems/memory_system.h"
 
-void linear_allocator_create(u64 tracked_memory, void* block, linear_allocator* allocator)
+bool linear_allocator_create(u32 size, Linear_Allocator* allocator)
 {
-    if (tracked_memory == 0)
+    if (size == 0)
     {
-        LOG_ERROR("linear_allocator_create: Invalid input parameters");
+        LOG_FATAL("linear_allocator_create: Invalid parameters");
+        return false;
+    }
+
+    allocator->size = size;
+    allocator->allocated = 0;
+    allocator->memory = memory_system_allocate(allocator->size, MEMORY_TAG_LINEAR_ALLOCATOR);
+    if (!allocator->memory)
+    {
+        LOG_FATAL("linear_allocator_create: Failed to allocate memory");
+        return false;
+    }
+
+    return true;
+}
+
+void linear_allocator_destroy(Linear_Allocator* allocator)
+{
+    if (!allocator)
+    {
+        LOG_FATAL("linear_allocator_destroy: Invalid parameters");
         return;
     }
 
-    allocator->tracked_memory = tracked_memory;
-    allocator->allocated_memory = 0;
-    if (block)
+    memory_system_free(allocator->memory, allocator->size, MEMORY_TAG_LINEAR_ALLOCATOR);
+    allocator->size = 0;
+    allocator->allocated = 0;
+    allocator->memory = 0;
+}
+
+void* linear_allocator_allocate(Linear_Allocator* allocator, u32 size)
+{
+    if (!allocator || size == 0)
     {
-        allocator->block = block;
-        allocator->owns_memory = FALSE;
+        LOG_FATAL("linear_allocator_allocate: Invalid parameters");
+        return 0;
     }
-    else
+
+    if (allocator->allocated + size > allocator->size)
     {
-        allocator->block = memory_system_allocate(tracked_memory, MEMORY_TAG_LINEAR_ALLOCATOR);
-        allocator->owns_memory = TRUE;
+        LOG_FATAL("linear_allocator_allocate: Not enough memory");
+        return 0;
     }
+
+    void* memory = (char*)allocator->memory + allocator->allocated;
+    allocator->allocated += size;
+    return memory;
 }
 
-void linear_allocator_destroy(linear_allocator* allocator)
+void linear_allocator_free(Linear_Allocator* allocator)
 {
-    if (allocator) {
-        allocator->allocated_memory = 0;
-        if (allocator->owns_memory && allocator->memory) {
-            memory_free(allocator->memory, allocator->tracked_memory, MEMORY_TAG_LINEAR_ALLOCATOR);
-        }
-
-        allocator->memory = 0;
-        allocator->tracked_memory = 0;
-        allocator->owns_memory = FALSE;
-    }
-}
-
-void* linear_allocator_allocate(linear_allocator* allocator, u64 size)
-{
-    if (allocator && allocator->memory) {
-        if (allocator->allocated_memory + size > allocator->tracked_memory) {
-            u64 remaining = allocator->tracked_memory - allocator->allocated_memory;
-            LOG_ERROR("linear_allocator_allocate: Tried to allocate %lluB, only %lluB remaining.", size, remaining);
-            return 0;
-        }
-
-        void* block = ((u8*)allocator->memory) + allocator->allocated_memory;
-        allocator->allocated_memory += size;
-        return block;
+    if (!allocator)
+    {
+        LOG_FATAL("linear_allocator_free: Invalid parameters");
+        return;
     }
 
-    LOG_ERROR("linear_allocator_allocate - provided allocator not initialized.");
-    return 0;
-}
-
-void linear_allocator_free_all(linear_allocator* allocator)
-{
-    if (allocator && allocator->memory) {
-        allocator->allocated_memory = 0;
-        memory_zero(allocator->memory, allocator->tracked_memory);
-    }
+    memory_system_zero(allocator->memory, allocator->size);
+    allocator->allocated = 0;
 }

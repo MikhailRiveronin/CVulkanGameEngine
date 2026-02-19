@@ -1,6 +1,6 @@
 #include "shader_system.h"
 
-#include "containers/string_map.h"
+#include "containers/hash_table.h"
 #include "core/string_utils.h"
 #include "memory_system.h"
 #include "renderer/renderer.h"

@@ -65,7 +65,7 @@ typedef struct Texture_Map
     Texture_Use use;
 } Texture_Map;
 
-#define MAX_MATERIAL_NAME_LENGTH 128
+// #define MAX_MATERIAL_NAME_LENGTH 128
 
 typedef enum Material_Type
 {
@@ -83,16 +83,7 @@ typedef enum Material_Type
 //     bool auto_release;
 // } Material_Config_Resource;
 
-typedef struct Material
-{
-    char name[MAX_MATERIAL_NAME_LENGTH];
-    u32 id;
-    u32 backend_id;
-    u32 generation;
-    Material_Type type;
-    vec4s diffuse_color;
-    Texture_Map diffuse_map;
-} Material;
+
 
 #define GEOMETRY_MAX_NAME_LENGTH 256
 
